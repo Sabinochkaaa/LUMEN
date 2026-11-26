@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AgentBuddy from "../components/AgentBuddy";
-import { api, Criterion } from "../api";
+import { api, Ticket, Criterion } from "../api";
 import { useApp } from "../App";
 import { CRIT_I18N, pick, useT } from "../i18n";
 import { Lock, ShieldCheck } from "lucide-react";
@@ -83,6 +83,7 @@ export default function Settings() {
           </div>
         </section>
       </div>
+      {admin && <Tickets />}
       {crit && (
         <section className="card mt-6 p-6">
           <div className="h2">{t("set.criteria")}</div>
@@ -98,5 +99,34 @@ export default function Settings() {
         </section>
       )}
     </div>
+  );
+}
+
+/** What users handed over to the team from the support chat and the bot (admins only). */
+function Tickets() {
+  const { t, lang } = useT();
+  const [items, setItems] = useState<Ticket[] | null>(null);
+  const [err, setErr] = useState("");
+  useEffect(() => { api.tickets().then((r) => setItems(r.items)).catch((e) => setErr(e.message)); }, []);
+  return (
+    <section className="card mt-6 p-6">
+      <div className="h2">{t("tk.title")}</div>
+      <p className="meta mt-1">{t("tk.sub")}</p>
+      {err && <p className="mt-3 text-[13px] text-bad">{err}</p>}
+      {items && !items.length && <p className="meta mt-4">{t("tk.empty")}</p>}
+      <ul className="mt-4 space-y-2">
+        {items?.map((x) => (
+          <li key={x.id} className="rounded-xl border border-line px-4 py-3">
+            <div className="meta flex flex-wrap gap-x-3">
+              <span className="font-mono">№{x.id}</span>
+              <span>{new Date(x.at).toLocaleString(lang === "en" ? "en-GB" : lang === "kk" ? "kk-KZ" : "ru-RU")}</span>
+              <span>{x.channel === "telegram" ? "Telegram" : t("tk.site")}</span>
+              {x.contact && <span className="text-ink">{x.contact}</span>}
+            </div>
+            <div className="mt-1 text-[14px]">{x.message}</div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -40,6 +40,10 @@ export interface Audit {
   relations: Relation[]; questions: Question[]; fintech: FintechCheck[]; scores: Scores; readiness: Readiness;
   readiness_reason: string; priorities: string[]; stages: StageEvent[]; warnings: string[]; demo: boolean; source: Line[];
 }
+export interface Ticket {
+  id: string; at: string; channel: string; message: string; contact?: string; audit_id?: string;
+  history?: { role: string; text: string }[]; status?: string;
+}
 export interface AuditSummary {
   id: string; document_name: string; document_title: string; analysed_at: string; model: string; provider: string;
   mode: string; readiness: Readiness; quality_index: number; requirements: number; findings: number; critical: number;
@@ -126,6 +130,7 @@ export const api = {
     fd.append("target", target);
     return req<TranslationResult>("/api/translate", { method: "POST", body: fd });
   },
+  tickets: () => req<{ items: Ticket[] }>("/api/support/tickets"),
   generate: (idea: string, lang: string) =>
     req<{ title: string; markdown: string }>("/api/generate", { method: "POST", body: JSON.stringify({ idea, lang }),
       headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(180000) }),
