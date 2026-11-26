@@ -305,3 +305,13 @@ def test_same_document_reuses_result(tmp_path, monkeypatch):
     r1 = svc.run_sync(doc, "a.md", provider="offline")
     r2 = svc.run_sync(doc, "a.md", provider="offline")
     assert len(calls) == 1 and r1.id != r2.id and r1.scores.quality_index == r2.scores.quality_index
+
+
+def test_bench_rules_catch_every_planted_defect_without_noise():
+    """Quality gate: every seeded defect the rules own is found, the clean spec gets no findings."""
+    from lumen.bench import run
+
+    res = run("offline", verbose=False)
+    missed = [c["title"] for c in res["cases"] if not c["caught"]]
+    assert not missed, missed
+    assert res["false_positives"] == 0, res["noise"]

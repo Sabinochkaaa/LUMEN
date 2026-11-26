@@ -358,7 +358,7 @@ def _sentence(text: str, fragment: str) -> str:
 
 # ====================================================================== set-level rules
 PRIORITY_RE = re.compile(r"(приоритет|priority|must have|should have|moscow|критичн\w+ для бизнес|обязательн\w+/желательн)", re.I)
-VERSION_RE = re.compile(r"(верси[яи]\s*[:№]?\s*\d|version\s*[:#]?\s*\d|v\d+\.\d+|ред(акция)?\.\s*\d)", re.I)
+VERSION_RE = re.compile(r"(верси[яи]\s*[:№|]?\s*\d|version\s*[:#|]?\s*\d|v\d+\.\d+|ред(акция)?\.\s*\d)", re.I)
 
 
 def set_rules(ctx: RuleContext) -> None:
@@ -396,6 +396,12 @@ def set_rules(ctx: RuleContext) -> None:
                 problem="Не указаны подразделения и ответственные за согласование.",
                 risk="Невозможно подтвердить, что изменения согласованы с владельцами систем и ИБ.",
                 fix="Указать подразделения, ФИО и дату согласования.")
+    elif not re.search(r"согласу|согласован|утвержд|approv|sign-?off", text, re.I):
+        ctx.add(req_ids=[], scope="set", criterion="set_traceable", severity="LOW", rule_id="SET-APPROVERS",
+                title="Не указаны согласующие документа", quote="", loc=None,
+                problem="В документе нет блока согласования: неизвестно, кто подтвердил требования.",
+                risk="Требования могут уйти в разработку без согласования с владельцами систем, ИБ и бизнесом.",
+                fix="Добавить блок «Согласующие»: подразделения, ФИО, дата и статус согласования.")
     # version
     vm = re.search(r"[^.\n]*верси[^.\n]*не заполнен[^.\n]*\.?", text, re.I)
     if vm:
