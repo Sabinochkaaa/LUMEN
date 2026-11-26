@@ -18,8 +18,13 @@ from .llm.client import LLMError, make_chain
 from .llm.schemas import TranslatedChunk, TranslatedLines
 from .parsing.loader import load_document
 
-LANGS = {"ru": "русский", "kk": "казахский (қазақ тілі, кириллица)", "en": "английский"}
-LANG_NAMES = {"ru": "Русский", "kk": "Қазақша", "en": "English"}
+LANGS = {
+    "ru": "русский", "kk": "казахский (қазақ тілі, кириллица)", "en": "английский",
+    "uz": "узбекский (o‘zbek tili, латиница)", "ky": "киргизский (кыргыз тили, кириллица)", "tr": "турецкий",
+    "zh": "китайский (упрощённые иероглифы)", "de": "немецкий", "fr": "французский", "es": "испанский",
+}
+LANG_NAMES = {"ru": "Русский", "kk": "Қазақша", "en": "English", "uz": "O‘zbekcha", "ky": "Кыргызча",
+              "tr": "Türkçe", "zh": "中文", "de": "Deutsch", "fr": "Français", "es": "Español"}
 
 SYSTEM = """Ты — профессиональный переводчик технической документации банка (требования, ТЗ, API-спецификации).
 Правила:
@@ -209,8 +214,16 @@ def markdown_to_docx(md: str, title: str = "") -> bytes:
     return buf.getvalue()
 
 
+_MORE = [("uz", r"узбек|o.?zbek|uzbek|\buz\b"), ("ky", r"кирги|кыргыз|kyrgyz|\bky\b"), ("tr", r"турец|turk|türk|\btr\b"),
+         ("zh", r"китай|chinese|中文|\bzh\b"), ("de", r"немец|german|deutsch|\bde\b"), ("fr", r"француз|french|français|\bfr\b"),
+         ("es", r"испан|spanish|español|\bes\b")]
+
+
 def detect_target(text: str) -> Optional[str]:
     low = text.lower()
+    for code, rx in _MORE:
+        if re.search(rx, low):
+            return code
     if re.search(r"англ|english|\ben\b|ағылшын", low):
         return "en"
     if re.search(r"казах|қазақ|kazakh|\bkk\b|\bkz\b|казак", low):

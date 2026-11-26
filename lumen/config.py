@@ -92,7 +92,8 @@ class Settings:
     batch_size: int = field(default_factory=lambda: int(_env("LUMEN_BATCH_SIZE", "12") or 12))
     data_dir: Path = field(default_factory=lambda: Path(_env("LUMEN_DATA_DIR", "data")))
     supabase_url: str = field(default_factory=lambda: _env("SUPABASE_URL"))
-    supabase_key: str = field(default_factory=lambda: _env("SUPABASE_SERVICE_KEY"))
+    # new Supabase secret key (sb_secret_…) or the legacy service_role key; either variable name works
+    supabase_key: str = field(default_factory=lambda: _env("SUPABASE_SECRET_KEY") or _env("SUPABASE_SERVICE_KEY"))
     telegram_token: str = field(default_factory=lambda: _env("TELEGRAM_BOT_TOKEN"))
     log_level: str = field(default_factory=lambda: _env("LOG_LEVEL", "INFO"))
 

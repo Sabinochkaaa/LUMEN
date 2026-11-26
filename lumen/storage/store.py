@@ -83,7 +83,12 @@ class SupabaseStore:
 
     def __init__(self, url: str, key: str, table: str = "audits", cipher: Optional[Cipher] = None):
         self.base = url.rstrip("/") + f"/rest/v1/{table}"
-        self.h = {"apikey": key, "authorization": f"Bearer {key}", "content-type": "application/json"}
+        key = key.strip()
+        self.key_kind = key_kind(key)
+        # new sb_ keys are not JWTs: Supabase wants them in the apikey header only
+        self.h = {"apikey": key, "content-type": "application/json"}
+        if not key.startswith("sb_"):
+            self.h["authorization"] = f"Bearer {key}"
         self.cipher = cipher
         self.has_private_col = True
 
@@ -133,6 +138,23 @@ class SupabaseStore:
         return True
 
 
+def key_kind(key: str) -> str:
+    """Which Supabase key this is: secret, publishable, service_role, anon or unknown (never logs the key)."""
+    if key.startswith("sb_secret_"):
+        return "secret"
+    if key.startswith("sb_publishable_"):
+        return "publishable"
+    try:
+        import base64
+        import json as _json
+
+        payload = key.split(".")[1]
+        role = _json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))).get("role", "")
+        return role or "unknown"
+    except Exception:
+        return "unknown"
+
+
 def describe_storage_error(e: Exception) -> str:
     """Short, secret-free diagnosis of a Supabase failure (safe to show in /api/health)."""
     if isinstance(e, httpx.HTTPStatusError):
@@ -144,8 +166,9 @@ def describe_storage_error(e: Exception) -> str:
         except Exception:
             pass
         hint = {
-            401: "неверный ключ: укажите service_role key в SUPABASE_KEY",
-            403: "нет прав: нужен service_role key или политика RLS",
+            401: "неверный ключ: укажите секретный ключ (sb_secret_… или service_role) в SUPABASE_SECRET_KEY",
+            403: "нет прав: сервер использует публичный ключ — нужен секретный (sb_secret_… или service_role) "
+                 "в SUPABASE_SECRET_KEY",
             404: "таблица не найдена: выполните supabase/migrations/001_audits.sql",
         }.get(code, "")
         if "PGRST205" in detail or "does not exist" in detail:
