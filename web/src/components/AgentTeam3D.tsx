@@ -84,13 +84,16 @@ function makeBot(color: string, desk: boolean): Bot {
   return { root, head, armL, armR, eyes, home: new THREE.Vector3(), face: 0, phase: Math.random() * 6, hit, screen };
 }
 
-export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", working = -1, finished = false, className = "", label }: {
-  active?: number; onPick?: (i: number) => void; mode?: "lineup" | "office"; working?: number; finished?: boolean;
+export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", working = -1, finished = false, className = "", label,
+  agent = 0, mood = "idle", tint }: {
+  active?: number; onPick?: (i: number) => void; mode?: "lineup" | "office" | "solo"; working?: number; finished?: boolean;
   className?: string; label?: string;
+  /** solo mode: which agent, what it is doing, and the colour of the glowing tablet it holds */
+  agent?: number; mood?: "idle" | "working" | "done"; tint?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const state = useRef({ active, working, finished, onPick });
-  state.current = { active, working, finished, onPick };
+  const state = useRef({ active, working, finished, onPick, mood, tint });
+  state.current = { active, working, finished, onPick, mood, tint };
 
   useEffect(() => {
     const el = host.current;
@@ -102,6 +105,7 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
       return; // no WebGL: the page still works without the picture
     }
     const office = mode === "office";
+    const solo = mode === "solo";
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -127,9 +131,12 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
     floor.receiveShadow = true;
     scene.add(floor);
 
-    const bots = AGENT_COLORS.map((c, i) => {
+    const cast = solo ? [AGENT_COLORS[agent] ?? AGENT_COLORS[0]] : AGENT_COLORS;
+    const bots = cast.map((c, i) => {
       const b = makeBot(c, office);
-      if (office) {
+      if (solo) {
+        b.home.set(0, 0, 0);
+      } else if (office) {
         const a = (i - 2) * 0.36; // desks on a gentle arc around the viewer
         b.home.set(Math.sin(a) * 5.4, 0, 5.4 - Math.cos(a) * 5.4);
         b.face = -a;
@@ -138,11 +145,33 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
       }
       b.root.position.copy(b.home);
       b.root.rotation.y = b.face;
-      b.hit.forEach((h) => (h.userData.i = i));
+      b.hit.forEach((h) => (h.userData.i = solo ? agent : i));
       scene.add(b.root);
       return b;
     });
     const hitList = bots.flatMap((b) => b.hit);
+
+    // solo: a glowing tablet held in front of the chest, and a head that follows the pointer
+    const tabletMat = new THREE.MeshStandardMaterial({ color: "#0F1626", emissive: new THREE.Color(tint ?? AGENT_COLORS[agent] ?? "#7C4DFF"), emissiveIntensity: 0.25 });
+    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.44, 0.04), tabletMat);
+    const sparks: THREE.Mesh[] = [];
+    if (solo) {
+      tablet.position.set(0, 0.95, 0.62);
+      tablet.rotation.x = -0.35;
+      bots[0].root.add(tablet);
+      for (let k = 0; k < 6; k++) {
+        const sp = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0 }));
+        scene.add(sp);
+        sparks.push(sp);
+      }
+    }
+    const look = new THREE.Vector2();
+    const onWinMove = (ev: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      look.set(THREE.MathUtils.clamp((ev.clientX - (r.left + r.width / 2)) / 500, -1, 1),
+        THREE.MathUtils.clamp((ev.clientY - (r.top + r.height / 3)) / 500, -1, 1));
+    };
+    if (solo) window.addEventListener("pointermove", onWinMove);
 
     const resize = () => {
       const w = el.clientWidth || 1;
@@ -152,9 +181,14 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
       renderer.domElement.style.height = "100%";
       camera.aspect = w / h;
       const half = Math.tan(THREE.MathUtils.degToRad(18));
-      const z = Math.max(6.8, (office ? 4.6 : 4.0) / (half * Math.min(camera.aspect, 1.8)));
-      camera.position.set(0, (office ? 3.4 : 1.6) + z * 0.06, z + (office ? 1.2 : 0));
-      camera.lookAt(0, office ? 1.25 : 1.0, office ? 0.9 : 0);
+      if (solo) {
+        camera.position.set(0, 1.5, 4.6);
+        camera.lookAt(0, 1.0, 0);
+      } else {
+        const z = Math.max(6.8, (office ? 4.6 : 4.0) / (half * Math.min(camera.aspect, 1.8)));
+        camera.position.set(0, (office ? 3.4 : 1.6) + z * 0.06, z + (office ? 1.2 : 0));
+        camera.lookAt(0, office ? 1.25 : 1.0, office ? 0.9 : 0);
+      }
       camera.updateProjectionMatrix();
     };
     const ro = new ResizeObserver(resize);
@@ -197,10 +231,36 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
       raf = requestAnimationFrame(tick);
       if (!visible) return;
       const t = clock.getElapsedTime();
-      const { active: act, working: work, finished: fin } = state.current;
+      const { active: act, working: work, finished: fin, mood: md, tint: tn } = state.current;
       bots.forEach((b, i) => {
-        const over = i === hovered;
-        if (office) {
+        const over = solo ? hovered >= 0 : i === hovered;
+        if (solo) {
+          const busy = md === "working";
+          const done = md === "done";
+          if (tn) tabletMat.emissive.lerp(new THREE.Color(tn), 0.08);
+          tabletMat.emissiveIntensity = busy ? 0.9 + Math.sin(t * 10) * 0.3 : done ? 0.75 : 0.22;
+          const s = over ? 1.06 : 1;
+          b.root.scale.lerp(tmp.set(s, s, s), 0.12);
+          if (!still) {
+            b.root.position.y = done ? Math.abs(Math.sin(t * 4.5)) * 0.28 : Math.sin(t * 2 + b.phase) * 0.04;
+            b.root.rotation.y = THREE.MathUtils.lerp(b.root.rotation.y, look.x * 0.35, 0.06);
+            b.head.rotation.y = THREE.MathUtils.lerp(b.head.rotation.y, busy ? Math.sin(t * 2.2) * 0.12 : look.x * 0.5, 0.1);
+            b.head.rotation.x = THREE.MathUtils.lerp(b.head.rotation.x, busy ? 0.32 + Math.sin(t * 7) * 0.04 : look.y * 0.3, 0.1);
+            // arms hold the tablet; when done or greeted, the right one waves
+            b.armL.rotation.x = THREE.MathUtils.lerp(b.armL.rotation.x, -1.0 + (busy ? Math.sin(t * 16) * 0.15 : 0), 0.15);
+            b.armR.rotation.x = THREE.MathUtils.lerp(b.armR.rotation.x, done || over ? -2.6 : -1.0 + (busy ? Math.sin(t * 16 + 1.5) * 0.15 : 0), 0.15);
+            b.armR.rotation.z = done || over ? 0.25 + Math.sin(t * 9) * 0.35 : 0.25;
+            tablet.rotation.y = busy ? Math.sin(t * 3) * 0.12 : 0;
+            sparks.forEach((sp, k) => {
+              const a = t * (busy ? 2.4 : 1) + (k / sparks.length) * Math.PI * 2;
+              sp.position.set(Math.cos(a) * 0.9, 1.0 + Math.sin(a * 1.7) * 0.35 + b.root.position.y, Math.sin(a) * 0.5 + 0.4);
+              sp.rotation.set(t * 2, t * 3, 0);
+              const m = sp.material as THREE.MeshBasicMaterial;
+              m.opacity = THREE.MathUtils.lerp(m.opacity, busy || done ? 0.9 : 0, 0.08);
+              m.color.copy(tabletMat.emissive);
+            });
+          }
+        } else if (office) {
           const typing = i === work && !fin;
           const s = (typing ? 1.08 : 1) * (over ? 1.06 : 1);
           b.root.scale.lerp(tmp.set(s, s, s), 0.12);
@@ -243,6 +303,7 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
       cv.removeEventListener("pointermove", onMove);
       cv.removeEventListener("pointerleave", onLeave);
       cv.removeEventListener("click", onClick);
+      window.removeEventListener("pointermove", onWinMove);
       const seen = new Set<THREE.Material>();
       scene.traverse((o) => {
         const m = o as THREE.Mesh;
@@ -256,7 +317,7 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
       renderer.dispose();
       cv.remove();
     };
-  }, [mode]);
+  }, [mode, agent]);
 
   return <div ref={host} className={className} role={label ? "img" : undefined} aria-label={label} />;
 }

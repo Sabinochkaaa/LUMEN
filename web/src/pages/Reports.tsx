@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { api, AuditSummary } from "../api";
 import { useT } from "../i18n";
 import ReportLink from "../components/ReportLink";
+import AgentBuddy from "../components/AgentBuddy";
 import { useApp } from "../App";
 import { Empty, ErrorBox, Loading, PageHead, ReadinessBadge, fmtDate, rise, stagger } from "../components/ui";
 
@@ -21,6 +22,25 @@ export default function Reports() {
   return (
     <div>
       <PageHead title={t("rep.title")} sub={t("rep.sub")} />
+      {items && (() => {
+        const last = items[0];
+        const notReady = items.filter((x) => x.readiness === "NOT READY").length;
+        const avg = items.length ? Math.round(items.reduce((a, x) => a + (x.quality_index || 0), 0) / items.length) : 0;
+        return (
+          <AgentBuddy agent={4} mood={last ? "done" : "idle"}
+            say={last ? t("buddy.repSay", { n: items.length, title: last.document_title || last.document_name, q: last.quality_index }) : t("buddy.repEmpty")}
+            onPick={() => window.dispatchEvent(new Event("lumen:support"))}>
+            {last && (
+              <div className="flex flex-wrap gap-2 text-[12.5px]">
+                <span className="rounded-full border border-line px-2.5 py-1">{t("buddy.repTotal", { n: items.length })}</span>
+                <span className="rounded-full border border-line px-2.5 py-1">{t("buddy.repAvg", { n: avg })}</span>
+                <span className="rounded-full border border-line px-2.5 py-1 text-bad">{t("buddy.repNot", { n: notReady })}</span>
+                <span className="meta self-center">{t("buddy.repHint")}</span>
+              </div>
+            )}
+          </AgentBuddy>
+        );
+      })()}
       {error && <div className="mb-4"><ErrorBox error={error} /></div>}
       {items && !items.length && <Empty title={t("rep.emptyT")} text={t("rep.emptyD")} action={<Link to="/new" className="btn-primary">{t("nav.new")}</Link>} />}
       <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-3">

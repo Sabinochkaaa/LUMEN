@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Clock, Download, FileText, FileUp, Languages, Loader2, Trash2 } from "lucide-react";
 import { api, TranslationResult } from "../api";
 import { LANGS, useT } from "../i18n";
+import AgentBuddy from "../components/AgentBuddy";
 import { CopyButton, ErrorBox, PageHead } from "../components/ui";
 
 /** One finished translation, kept in this browser so the user sees what they translated before. */
@@ -76,6 +77,9 @@ function Overlay({ src, overlay, show }: { src: string; overlay: NonNullable<Tra
 
 type View = "overlay" | "text" | "original" | "side";
 
+/** the translator's tablet glows in the colour of the target language */
+const TINT: Record<string, string> = { ru: "#2F6BFF", kk: "#00AFCA", en: "#7C4DFF" };
+
 export default function Translate() {
   const { t, lang } = useT();
   const [file, setFile] = useState<File | null>(null);
@@ -87,7 +91,9 @@ export default function Translate() {
   const [cur, setCur] = useState<Entry | null>(() => history[0] ?? null);
   const [view, setView] = useState<View>(() => (history[0]?.res.overlay && history[0]?.image ? "overlay" : "text"));
   const [error, setError] = useState("");
+  const [fresh, setFresh] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (!fresh) return; const id = setTimeout(() => setFresh(false), 4000); return () => clearTimeout(id); }, [fresh]);
 
   const pick = async (f: File | null) => {
     setFile(f); setError("");
@@ -103,6 +109,7 @@ export default function Translate() {
       setView(res.overlay && preview ? "overlay" : "text");
       const next = [e, ...history.filter((h) => !(h.name === e.name && h.target === e.target))].slice(0, MAX);
       setHistory(next); saveHistory(next);
+      setFresh(true);
     } catch (err: any) { setError(err.message); } finally { setBusy(false); }
   };
   const open = (e: Entry) => { setCur(e); setView(e.res.overlay && e.image ? "overlay" : "text"); };
@@ -123,6 +130,14 @@ export default function Translate() {
   return (
     <div>
       <PageHead title={t("tr.title")} sub={t("tr.sub")} />
+      <AgentBuddy agent={3} tint={TINT[target]}
+        mood={busy ? "working" : fresh ? "done" : "idle"}
+        say={busy ? t("buddy.trBusy", { lang: langLabel(target) })
+          : error ? t("buddy.trError")
+          : fresh && cur ? t("buddy.trDone", { lang: langLabel(cur.target) })
+          : file ? t("buddy.trPicked", { name: file.name, lang: langLabel(target) })
+          : t("buddy.trIdle")}
+        onPick={() => input.current?.click()} />
       <div className="grid gap-6 lg:grid-cols-[380px_1fr] lg:grid-rows-[auto_1fr]">
           <div className="card flex min-w-0 flex-col gap-4 p-6 lg:col-start-1 lg:row-start-1">
             <button onClick={() => input.current?.click()} className="group flex flex-col items-center overflow-hidden rounded-xl border-2 border-dashed border-line px-4 py-6 text-center transition-colors hover:border-signal/50">
