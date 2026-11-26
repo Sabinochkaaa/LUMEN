@@ -1,0 +1,4079 @@
+{
+ "id": "8c2f01c81425",
+ "passport": {
+  "document_name": "requirements.md",
+  "document_title": "Уведомление о расходах по карте",
+  "document_format": "markdown",
+  "document_sha256": "e7dae55e5453a250d93e335f5ff9c7f775f4457ccddd333f4a67e47b20d74381",
+  "analysed_at": "2026-11-26T14:12:42+05:00",
+  "provider": "offline",
+  "model": "rules-only",
+  "agent_version": "1.0.0",
+  "agent_commit": "223a733",
+  "mode": "offline",
+  "duration_s": 0.0,
+  "llm_calls": 0,
+  "llm_failures": 0,
+  "tokens_in": 0,
+  "tokens_out": 0
+ },
+ "requirements": [
+  {
+   "id": "REQ-001",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Цели",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 23,
+    "line_end": 23,
+    "page": null,
+    "section": "Цели"
+   },
+   "quote": "Дать клиенту возможность узнать о достижении личного бюджета в момент покупки.",
+   "summary": "Дать клиенту возможность узнать о достижении личного бюджета в момент покупки.",
+   "type": "business_goal",
+   "context": []
+  },
+  {
+   "id": "REQ-002",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Архитектура решения",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 26,
+    "line_end": 26,
+    "page": null,
+    "section": "Архитектура решения"
+   },
+   "quote": "Мобильное приложение → сервис настроек. Карточный процессинг → учёт расходов → сервис push.",
+   "summary": "Мобильное приложение → сервис настроек.",
+   "type": "architecture",
+   "context": []
+  },
+  {
+   "id": "REQ-003",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Дизайн процесса UI",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 29,
+    "line_end": 29,
+    "page": null,
+    "section": "Дизайн процесса UI"
+   },
+   "quote": "Карты → Расходы → Уведомления. На экране видны переключатель, поле «Порог, ₸», сумма за месяц и кнопка «Сохранить». При ошибке ввода сообщение появляется под полем.",
+   "summary": "Карты → Расходы → Уведомления.",
+   "type": "ui",
+   "context": []
+  },
+  {
+   "id": "REQ-004",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Требования к изменениям / BPMN схема процесса",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 34,
+    "line_end": 34,
+    "page": null,
+    "section": "BPMN схема процесса"
+   },
+   "quote": "Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.",
+   "summary": "Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.",
+   "type": "architecture",
+   "context": []
+  },
+  {
+   "id": "REQ-005",
+   "source_id": "Ф-1",
+   "source_id_kind": "explicit",
+   "section": "Часть A. Новый функционал / Требования к изменениям / Функциональные требования",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 37,
+    "line_end": 37,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "quote": "Ф-1. Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно. По умолчанию уведомление выключено.",
+   "summary": "Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.",
+   "type": "functional",
+   "context": []
+  },
+  {
+   "id": "REQ-006",
+   "source_id": "Ф-2",
+   "source_id_kind": "explicit",
+   "section": "Часть A. Новый функционал / Требования к изменениям / Функциональные требования",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 38,
+    "line_end": 38,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "quote": "Ф-2. Месяц определяется по дате совершения покупки в Алматы. В расходы входят проведённые покупки. Возврат уменьшает расходы месяца исходной покупки. Переводы и снятие наличных исключаются.",
+   "summary": "Месяц определяется по дате совершения покупки в Алматы.",
+   "type": "functional",
+   "context": []
+  },
+  {
+   "id": "REQ-007",
+   "source_id": "Ф-3",
+   "source_id_kind": "explicit",
+   "section": "Часть A. Новый функционал / Требования к изменениям / Функциональные требования",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 39,
+    "line_end": 39,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "quote": "Ф-3. Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push. На карту приходится максимум один такой push за календарный месяц.",
+   "summary": "Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push.",
+   "type": "functional",
+   "context": []
+  },
+  {
+   "id": "REQ-008",
+   "source_id": "Ф-4",
+   "source_id_kind": "explicit",
+   "section": "Часть A. Новый функционал / Требования к изменениям / Функциональные требования",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 40,
+    "line_end": 40,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "quote": "Ф-4. При изменении порога накопленная сумма сохраняется. Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.",
+   "summary": "При изменении порога накопленная сумма сохраняется.",
+   "type": "functional",
+   "context": []
+  },
+  {
+   "id": "REQ-009",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Sequence Diagram",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 43,
+    "line_end": 43,
+    "page": null,
+    "section": "Sequence Diagram"
+   },
+   "quote": "Процессинг → сервис расходов: проведена покупка. Сервис расходов → настройки: получить порог карты. Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.",
+   "summary": "Процессинг → сервис расходов: проведена покупка.",
+   "type": "architecture",
+   "context": []
+  },
+  {
+   "id": "REQ-010",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Нефункциональные требования",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 46,
+    "line_end": 46,
+    "page": null,
+    "section": "Нефункциональные требования"
+   },
+   "quote": "Сервис передаёт push на отправку в течение минуты после получения события.",
+   "summary": "Сервис передаёт push на отправку в течение минуты после получения события.",
+   "type": "nonfunctional",
+   "context": []
+  },
+  {
+   "id": "REQ-011",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Требования к данным",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 49,
+    "line_end": 49,
+    "page": null,
+    "section": "Требования к данным"
+   },
+   "quote": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "summary": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "type": "data",
+   "context": []
+  },
+  {
+   "id": "REQ-012",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть A. Новый функционал / Требования к интеграции",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 52,
+    "line_end": 52,
+    "page": null,
+    "section": "Требования к интеграции"
+   },
+   "quote": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.",
+   "summary": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API».",
+   "type": "integration",
+   "context": []
+  },
+  {
+   "id": "REQ-013",
+   "source_id": "Критерии приемки, стр. табл. 1",
+   "source_id_kind": "derived",
+   "section": "Часть A. Новый функционал / Критерии приемки",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 63,
+    "line_end": 63,
+    "page": null,
+    "section": "Критерии приемки"
+   },
+   "quote": "Исходные условия: Расходы 48 500 ₸, порог 50 000 ₸; Действие: Провести покупку на 1 500 ₸; Ожидаемый результат: Итог 50 000 ₸ и один push",
+   "summary": "Исходные условия: Расходы 48 500 ₸, порог 50 000 ₸; Действие: Провести покупку на 1 500 ₸; Ожидаемый результат: Итог 50…",
+   "type": "acceptance",
+   "context": []
+  },
+  {
+   "id": "REQ-014",
+   "source_id": "Критерии приемки, стр. табл. 2",
+   "source_id_kind": "derived",
+   "section": "Часть A. Новый функционал / Критерии приемки",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 64,
+    "line_end": 64,
+    "page": null,
+    "section": "Критерии приемки"
+   },
+   "quote": "Исходные условия: Покупка 31 января в 23:58 на 4 000 ₸; Действие: Провести 1 февраля в 00:03 по Алматы; Ожидаемый результат: Февральский счётчик вырос на 4 000 ₸",
+   "summary": "Исходные условия: Покупка 31 января в 23:58 на 4 000 ₸; Действие: Провести 1 февраля в 00:03 по Алматы; Ожидаемый резул…",
+   "type": "acceptance",
+   "context": []
+  },
+  {
+   "id": "REQ-015",
+   "source_id": "Критерии приемки, стр. табл. 3",
+   "source_id_kind": "derived",
+   "section": "Часть A. Новый функционал / Критерии приемки",
+   "part": "Часть A. Новый функционал",
+   "loc": {
+    "line_start": 65,
+    "line_end": 65,
+    "page": null,
+    "section": "Критерии приемки"
+   },
+   "quote": "Исходные условия: Расходы 19 900 ₸, порог 20 000 ₸; Действие: Перевести 500 ₸; Ожидаемый результат: Счётчик показывает 19 900 ₸",
+   "summary": "Исходные условия: Расходы 19 900 ₸, порог 20 000 ₸; Действие: Перевести 500 ₸; Ожидаемый результат: Счётчик показывает…",
+   "type": "acceptance",
+   "context": []
+  },
+  {
+   "id": "REQ-016",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть B. REST API",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 97,
+    "line_end": 97,
+    "page": null,
+    "section": "Часть B. REST API"
+   },
+   "quote": "Дочерний документ части A: «Уведомление о расходах по карте — REST API».",
+   "summary": "Дочерний документ части A: «Уведомление о расходах по карте — REST API».",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-017",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть B. REST API / Общие параметры",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 103,
+    "line_end": 114,
+    "page": null,
+    "section": "Общие параметры"
+   },
+   "quote": "Description: Сохранение порога. Функциональные требования: чтение порога\nREST type: GET\nAuthorization: Bearer, сессия владельца карты\nController: AlertsController\nURL type: Dev / Prod\nRequest URL: Dev: /alerts/saveLimit . Prod: —\nCURL: curl -G \"$BASE/alerts/saveLimit\" -H \"Authorization: Bearer $TOKEN\" --data 'cardId=demo-42&amount=50000&enabled=1'\nSwagger: —\nGitlab project: Учебный контур\nFramework: Учебный контур\nAuthor: Школа тестирования\nDeveloper: Команда практикума",
+   "summary": "Таблица «Общие параметры»: Description, REST type, Authorization, Controller, URL type, Request URL",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-018",
+   "source_id": "Логика работы метода, п. 1",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Логика работы метода",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 117,
+    "line_end": 117,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "quote": "Проверить пользовательскую сессию.",
+   "summary": "Проверить пользовательскую сессию.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-019",
+   "source_id": "Логика работы метода, п. 2",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Логика работы метода",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 118,
+    "line_end": 118,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "quote": "Проверить принадлежность карты клиенту.",
+   "summary": "Проверить принадлежность карты клиенту.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-020",
+   "source_id": "Логика работы метода, п. 3",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Логика работы метода",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 119,
+    "line_end": 119,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "quote": "Проверить сумму и переключатель.",
+   "summary": "Проверить сумму и переключатель.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-021",
+   "source_id": "Логика работы метода, п. 4",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Логика работы метода",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 120,
+    "line_end": 120,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "quote": "Заменить настройку и вернуть результат сохранения.",
+   "summary": "Заменить настройку и вернуть результат сохранения.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-022",
+   "source_id": "Логика работы метода, п. 5",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Логика работы метода",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 121,
+    "line_end": 121,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "quote": "При отклонении суммы вернуть прежнее состояние и результат ERROR.",
+   "summary": "При отклонении суммы вернуть прежнее состояние и результат ERROR.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-023",
+   "source_id": "Особые правила, п. 1",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Особые правила",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 124,
+    "line_end": 124,
+    "page": null,
+    "section": "Особые правила"
+   },
+   "quote": "Целое число тенге, обе границы включены.",
+   "summary": "Целое число тенге, обе границы включены.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-024",
+   "source_id": "Особые правила, п. 2",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Особые правила",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 125,
+    "line_end": 125,
+    "page": null,
+    "section": "Особые правила"
+   },
+   "quote": "Повторное сохранение заменяет действующую настройку.",
+   "summary": "Повторное сохранение заменяет действующую настройку.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-025",
+   "source_id": "Особые правила, п. 3",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Особые правила",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 126,
+    "line_end": 126,
+    "page": null,
+    "section": "Особые правила"
+   },
+   "quote": "Изменение порога сохраняет накопленные расходы.",
+   "summary": "Изменение порога сохраняет накопленные расходы.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-026",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть B. REST API / Схема",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 129,
+    "line_end": 131,
+    "page": null,
+    "section": "Схема"
+   },
+   "quote": "Приложение → AlertsController → хранилище настроек → AlertsController → приложение.",
+   "summary": "Приложение → AlertsController → хранилище настроек → AlertsController → приложение.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-027",
+   "source_id": "cardId",
+   "source_id_kind": "explicit",
+   "section": "Часть B. REST API / Параметры запроса / Query-параметры",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 142,
+    "line_end": 142,
+    "page": null,
+    "section": "Query-параметры"
+   },
+   "quote": "Parameter: cardId; Format: string; Size: 1–64; Mandatory: Да; Logic: Карта клиента; Description: Идентификатор карты; DB field: card_id",
+   "summary": "Parameter: cardId; Format: string; Size: 1–64; Mandatory: Да; Logic: Карта клиента; Description: Идентификатор карты; D…",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-028",
+   "source_id": "amount",
+   "source_id_kind": "explicit",
+   "section": "Часть B. REST API / Параметры запроса / Query-параметры",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 143,
+    "line_end": 143,
+    "page": null,
+    "section": "Query-параметры"
+   },
+   "quote": "Parameter: amount; Format: integer; Size: 32 bit; Mandatory: Да; Logic: 1 000–1 000 000; Description: Порог в тенге; DB field: limit_kzt",
+   "summary": "Parameter: amount; Format: integer; Size: 32 bit; Mandatory: Да; Logic: 1 000–1 000 000; Description: Порог в тенге; DB…",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-029",
+   "source_id": "enabled",
+   "source_id_kind": "explicit",
+   "section": "Часть B. REST API / Параметры запроса / Query-параметры",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 144,
+    "line_end": 144,
+    "page": null,
+    "section": "Query-параметры"
+   },
+   "quote": "Parameter: enabled; Format: integer; Size: 1 знак; Mandatory: Да; Logic: 0 или 1; Description: Признак включения; DB field: enabled",
+   "summary": "Parameter: enabled; Format: integer; Size: 1 знак; Mandatory: Да; Logic: 0 или 1; Description: Признак включения; DB fi…",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-030",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть B. REST API / Параметры запроса / Request body",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 147,
+    "line_end": 147,
+    "page": null,
+    "section": "Request body"
+   },
+   "quote": "Content-Type: application/json .",
+   "summary": "Content-Type: application/json .",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-031",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть B. REST API / Параметры запроса / Request body",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 148,
+    "line_end": 148,
+    "page": null,
+    "section": "Request body"
+   },
+   "quote": "Тело не используется.",
+   "summary": "Тело не используется.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-032",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть B. REST API / Ответ",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 151,
+    "line_end": 151,
+    "page": null,
+    "section": "Ответ"
+   },
+   "quote": "Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.",
+   "summary": "Если результат 200 или 201 — успешный.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-033",
+   "source_id": "result",
+   "source_id_kind": "explicit",
+   "section": "Часть B. REST API / Ответ",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 155,
+    "line_end": 155,
+    "page": null,
+    "section": "Ответ"
+   },
+   "quote": "Parameter: result; Format: string; Logic: OK / ERROR; Description: Исход сохранения; DB field: —",
+   "summary": "Parameter: result; Format: string; Logic: OK / ERROR; Description: Исход сохранения; DB field: —",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-034",
+   "source_id": "amount",
+   "source_id_kind": "explicit",
+   "section": "Часть B. REST API / Ответ",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 156,
+    "line_end": 156,
+    "page": null,
+    "section": "Ответ"
+   },
+   "quote": "Parameter: amount; Format: string; Logic: При успехе; Description: Порог в тенге; DB field: limit_kzt",
+   "summary": "Parameter: amount; Format: string; Logic: При успехе; Description: Порог в тенге; DB field: limit_kzt",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-035",
+   "source_id": "enabled",
+   "source_id_kind": "explicit",
+   "section": "Часть B. REST API / Ответ",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 157,
+    "line_end": 157,
+    "page": null,
+    "section": "Ответ"
+   },
+   "quote": "Parameter: enabled; Format: string; Logic: «0» или «1»; Description: Признак включения; DB field: enabled",
+   "summary": "Parameter: enabled; Format: string; Logic: «0» или «1»; Description: Признак включения; DB field: enabled",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-036",
+   "source_id": "message",
+   "source_id_kind": "explicit",
+   "section": "Часть B. REST API / Ответ",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 158,
+    "line_end": 158,
+    "page": null,
+    "section": "Ответ"
+   },
+   "quote": "Parameter: message; Format: string; Logic: При ошибке; Description: Описание ошибки; DB field: —",
+   "summary": "Parameter: message; Format: string; Logic: При ошибке; Description: Описание ошибки; DB field: —",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-037",
+   "source_id": "HTTP 200",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Статусы",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 162,
+    "line_end": 162,
+    "page": null,
+    "section": "Статусы"
+   },
+   "quote": "200. Ответ в случае успешного выполнения метода.",
+   "summary": "200. Ответ в случае успешного выполнения метода.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-038",
+   "source_id": "HTTP 400",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Статусы",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 163,
+    "line_end": 163,
+    "page": null,
+    "section": "Статусы"
+   },
+   "quote": "400. Ответ в случае, если параметры запроса заполнены неверно.",
+   "summary": "400. Ответ в случае, если параметры запроса заполнены неверно.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-039",
+   "source_id": "HTTP 401",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Статусы / 200. Successful — Created",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 174,
+    "line_end": 174,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "quote": "401. Ответ в случае, если запрос выполнен без необходимой авторизации.",
+   "summary": "401. Ответ в случае, если запрос выполнен без необходимой авторизации.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-040",
+   "source_id": "HTTP 403",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Статусы / 200. Successful — Created",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 175,
+    "line_end": 175,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "quote": "403. Ответ в случае, если на указанный ресурс доступ запрещен.",
+   "summary": "403. Ответ в случае, если на указанный ресурс доступ запрещен.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-041",
+   "source_id": "HTTP 500",
+   "source_id_kind": "derived",
+   "section": "Часть B. REST API / Статусы / 200. Successful — Created",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 176,
+    "line_end": 176,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "quote": "500. Ответ в случае, если произошла внутренняя ошибка сервера.",
+   "summary": "500. Ответ в случае, если произошла внутренняя ошибка сервера.",
+   "type": "api",
+   "context": []
+  },
+  {
+   "id": "REQ-042",
+   "source_id": null,
+   "source_id_kind": "none",
+   "section": "Часть B. REST API / Статусы / 403. Unsuccessful — Forbidden",
+   "part": "Часть B. REST API",
+   "loc": {
+    "line_start": 189,
+    "line_end": 189,
+    "page": null,
+    "section": "403. Unsuccessful — Forbidden"
+   },
+   "quote": "Для чужой карты возвращается 404, как и для отсутствующей карты.",
+   "summary": "Для чужой карты возвращается 404, как и для отсутствующей карты.",
+   "type": "api",
+   "context": [
+    "404",
+    "{\"message\":\"Карта не найдена\"}"
+   ]
+  }
+ ],
+ "assessments": [
+  {
+   "req_id": "REQ-001",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-002",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-003",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "issue",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 97.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-004",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-005",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-006",
+   "criteria": {
+    "unambiguous": "issue",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "issue",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 94.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-007",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-008",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 98.5,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-009",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "issue",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 97.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-010",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "issue",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 92.0,
+   "verdict": "warn",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-011",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "issue",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 92.0,
+   "verdict": "warn",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-012",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-013",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-014",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-015",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-016",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-017",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "issue",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "issue",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 64.0,
+   "verdict": "fail",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-018",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-019",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-020",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-021",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-022",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-023",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-024",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-025",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 98.5,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-026",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-027",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-028",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "issue",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 96.0,
+   "verdict": "warn",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-029",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-030",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "issue",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 98.5,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-031",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "issue",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 98.5,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-032",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 92.0,
+   "verdict": "warn",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-033",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-034",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "issue",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 96.0,
+   "verdict": "warn",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-035",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-036",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "ok",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-037",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-038",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-039",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-040",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-041",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "unknown",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 100.0,
+   "verdict": "pass",
+   "summary_llm": ""
+  },
+  {
+   "req_id": "REQ-042",
+   "criteria": {
+    "unambiguous": "unknown",
+    "complete": "unknown",
+    "verifiable": "unknown",
+    "consistent": "issue",
+    "necessary": "unknown",
+    "singular": "unknown",
+    "feasible": "unknown",
+    "traceable": "issue",
+    "correct": "unknown",
+    "implementation_free": "unknown",
+    "inputs_defined": "unknown",
+    "outputs_defined": "unknown",
+    "errors_defined": "unknown",
+    "acceptance": "unknown",
+    "boundaries": "unknown"
+   },
+   "score": 84.0,
+   "verdict": "warn",
+   "summary_llm": ""
+  }
+ ],
+ "findings": [
+  {
+   "id": "F-001",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "set_validatable",
+   "severity": "HIGH",
+   "title": "Раздел «Тестирование требований» не заполнен",
+   "quote": "заполняются тестировщиками",
+   "loc": {
+    "line_start": 57,
+    "line_end": 57,
+    "page": null,
+    "section": "Тестирование требований"
+   },
+   "problem": "Вместо содержимого раздела — заглушка «заполняются тестировщиками».",
+   "risk": "Отсутствуют данные, необходимые для разработки или приёмки; набор нельзя валидировать.",
+   "fix": "Заполнить раздел «Тестирование требований» до передачи в разработку.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "SET-PLACEHOLDER",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Able to be validated",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-002",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-017"
+   ],
+   "criterion": "correct",
+   "severity": "HIGH",
+   "title": "Изменяющая операция объявлена через GET",
+   "quote": "REST type | GET",
+   "loc": {
+    "line_start": 104,
+    "line_end": 104,
+    "page": null,
+    "section": "Общие параметры"
+   },
+   "problem": "Метод сохраняет состояние, но объявлен как GET (безопасный и идемпотентный по RFC 9110).",
+   "risk": "Кэширование/предзагрузка прокси и браузеров может повторно изменить настройку; параметры попадают в URL и логи; повышается риск CSRF.",
+   "fix": "Использовать PUT (замена настройки) или POST, параметры передавать в теле JSON.",
+   "rewrite": "REST type: PUT; Request URL: /alerts/limit; тело: {\"cardId\", \"amount\", \"enabled\"}.",
+   "source": "rule",
+   "rule_id": "API-GET-MUTATION",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Correct; IEEE 830 §4.3.1",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-003",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "consistent",
+   "severity": "HIGH",
+   "title": "Ошибка бизнес-валидации возвращается со статусом 200",
+   "quote": "{\"result\":\"ERROR\",\"message\":\"Проверьте сумму\"}",
+   "loc": {
+    "line_start": 170,
+    "line_end": 172,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "problem": "В примерах успешного ответа 200 приведено тело с результатом ERROR.",
+   "risk": "Клиенты, проверяющие только HTTP-код, сочтут отклонённое сохранение успешным; мониторинг ошибок не увидит отказов.",
+   "fix": "Возвращать ошибку валидации с 400/422 и телом {\"message\": …}; 200 — только при успехе.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-SUCCESS-WITH-ERROR",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-004",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-010"
+   ],
+   "criterion": "verifiable",
+   "severity": "MEDIUM",
+   "title": "Временное ограничение без профиля нагрузки и доли запросов",
+   "quote": "Сервис передаёт push на отправку в течение минуты после получения события.",
+   "loc": {
+    "line_start": 46,
+    "line_end": 46,
+    "page": null,
+    "section": "Нефункциональные требования"
+   },
+   "problem": "Не указаны нагрузка, перцентиль и точки начала/окончания измерения.",
+   "risk": "Требование «выполнено» на одном событии и нарушено под пиковой нагрузкой.",
+   "fix": "Добавить: при нагрузке N событий/с, для 95–99% событий, время от T1 (получение) до T2 (передача).",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-NFR-PROFILE",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Verifiable; IEEE 830 §4.3.6",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-005",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-011"
+   ],
+   "criterion": "consistent",
+   "severity": "MEDIUM",
+   "title": "Смешение денежных единиц (тиын и тенге)",
+   "quote": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "loc": {
+    "line_start": 49,
+    "line_end": 49,
+    "page": null,
+    "section": "Требования к данным"
+   },
+   "problem": "В одном требовании величины заданы в разных единицах: тиын и тенге.",
+   "risk": "Ошибка масштаба ×100 при сравнении суммы с порогом — ложные или пропущенные уведомления.",
+   "fix": "Хранить и сравнивать все суммы в одной минимальной единице (тиын), явно описать преобразование для отображения.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-UNITS",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-006",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "modifiable",
+   "severity": "MEDIUM",
+   "title": "Версия и дата документа не зафиксированы",
+   "quote": "Документ (версия/дата) в источнике не заполнен. Пункты чек-листа приведены как в шаблоне, отметки не проставлены.",
+   "loc": {
+    "line_start": 68,
+    "line_end": 68,
+    "page": null,
+    "section": "Ревью требований"
+   },
+   "problem": "Документ не имеет версии/даты.",
+   "risk": "Невозможно сослаться на согласованную редакцию; отчёт проверки нельзя привязать к версии.",
+   "fix": "Добавить лист изменений: версия, дата, автор, описание изменений.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "SET-VERSION",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "IEEE 830 §4.3.7",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-007",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "set_validatable",
+   "severity": "MEDIUM",
+   "title": "Чек-лист ревью не заполнен (14 пунктов с шаблонными «Да / Нет»)",
+   "quote": "Техническое требование зафиксировано и покрывает бизнес-требование | Да / Нет | Да / Нет",
+   "loc": {
+    "line_start": 72,
+    "line_end": 85,
+    "page": null,
+    "section": "Ревью требований"
+   },
+   "problem": "Пункты чек-листа ревью оставлены в шаблонном виде, решения по ним не приняты.",
+   "risk": "Нет подтверждения тестируемости, отката, согласования ИБ и архитектуры.",
+   "fix": "Проставить отметки по каждому пункту и приложить подтверждения (ссылки, ФИО, даты).",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "SET-CHECKLIST",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Able to be validated",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-008",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "set_traceable",
+   "severity": "MEDIUM",
+   "title": "Блок согласующих пуст",
+   "quote": "| | | |",
+   "loc": {
+    "line_start": 91,
+    "line_end": 91,
+    "page": null,
+    "section": "Блок согласующих"
+   },
+   "problem": "Не указаны подразделения и ответственные за согласование.",
+   "risk": "Невозможно подтвердить, что изменения согласованы с владельцами систем и ИБ.",
+   "fix": "Указать подразделения, ФИО и дату согласования.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "SET-APPROVERS",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "IEEE 830 §4.3.8",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-009",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-017"
+   ],
+   "criterion": "complete",
+   "severity": "MEDIUM",
+   "title": "Не заполнено значение «Prod»",
+   "quote": "Prod: —",
+   "loc": {
+    "line_start": 108,
+    "line_end": 108,
+    "page": null,
+    "section": "Общие параметры"
+   },
+   "problem": "Поле «Prod» оставлено пустым (прочерк).",
+   "risk": "Исполнитель не получит необходимые данные; интеграция/выпуск будут заблокированы.",
+   "fix": "Заполнить «Prod» или явно указать «не применимо» с обоснованием.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-EMPTY-VALUE",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-010",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-017"
+   ],
+   "criterion": "complete",
+   "severity": "MEDIUM",
+   "title": "Пустое поле контракта «swagger»",
+   "quote": "Swagger | —",
+   "loc": {
+    "line_start": 110,
+    "line_end": 110,
+    "page": null,
+    "section": "Общие параметры"
+   },
+   "problem": "Поле «swagger» не заполнено.",
+   "risk": "Неполный контракт: потребители API не смогут интегрироваться или сверить реализацию.",
+   "fix": "Заполнить «swagger» или указать «не применимо» с причиной.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-EMPTY-FIELD",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-011",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-028",
+    "REQ-034"
+   ],
+   "criterion": "consistent",
+   "severity": "MEDIUM",
+   "title": "Параметр «amount» имеет разные типы: integer, string",
+   "quote": "amount | integer | 32 bit | Да | 1 000–1 000 000 | Порог в тенге | limit_kzt",
+   "loc": {
+    "line_start": 143,
+    "line_end": 143,
+    "page": null,
+    "section": "Query-параметры"
+   },
+   "problem": "«amount» описан как integer (REQ-028) и string (REQ-034).",
+   "risk": "Ошибки сериализации/парсинга, потеря точности сумм, разная валидация на клиенте и сервере.",
+   "fix": "Определить единый тип «amount» в запросе и ответе (для денег — integer в минимальных единицах).",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-TYPE-MISMATCH",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-012",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-032"
+   ],
+   "criterion": "integration_contract",
+   "severity": "MEDIUM",
+   "title": "Статус 201 упоминается, но не описан в перечне статусов",
+   "quote": "Если результат 200 или 201 — успешный.",
+   "loc": {
+    "line_start": 151,
+    "line_end": 151,
+    "page": null,
+    "section": "Ответ"
+   },
+   "problem": "Текст ссылается на код 201, однако в разделе статусов нет его условия и тела ответа.",
+   "risk": "Клиент и тестировщики не знают, когда возникает этот код и что в нём приходит.",
+   "fix": "Описать 201 в перечне статусов (условие, пример тела) или убрать упоминание.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-UNDEFINED-STATUS",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-013",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-042"
+   ],
+   "criterion": "integration_contract",
+   "severity": "MEDIUM",
+   "title": "Статус 404 используется, но не описан в перечне статусов",
+   "quote": "Для чужой карты возвращается 404, как и для отсутствующей карты.",
+   "loc": {
+    "line_start": 189,
+    "line_end": 189,
+    "page": null,
+    "section": "403. Unsuccessful — Forbidden"
+   },
+   "problem": "Текст ссылается на код 404, которого нет в разделе статусов.",
+   "risk": "Клиент не обработает код; тестировщики не знают ожидаемого тела ответа.",
+   "fix": "Добавить 404 в перечень статусов с условием и примером тела.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-UNDEFINED-STATUS",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-014",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-042"
+   ],
+   "criterion": "consistent",
+   "severity": "MEDIUM",
+   "title": "Раздел статуса 403 описывает возврат 404",
+   "quote": "Для чужой карты возвращается 404, как и для отсутствующей карты.",
+   "loc": {
+    "line_start": 189,
+    "line_end": 189,
+    "page": null,
+    "section": "403. Unsuccessful — Forbidden"
+   },
+   "problem": "В разделе «403. Unsuccessful — Forbidden» указано, что возвращается 404.",
+   "risk": "Неясно, когда возникает статус из заголовка; противоречивый контракт.",
+   "fix": "Определить условия для 403 и 404 раздельно или удалить неиспользуемый.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-STATUS-SECTION",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-015",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "ranked",
+   "severity": "MEDIUM",
+   "title": "Требования не ранжированы по важности/стабильности",
+   "quote": "",
+   "loc": null,
+   "problem": "Ни для одного из 42 требований не указан приоритет или стабильность.",
+   "risk": "При ограничении сроков невозможно согласованно решить, что реализовать первым.",
+   "fix": "Добавить атрибут приоритета (например, MoSCoW) и стабильности к каждому требованию.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "SET-RANK",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "IEEE 830 §4.3.5",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-016",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "set_traceable",
+   "severity": "MEDIUM",
+   "title": "31 из 42 требований без собственных идентификаторов",
+   "quote": "",
+   "loc": null,
+   "problem": "Идентификаторы есть только у части требований; остальные описаны прозой/таблицами (разделы: 200. Successful — Created, 403. Unsuccessful — Forbidden, BPMN схема процесса, Request body, Sequence Diagram, Архитектура решения, Дизайн процесса UI, Критерии приемки).",
+   "risk": "Невозможно однозначно ссылаться на требования в задачах, тестах и согласованиях.",
+   "fix": "Присвоить уникальные идентификаторы всем требованиям (НФ-, Д-, И-, API-…).",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "SET-IDS",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "IEEE 830 §4.3.8",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-017",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-003"
+   ],
+   "criterion": "singular",
+   "severity": "LOW",
+   "title": "Неатомарное требование (3 утверждения)",
+   "quote": "Карты → Расходы → Уведомления. На экране видны переключатель, поле «Порог, ₸», сумма за месяц и кнопка «Сохранить». При ошибке ввода сообщение появляется под полем.",
+   "loc": {
+    "line_start": 29,
+    "line_end": 29,
+    "page": null,
+    "section": "Дизайн процесса UI"
+   },
+   "problem": "В одном пункте объединены 3 самостоятельных утверждения.",
+   "risk": "Сложно трассировать к тестам и частично принимать; изменения затрагивают всё сразу.",
+   "fix": "Разбить на отдельные пронумерованные требования, по одному проверяемому утверждению.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-ATOMIC",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Singular",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-018",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-006"
+   ],
+   "criterion": "singular",
+   "severity": "LOW",
+   "title": "Неатомарное требование (4 утверждения)",
+   "quote": "Ф-2. Месяц определяется по дате совершения покупки в Алматы. В расходы входят проведённые покупки. Возврат уменьшает расходы месяца исходной покупки. Переводы и снятие наличных исключаются.",
+   "loc": {
+    "line_start": 38,
+    "line_end": 38,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "В одном пункте объединены 4 самостоятельных утверждения.",
+   "risk": "Сложно трассировать к тестам и частично принимать; изменения затрагивают всё сразу.",
+   "fix": "Разбить на отдельные пронумерованные требования, по одному проверяемому утверждению.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-ATOMIC",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Singular",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-019",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-006"
+   ],
+   "criterion": "unambiguous",
+   "severity": "LOW",
+   "title": "Часовой пояс задан городом, без смещения UTC",
+   "quote": "Месяц определяется по дате совершения покупки в Алматы.",
+   "loc": {
+    "line_start": 38,
+    "line_end": 38,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Граница суток/месяца привязана к городу, но не указано смещение UTC и источник времени.",
+   "risk": "Покупки около полуночи попадут не в тот месяц при расхождении часовых поясов серверов.",
+   "fix": "Указать часовой пояс явно (например, UTC+5, IANA Asia/Almaty) и источник метки времени события.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TZ",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-020",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-009"
+   ],
+   "criterion": "singular",
+   "severity": "LOW",
+   "title": "Неатомарное требование (3 утверждения)",
+   "quote": "Процессинг → сервис расходов: проведена покупка. Сервис расходов → настройки: получить порог карты. Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.",
+   "loc": {
+    "line_start": 43,
+    "line_end": 43,
+    "page": null,
+    "section": "Sequence Diagram"
+   },
+   "problem": "В одном пункте объединены 3 самостоятельных утверждения.",
+   "risk": "Сложно трассировать к тестам и частично принимать; изменения затрагивают всё сразу.",
+   "fix": "Разбить на отдельные пронумерованные требования, по одному проверяемому утверждению.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-ATOMIC",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Singular",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-021",
+   "scope": "set",
+   "req_ids": [
+    "REQ-008",
+    "REQ-025"
+   ],
+   "criterion": "modifiable",
+   "severity": "LOW",
+   "title": "Возможное дублирование REQ-008 и REQ-025",
+   "quote": "Изменение порога сохраняет накопленные расходы.",
+   "loc": {
+    "line_start": 126,
+    "line_end": 126,
+    "page": null,
+    "section": "Особые правила"
+   },
+   "problem": "Правило в REQ-025 повторяет REQ-008 (сходство формулировок 67%).",
+   "risk": "При изменении одного места второе останется прежним — рассинхронизация документов.",
+   "fix": "Оставить правило в одном месте, во втором — ссылку на REQ-008.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "SET-DUP",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "IEEE 830 §4.3.7",
+   "confidence": 0.67
+  },
+  {
+   "id": "F-022",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-030",
+    "REQ-031"
+   ],
+   "criterion": "consistent",
+   "severity": "LOW",
+   "title": "Content-Type: application/json при отсутствии тела запроса",
+   "quote": "Content-Type: application/json .",
+   "loc": {
+    "line_start": 147,
+    "line_end": 147,
+    "page": null,
+    "section": "Request body"
+   },
+   "problem": "Объявлен JSON-формат тела, но тело не используется.",
+   "risk": "Неоднозначность для клиентов и шлюзов; признак незавершённого контракта.",
+   "fix": "Либо перенести параметры в тело JSON, либо убрать Content-Type.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-CT-NOBODY",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-023",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "integration_contract",
+   "severity": "LOW",
+   "title": "Код 200 подписан как «Created» (201)",
+   "quote": "200. Successful — Created",
+   "loc": {
+    "line_start": 165,
+    "line_end": 165,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "problem": "Заголовок объединяет код 200 и фразу статуса 201.",
+   "risk": "Неоднозначно, какой код вернёт сервис при успешном создании/сохранении.",
+   "fix": "Оставить один код: 200 или 201, и привести примеры к нему.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "API-STATUS-LABEL",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 1.0
+  }
+ ],
+ "relations": [
+  {
+   "source": "REQ-025",
+   "target": "REQ-008",
+   "type": "duplicates",
+   "status": "needs_confirmation",
+   "note": "Сходство формулировок 67%",
+   "origin": "rule"
+  },
+  {
+   "source": "REQ-012",
+   "target": "REQ-016",
+   "type": "traces_to",
+   "status": "confirmed",
+   "note": "Ссылка на документ «Уведомление о расходах по карте — REST API»",
+   "origin": "rule"
+  },
+  {
+   "source": "REQ-028",
+   "target": "REQ-034",
+   "type": "conflicts_with",
+   "status": "confirmed",
+   "note": "F-011: Параметр «amount» имеет разные типы: integer, string",
+   "origin": "finding"
+  },
+  {
+   "source": "REQ-030",
+   "target": "REQ-031",
+   "type": "conflicts_with",
+   "status": "confirmed",
+   "note": "F-022: Content-Type: application/json при отсутствии тела запроса",
+   "origin": "finding"
+  }
+ ],
+ "questions": [
+  {
+   "id": "Q-001",
+   "req_ids": [
+    "REQ-006"
+   ],
+   "question": "Какой часовой пояс (смещение UTC) и какая метка времени события используются в REQ-006?",
+   "why": "Определяет, в какой месяц попадёт операция у границы суток.",
+   "risk": "Расхождение счётчиков с выпиской клиента.",
+   "options": [
+    "UTC+5 (Asia/Almaty), время авторизации",
+    "UTC+5, время проведения (клиринга)",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TZ",
+   "finding_ids": [
+    "F-018",
+    "F-019"
+   ]
+  },
+  {
+   "id": "Q-002",
+   "req_ids": [
+    "REQ-011"
+   ],
+   "question": "Подтвердите единицу хранения и сравнения сумм в REQ-011: тиын или тенге?",
+   "why": "Сравнение величин в разных единицах — классический источник ошибки ×100.",
+   "risk": "Порог сработает на неверной сумме.",
+   "options": [
+    "Всё хранить в тиын",
+    "Всё хранить в тенге (целые)",
+    "Хранить в разных, описав конвертацию"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-UNITS",
+   "finding_ids": [
+    "F-005"
+   ]
+  },
+  {
+   "id": "Q-003",
+   "req_ids": [
+    "REQ-017"
+   ],
+   "question": "Допустимо ли заменить GET на PUT/POST для операции сохранения в REQ-017?",
+   "why": "GET не должен менять состояние сервера.",
+   "risk": "Непредсказуемые повторные изменения и утечки в логи.",
+   "options": [
+    "PUT /alerts/limit (идемпотентная замена)",
+    "POST /alerts/limit",
+    "Оставить GET (обосновать)"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:API-GET-MUTATION",
+   "finding_ids": [
+    "F-002",
+    "F-009",
+    "F-010"
+   ]
+  },
+  {
+   "id": "Q-004",
+   "req_ids": [],
+   "question": "Каким HTTP-кодом должен завершаться отказ валидации суммы: 200 с result=ERROR или 400/422?",
+   "why": "Документ одновременно относит ERROR к успешному ответу и описывает 400 для неверных параметров.",
+   "risk": "Разная обработка ошибок в приложении и сервисе.",
+   "options": [
+    "400 Bad Request",
+    "422 Unprocessable Entity",
+    "200 + result=ERROR (обосновать)"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:API-SUCCESS-WITH-ERROR",
+   "finding_ids": []
+  }
+ ],
+ "fintech": [
+  {
+   "key": "payments",
+   "aspect": "Платёжные операции",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-001",
+    "REQ-004",
+    "REQ-006",
+    "REQ-009",
+    "REQ-011",
+    "REQ-013"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "money_currency",
+   "aspect": "Денежные суммы и валюты",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-003",
+    "REQ-005",
+    "REQ-007",
+    "REQ-008",
+    "REQ-009",
+    "REQ-011"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "precision",
+   "aspect": "Точность денежных вычислений и минимальные единицы",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-011"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "rounding",
+   "aspect": "Округление",
+   "applicable": "unknown",
+   "status": "unknown",
+   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "req_ids": [],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "redelivery",
+   "aspect": "Повторная доставка событий",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-012"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "idempotency",
+   "aspect": "Идемпотентность операций",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-012",
+    "REQ-024"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "duplicates",
+   "aspect": "Дублирование платежей/уведомлений",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-007"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "timeouts",
+   "aspect": "Тайм-ауты",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-010"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "retries",
+   "aspect": "Повторные попытки",
+   "applicable": "unknown",
+   "status": "unknown",
+   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "req_ids": [],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "provider_errors",
+   "aspect": "Ошибки внешних провайдеров",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-013",
+    "REQ-015",
+    "REQ-041"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "refunds",
+   "aspect": "Отмены и возвраты",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-006"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "statuses",
+   "aspect": "Статусы операций",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-004",
+    "REQ-006",
+    "REQ-009"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "concurrency",
+   "aspect": "Конкурентные транзакции",
+   "applicable": "unknown",
+   "status": "unknown",
+   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "req_ids": [],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "authn",
+   "aspect": "Аутентификация и авторизация",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-017",
+    "REQ-018",
+    "REQ-039"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "access_control",
+   "aspect": "Разграничение доступа",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-019",
+    "REQ-040",
+    "REQ-042"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "logging",
+   "aspect": "Журналирование и аудит",
+   "applicable": "unknown",
+   "status": "unknown",
+   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "req_ids": [],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "pii",
+   "aspect": "Защита персональных и платёжных данных",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-009"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "unavailability",
+   "aspect": "Недоступность внешних сервисов",
+   "applicable": "unknown",
+   "status": "unknown",
+   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "req_ids": [],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "consistency",
+   "aspect": "Согласованность данных",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "req_ids": [
+    "REQ-012",
+    "REQ-013"
+   ],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  },
+  {
+   "key": "recovery",
+   "aspect": "Восстановление после сбоев и откат",
+   "applicable": "unknown",
+   "status": "unknown",
+   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "req_ids": [],
+   "quote": "",
+   "severity": "INFO",
+   "recommendation": "",
+   "source": "rule"
+  }
+ ],
+ "scores": {
+  "quality_index": 73.3,
+  "requirements_index": 97.6,
+  "set_index": 36.8,
+  "checked_requirements": 42,
+  "total_requirements": 42,
+  "findings_total": 23,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 3,
+   "MEDIUM": 13,
+   "LOW": 7,
+   "INFO": 0
+  },
+  "contradictions": 2,
+  "incomplete": 2,
+  "unverifiable": 3,
+  "ambiguous": 1,
+  "open_questions": 4,
+  "needs_review": 0,
+  "criteria_coverage": 0.087,
+  "method": "Штраф дефекта: CRITICAL 40, HIGH 20, MEDIUM 8, LOW 3, INFO 0; замечания «требует проверки» — ×0.5. Балл требования = max(0, 100 − Σ штрафов его дефектов − ½ Σ штрафов межтребовательных дефектов с его участием). Индекс требований = среднее баллов. Индекс набора = 100 / (1 + P/50), P — Σ штрафов дефектов уровня набора (индекс вдвое ниже при P = 50). Общий индекс качества = 0.6 × индекс требований + 0.4 × индекс набора. Покрытие критериев = доля пар «требование × критерий», получивших вердикт ok/issue/na. Готовность: NOT READY — есть CRITICAL или ≥ 5 HIGH; READY WITH CONDITIONS — есть HIGH/MEDIUM; READY — только LOW/INFO; INSUFFICIENT DATA — < 3 требований, покрытие критериев < 50% или семантическая проверка (LLM) не выполнялась при отсутствии CRITICAL."
+ },
+ "readiness": "INSUFFICIENT DATA",
+ "readiness_reason": "Семантическая проверка моделью не выполнялась (офлайн-режим): правила нашли 23 дефекта, но противоречия и полнота смысла не оценены. Запустите с LLM-ключом.",
+ "priorities": [
+  "[HIGH] Раздел «Тестирование требований» не заполнен (набор; строка 57, раздел «Тестирование требований») — Заполнить раздел «Тестирование требований» до передачи в разработку.",
+  "[HIGH] Изменяющая операция объявлена через GET (REQ-017; строка 104, раздел «Общие параметры») — Использовать PUT (замена настройки) или POST, параметры передавать в теле JSON.",
+  "[HIGH] Ошибка бизнес-валидации возвращается со статусом 200 (набор; строки 170–172, раздел «200. Successful — Created») — Возвращать ошибку валидации с 400/422 и телом {\"message\": …}; 200 — только при успехе."
+ ],
+ "stages": [
+  {
+   "index": 1,
+   "total": 15,
+   "key": "upload",
+   "title": "Загрузка документа",
+   "status": "done",
+   "message": "13 507 байт",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 2,
+   "total": 15,
+   "key": "validate",
+   "title": "Проверка формата и целостности",
+   "status": "done",
+   "message": "Формат: MARKDOWN, SHA-256 e7dae55e5453…",
+   "elapsed_ms": 3
+  },
+  {
+   "index": 3,
+   "total": 15,
+   "key": "parse",
+   "title": "Извлечение текста, структуры, страниц и таблиц",
+   "status": "done",
+   "message": "199 строк, — стр., 7 таблиц",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 4,
+   "total": 15,
+   "key": "segment",
+   "title": "Сегментация документа",
+   "status": "done",
+   "message": "128 блоков, 34 разделов",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 5,
+   "total": 15,
+   "key": "extract",
+   "title": "Выделение и идентификация требований",
+   "status": "done",
+   "message": "42 требований, с исходным ID: 11",
+   "elapsed_ms": 2
+  },
+  {
+   "index": 6,
+   "total": 15,
+   "key": "classify",
+   "title": "Классификация требований",
+   "status": "done",
+   "message": "API-контракт: 27, Функциональное: 4, Архитектура/процесс: 3, Критерий приёмки: 3, Бизнес-цель: 1, UI/UX: 1, Нефункциональное: 1, Данные: 1, Интеграция: 1",
+   "elapsed_ms": 1
+  },
+  {
+   "index": 7,
+   "total": 15,
+   "key": "individual",
+   "title": "Индивидуальная проверка требований",
+   "status": "done",
+   "message": "Правила: 25 замечаний",
+   "elapsed_ms": 17
+  },
+  {
+   "index": 8,
+   "total": 15,
+   "key": "consistency",
+   "title": "Межтребовательная проверка (противоречия, дубли)",
+   "status": "done",
+   "message": "Правила: 9 замечаний набора, 2 связей",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 9,
+   "total": 15,
+   "key": "completeness",
+   "title": "Анализ полноты документа",
+   "status": "skipped",
+   "message": "Требуется LLM — смысловая полнота не оценивалась",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 10,
+   "total": 15,
+   "key": "fintech",
+   "title": "FinTech-аудит (LÜMEN Risk Engine)",
+   "status": "done",
+   "message": "Документ относится к финансовой предметной области (без LLM — только упоминания)",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 11,
+   "total": 15,
+   "key": "clarify",
+   "title": "Уточняющие вопросы (Clarification Engine)",
+   "status": "done",
+   "message": "4 вопросов к владельцу требований",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 12,
+   "total": 15,
+   "key": "verify",
+   "title": "Перепроверка результатов и защита от галлюцинаций",
+   "status": "done",
+   "message": "Цитаты сверены с документом; «требует проверки»: 0; отклонено перепроверкой: 0; отброшено несуществующих ID: 0",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 13,
+   "total": 15,
+   "key": "stats",
+   "title": "Подсчёт статистики и готовности",
+   "status": "done",
+   "message": "Индекс качества 73.3, готовность: INSUFFICIENT DATA",
+   "elapsed_ms": 0
+  },
+  {
+   "index": 14,
+   "total": 15,
+   "key": "report",
+   "title": "Генерация отчёта",
+   "status": "done",
+   "message": "Markdown 49 КБ, HTML 62 КБ",
+   "elapsed_ms": 3
+  },
+  {
+   "index": 15,
+   "total": 15,
+   "key": "save",
+   "title": "Сохранение отчёта",
+   "status": "done",
+   "message": "reports/audit_report_offline.md, reports/audit_report_offline.html, reports/audit_report_offline.json",
+   "elapsed_ms": 1
+  }
+ ],
+ "warnings": [
+  "Семантическая проверка моделью не выполнялась (офлайн-режим): отчёт построен только детерминированными правилами LÜMEN Core. Для полного анализа задайте ключ LLM в .env."
+ ],
+ "demo": false,
+ "source": [
+  {
+   "no": 1,
+   "text": "# Уведомление о расходах по карте",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 2,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 3,
+   "text": "Комплект из двух исходных документов. Текст требований не вычитывался и не исправлялся.  ",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 4,
+   "text": "Часть B — дочерняя спецификация, на которую ссылается раздел интеграции в части A.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 5,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 6,
+   "text": "---",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 7,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 8,
+   "text": "## Часть A. Новый функционал",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 9,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 10,
+   "text": "### Общие сведения",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 11,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 12,
+   "text": "| Поле | Значение |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 13,
+   "text": "| :--- | :--- |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 14,
+   "text": "| **Наименование задачи** | Месячный порог расходов по карте |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 15,
+   "text": "| **Продукт** | Мобильный банк, учебный кейс |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 16,
+   "text": "| **Бизнес-процесс** | Информирование держателя карты |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 17,
+   "text": "| **Business owner / Product owner / Аналитик** | Учебные роли розничного бизнеса, владельца мобильного банка и аналитика команды |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 18,
+   "text": "| **Тип работы** | Новый функционал |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 19,
+   "text": "| **Влияние на ИС** | Мобильный банк, карточный процессинг, сервис уведомлений |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 20,
+   "text": "| **Задача в JIRA** | Практикум без Jira-задачи |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 21,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 22,
+   "text": "### Цели",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 23,
+   "text": "Дать клиенту возможность узнать о достижении личного бюджета в момент покупки.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 24,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 25,
+   "text": "### Архитектура решения",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 26,
+   "text": "Мобильное приложение → сервис настроек. Карточный процессинг → учёт расходов → сервис push.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 27,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 28,
+   "text": "### Дизайн процесса UI",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 29,
+   "text": "Карты → Расходы → Уведомления. На экране видны переключатель, поле «Порог, ₸», сумма за месяц и кнопка «Сохранить». При ошибке ввода сообщение появляется под полем.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 30,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 31,
+   "text": "### Требования к изменениям",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 32,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 33,
+   "text": "#### BPMN схема процесса",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 34,
+   "text": "Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 35,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 36,
+   "text": "#### Функциональные требования",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 37,
+   "text": "* **Ф-1.** Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно. По умолчанию уведомление выключено.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 38,
+   "text": "* **Ф-2.** Месяц определяется по дате совершения покупки в Алматы. В расходы входят проведённые покупки. Возврат уменьшает расходы месяца исходной покупки. Переводы и снятие наличных исключаются.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 39,
+   "text": "* **Ф-3.** Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push. На карту приходится максимум один такой push за календарный месяц.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 40,
+   "text": "* **Ф-4.** При изменении порога накопленная сумма сохраняется. Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 41,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 42,
+   "text": "### Sequence Diagram",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 43,
+   "text": "Процессинг → сервис расходов: проведена покупка. Сервис расходов → настройки: получить порог карты. Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 44,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 45,
+   "text": "### Нефункциональные требования",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 46,
+   "text": "Сервис передаёт push на отправку в течение минуты после получения события.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 47,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 48,
+   "text": "### Требования к данным",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 49,
+   "text": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 50,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 51,
+   "text": "### Требования к интеграции",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 52,
+   "text": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 53,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 54,
+   "text": "### Требования к тестированию",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 55,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 56,
+   "text": "#### Тестирование требований",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 57,
+   "text": "заполняются тестировщиками",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 58,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 59,
+   "text": "### Критерии приемки",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 60,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 61,
+   "text": "| Исходные условия | Действие | Ожидаемый результат |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 62,
+   "text": "| :--- | :--- | :--- |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 63,
+   "text": "| Расходы 48 500 ₸, порог 50 000 ₸ | Провести покупку на 1 500 ₸ | Итог 50 000 ₸ и один push |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 64,
+   "text": "| Покупка 31 января в 23:58 на 4 000 ₸ | Провести 1 февраля в 00:03 по Алматы | Февральский счётчик вырос на 4 000 ₸ |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 65,
+   "text": "| Расходы 19 900 ₸, порог 20 000 ₸ | Перевести 500 ₸ | Счётчик показывает 19 900 ₸ |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 66,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 67,
+   "text": "### Ревью требований",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 68,
+   "text": "Документ (версия/дата) в источнике не заполнен. Пункты чек-листа приведены как в шаблоне, отметки не проставлены.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 69,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 70,
+   "text": "| Проверка | Создано или доступно | Проверено | Примечания |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 71,
+   "text": "| :--- | :--- | :--- | :--- |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 72,
+   "text": "| Техническое требование зафиксировано и покрывает бизнес-требование | Да / Нет | Да / Нет | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 73,
+   "text": "| Функциональная спецификация имеет структурированное описание (по стандарту, шаблону) | Да / Нет | Да / Нет | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 74,
+   "text": "| Sequence-диаграммы, предусмотрены взаимодействия систем, компонентов и решений | Да / Нет / Не требуется | Да / Нет / Не требуется | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 75,
+   "text": "| Требование покрывает спецификацию UX/UI дизайна | Да / Нет / Не требуется | Да / Нет / Не требуется | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 76,
+   "text": "| Реализация задачи/проекта предусматривает схему отката решений | Да / Нет / Не требуется | Да / Нет / Не требуется | При невозможности отката — варианты скрытия функционала |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 77,
+   "text": "| Требование может быть протестировано | Да / Нет | Да / Нет | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 78,
+   "text": "| Требование предусматривает модель данных или поток, содержит описание | Да / Нет / Не требуется | Да / Нет / Не требуется | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 79,
+   "text": "| Требование не имеет противоречий или явных показателей операционных рисков | Да / Нет | Да / Нет | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 80,
+   "text": "| Требование содержит архитектуру и согласовано с архитекторами | Да / Нет / Не требуется | Да / Нет / Не требуется | Для архитектуры — чек-лист |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 81,
+   "text": "| Все изменения, влияющие на иные продукты/системы в требовании, согласованы с ответственными лицами | Да / Нет / Не требуется | Да / Нет / Не требуется | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 82,
+   "text": "| Структура требований не несёт изменений и рисков информационной безопасности | Да / Нет | Да / Нет | По информационной безопасности — чек-лист |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 83,
+   "text": "| В требовании присутствует схема полного бизнес-процесса и часть реализуемой доработки | Да / Нет | Да / Нет | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 84,
+   "text": "| Требование носит интеграционный характер и имеет четкую постановку реализации интеграционного взаимодействия | Да / Нет / Не требуется | Да / Нет / Не требуется | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 85,
+   "text": "| Поддерживается версионность документа / зафиксирована | Да / Нет | Да / Нет | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 86,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 87,
+   "text": "### Блок согласующих",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 88,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 89,
+   "text": "| Подразделение | ФИО ответственного | Подпись |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 90,
+   "text": "| :--- | :--- | :--- |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 91,
+   "text": "| | | |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 92,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 93,
+   "text": "---",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 94,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 95,
+   "text": "## Часть B. REST API",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 96,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 97,
+   "text": "Дочерний документ части A: «Уведомление о расходах по карте — REST API».",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 98,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 99,
+   "text": "### Общие параметры",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 100,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 101,
+   "text": "| Поле | Значение |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 102,
+   "text": "| :--- | :--- |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 103,
+   "text": "| **Description** | Сохранение порога. Функциональные требования: чтение порога |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 104,
+   "text": "| **REST type** | GET |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 105,
+   "text": "| **Authorization** | Bearer, сессия владельца карты |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 106,
+   "text": "| **Controller** | AlertsController |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 107,
+   "text": "| **URL type** | Dev / Prod |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 108,
+   "text": "| **Request URL** | Dev: `/alerts/saveLimit` . Prod: — |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 109,
+   "text": "| **CURL** | `curl -G \"$BASE/alerts/saveLimit\" -H \"Authorization: Bearer $TOKEN\" --data 'cardId=demo-42&amount=50000&enabled=1'` |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 110,
+   "text": "| **Swagger** | — |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 111,
+   "text": "| **Gitlab project** | Учебный контур |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 112,
+   "text": "| **Framework** | Учебный контур |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 113,
+   "text": "| **Author** | Школа тестирования |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 114,
+   "text": "| **Developer** | Команда практикума |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 115,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 116,
+   "text": "### Логика работы метода",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 117,
+   "text": "1. Проверить пользовательскую сессию.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 118,
+   "text": "2. Проверить принадлежность карты клиенту.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 119,
+   "text": "3. Проверить сумму и переключатель.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 120,
+   "text": "4. Заменить настройку и вернуть результат сохранения.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 121,
+   "text": "5. При отклонении суммы вернуть прежнее состояние и результат ERROR.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 122,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 123,
+   "text": "### Особые правила",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 124,
+   "text": "1. Целое число тенге, обе границы включены.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 125,
+   "text": "2. Повторное сохранение заменяет действующую настройку.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 126,
+   "text": "3. Изменение порога сохраняет накопленные расходы.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 127,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 128,
+   "text": "### Схема",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 129,
+   "text": "```text",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 130,
+   "text": "Приложение → AlertsController → хранилище настроек → AlertsController → приложение.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 131,
+   "text": "```",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 132,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 133,
+   "text": "### Параметры запроса",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 134,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 135,
+   "text": "#### Path-параметры",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 136,
+   "text": "Не используются.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 137,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 138,
+   "text": "#### Query-параметры",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 139,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 140,
+   "text": "| Parameter | Format | Size | Mandatory | Logic | Description | DB field |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 141,
+   "text": "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 142,
+   "text": "| `cardId` | string | 1–64 | Да | Карта клиента | Идентификатор карты | `card_id` |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 143,
+   "text": "| `amount` | integer | 32 bit | Да | 1 000–1 000 000 | Порог в тенге | `limit_kzt` |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 144,
+   "text": "| `enabled` | integer | 1 знак | Да | 0 или 1 | Признак включения | `enabled` |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 145,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 146,
+   "text": "#### Request body",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 147,
+   "text": "* **Content-Type:** `application/json` .",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 148,
+   "text": "* Тело не используется.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 149,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 150,
+   "text": "### Ответ",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 151,
+   "text": "Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 152,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 153,
+   "text": "| Parameter | Format | Logic | Description | DB field |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 154,
+   "text": "| :--- | :--- | :--- | :--- | :--- |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 155,
+   "text": "| `result` | string | OK / ERROR | Исход сохранения | — |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 156,
+   "text": "| `amount` | string | При успехе | Порог в тенге | `limit_kzt` |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 157,
+   "text": "| `enabled` | string | «0» или «1» | Признак включения | `enabled` |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 158,
+   "text": "| `message` | string | При ошибке | Описание ошибки | — |",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 159,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 160,
+   "text": "### Статусы",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 161,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 162,
+   "text": "**200.** Ответ в случае успешного выполнения метода.  ",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 163,
+   "text": "**400.** Ответ в случае, если параметры запроса заполнены неверно.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 164,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 165,
+   "text": "#### 200. Successful — Created",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 166,
+   "text": "```json",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 167,
+   "text": "{\"result\":\"OK\",\"amount\":\"50000\",\"enabled\":\"1\"}",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 168,
+   "text": "```",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 169,
+   "text": "или",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 170,
+   "text": "```json",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 171,
+   "text": "{\"result\":\"ERROR\",\"message\":\"Проверьте сумму\"}",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 172,
+   "text": "```",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 173,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 174,
+   "text": "**401.** Ответ в случае, если запрос выполнен без необходимой авторизации.  ",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 175,
+   "text": "**403.** Ответ в случае, если на указанный ресурс доступ запрещен.  ",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 176,
+   "text": "**500.** Ответ в случае, если произошла внутренняя ошибка сервера.",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 177,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 178,
+   "text": "#### 400. Unsuccessful — Bad request",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 179,
+   "text": "```json",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 180,
+   "text": "{\"message\":\"Некорректный запрос\"}",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 181,
+   "text": "```",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 182,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 183,
+   "text": "#### 401. Unsuccessful — Unauthorized",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 184,
+   "text": "```json",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 185,
+   "text": "{\"message\":\"Требуется вход\"}",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 186,
+   "text": "```",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 187,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 188,
+   "text": "#### 403. Unsuccessful — Forbidden",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 189,
+   "text": "Для чужой карты возвращается 404, как и для отсутствующей карты.  ",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 190,
+   "text": "**404**",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 191,
+   "text": "```json",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 192,
+   "text": "{\"message\":\"Карта не найдена\"}",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 193,
+   "text": "```",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 194,
+   "text": "",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 195,
+   "text": "#### 500. Unsuccessful — Internal server error",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 196,
+   "text": "```json",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 197,
+   "text": "{\"message\":\"Ошибка сервиса\"}",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 198,
+   "text": "```",
+   "page": null,
+   "origin": ""
+  },
+  {
+   "no": 199,
+   "text": "",
+   "page": null,
+   "origin": ""
+  }
+ ]
+}
