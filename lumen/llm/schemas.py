@@ -103,3 +103,7 @@ class ChatAnswer(BaseModel):
     answer: str = Field(description="Ответ пользователю по-русски, кратко и по делу, со ссылками на ID замечаний/требований")
     send_format: Literal["none", "pdf", "docx", "xlsx", "html", "md", "json"] = Field(
         "none", description="Если пользователь просит прислать отчёт/файл — нужный формат, иначе none")
+
+
+class TranslatedChunk(BaseModel):
+    text: str = Field(description="Перевод фрагмента с сохранением разметки Markdown, таблиц, ID и чисел")

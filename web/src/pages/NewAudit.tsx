@@ -1,62 +1,44 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, CircleAlert, FileUp, Loader2, PlayCircle, SkipForward, Sparkles } from "lucide-react";
+import { Check, CircleAlert, FileUp, Loader2, SkipForward, Sparkles } from "lucide-react";
 import { api, Line, StageEvent } from "../api";
 import DocumentLens from "../components/DocumentLens";
 import { ErrorBox, PageHead } from "../components/ui";
 import { useApp } from "../App";
+import { useT } from "../i18n";
 
-const PROVIDERS = [
-  { v: "", label: "Автовыбор (по ключам на сервере)" },
-  { v: "anthropic", label: "Claude — Anthropic API" },
-  { v: "gemini", label: "Gemini — Google AI Studio" },
-  { v: "openrouter", label: "OpenRouter — бесплатные модели" },
-  { v: "groq", label: "Groq — бесплатно и быстро" },
-  { v: "openai", label: "OpenAI-совместимый (DeepSeek, локальные…)" },
-  { v: "claude-cli", label: "Claude Code CLI" },
-  { v: "offline", label: "Без LLM — только правила" },
-];
-
+const PROVIDERS = ["", "anthropic", "gemini", "openrouter", "groq", "openai", "claude-cli", "offline"];
+const PLABEL: Record<string, string> = { anthropic: "Claude — Anthropic", gemini: "Gemini — Google", openrouter: "OpenRouter", groq: "Groq", openai: "OpenAI-compatible", "claude-cli": "Claude Code CLI" };
 type Stage = { key: string; title: string; status?: StageEvent["status"]; message?: string; ms?: number };
 
 export default function NewAudit() {
   const nav = useNavigate();
   const { health } = useApp();
+  const { t } = useT();
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [provider, setProvider] = useState("");
   const [model, setModel] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [stages, setStages] = useState<Stage[]>([]);
-  const [run, setRun] = useState<{ id: string; name: string; demo: boolean } | null>(null);
-  const [done, setDone] = useState<{ id: string; readiness: string } | null>(null);
+  const [run, setRun] = useState<{ id: string; name: string } | null>(null);
+  const [done, setDone] = useState<{ id: string } | null>(null);
   const [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
 
   const preview = useCallback(async (f: File) => {
     if (/\.(md|markdown|txt)$/i.test(f.name)) {
       const text = await f.text();
-      setLines(text.replace(/\r\n?/g, "\n").split("\n").map((t, i) => ({ no: i + 1, text: t })));
+      setLines(text.replace(/\r\n?/g, "\n").split("\n").map((x, i) => ({ no: i + 1, text: x })));
     } else setLines([]);
   }, []);
 
   const pick = (f?: File | null) => {
     if (!f) return;
-    if (!/\.(pdf|docx|md|markdown|txt|html?|rtf|png|jpe?g|webp|tiff?|bmp)$/i.test(f.name)) { setError("Поддерживаются PDF, DOCX, MD, TXT, HTML, RTF и изображения."); return; }
-    if (f.size > 20 * 1024 * 1024) { setError("Файл больше 20 МБ."); return; }
+    if (!/\.(pdf|docx|md|markdown|txt|html?|rtf|png|jpe?g|webp|tiff?|bmp)$/i.test(f.name)) { setError(t("new.badFormat")); return; }
+    if (f.size > 20 * 1024 * 1024) { setError(t("new.tooBig")); return; }
     setError(""); setFile(f); preview(f);
-  };
-
-  const listen = (id: string) => {
-    api.events(id, (type, d) => {
-      if (type === "queued") setStages(d.stages.map((s: Stage) => ({ ...s })));
-      else if (type === "stage") {
-        const ev = d as StageEvent;
-        setStages((prev) => prev.map((s) => s.key === ev.key ? { ...s, status: ev.status, message: ev.message, ms: ev.elapsed_ms } : s));
-      } else if (type === "result") setDone(d);
-      else if (type === "error") setError(d.message);
-    });
   };
 
   const start = async () => {
@@ -64,26 +46,22 @@ export default function NewAudit() {
     setError(""); setDone(null);
     try {
       const r = await api.upload(file, provider || undefined, model || undefined);
-      setRun({ id: r.audit_id, name: file.name, demo: false });
-      listen(r.audit_id);
-    } catch (e: any) { setError(e.message); }
-  };
-
-  const demo = async () => {
-    setError(""); setDone(null);
-    try {
-      const text = await fetch("/api/demo/document").then((r) => r.text());
-      setLines(text.split("\n").map((t, i) => ({ no: i + 1, text: t })));
-      const r = await api.demo();
-      setRun({ id: r.audit_id, name: "demo_requirements.md", demo: true });
-      listen(r.audit_id);
+      setRun({ id: r.audit_id, name: file.name });
+      api.events(r.audit_id, (type, d) => {
+        if (type === "queued") setStages(d.stages.map((s: Stage) => ({ ...s })));
+        else if (type === "stage") {
+          const ev = d as StageEvent;
+          setStages((prev) => prev.map((s) => s.key === ev.key ? { ...s, status: ev.status, message: ev.message, ms: ev.elapsed_ms } : s));
+        } else if (type === "result") setDone(d);
+        else if (type === "error") setError(d.message);
+      });
     } catch (e: any) { setError(e.message); }
   };
 
   useEffect(() => {
     if (!done) return;
-    const t = setTimeout(() => nav(`/audits/${done.id}`), 1600);
-    return () => clearTimeout(t);
+    const id = setTimeout(() => nav(`/audits/${done.id}`), 1600);
+    return () => clearTimeout(id);
   }, [done, nav]);
 
   const finished = stages.filter((s) => s.status && s.status !== "running").length;
@@ -93,48 +71,34 @@ export default function NewAudit() {
   if (run) {
     return (
       <div>
-        <PageHead title={done ? "Анализ завершён" : "LÜMEN Core читает документ"}
-          sub={<>{run.name}{run.demo && <span className="chip ml-2 bg-amber-50 text-amber-800">демо-прогон</span>}</>}
-          right={done && <button className="btn-primary" onClick={() => nav(`/audits/${done.id}`)}>Открыть результаты</button>} />
-        <div className="mb-6 h-1.5 overflow-hidden rounded-full bg-line">
-          <motion.div className="h-full bg-signal" animate={{ width: `${pct}%` }} transition={{ ease: "easeOut", duration: 0.5 }} />
+        <PageHead title={done ? t("new.done") : t("new.reading")} sub={run.name}
+          right={done && <button className="btn-primary" onClick={() => nav(`/audits/${done.id}`)}>{t("new.open")}</button>} />
+        <div className="mb-6 h-2 overflow-hidden rounded-full bg-line">
+          <motion.div className="h-full grad-bg" animate={{ width: `${pct}%` }} transition={{ ease: "easeOut", duration: 0.5 }} />
         </div>
         {error && <div className="mb-4"><ErrorBox error={error} /></div>}
         <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
-          <div>
-            {lines.length ? (
-              <DocumentLens lines={lines} scanning={scanning} height={620} />
-            ) : (
-              <div className="relative h-[620px] overflow-hidden rounded-xl border border-line bg-[#FBFCFE] p-6">
-                {scanning && <div className="lens-beam" />}
-                {Array.from({ length: 22 }).map((_, i) => (
-                  <div key={i} className="mb-3 h-3 rounded bg-line" style={{ width: `${40 + ((i * 37) % 55)}%` }} />
-                ))}
-                <p className="meta absolute bottom-4 left-6">Текст извлекается на сервере (для фото и сканов — через OCR) и появится в отчёте с номерами строк.</p>
-              </div>
-            )}
-          </div>
+          {lines.length ? <DocumentLens lines={lines} scanning={scanning} height={620} /> : (
+            <div className="relative h-[620px] overflow-hidden rounded-xl border border-line bg-surface-2 p-6">
+              {scanning && <div className="lens-beam" />}
+              {Array.from({ length: 22 }).map((_, i) => <div key={i} className="mb-3 h-3 rounded bg-line" style={{ width: `${40 + ((i * 37) % 55)}%` }} />)}
+              <p className="meta absolute bottom-4 left-6 right-6">{t("new.serverText")}</p>
+            </div>
+          )}
           <ol className="card divide-y divide-line" aria-live="polite">
             {stages.map((s, i) => (
-              <li key={s.key} className="flex items-start gap-3 px-5 py-3">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
-                  style={{ background: s.status === "done" ? "#E7F6EE" : s.status === "error" ? "#FDECEA" : s.status === "running" ? "#EAF0FF" : "#F3F5F9",
-                    color: s.status === "done" ? "#12A150" : s.status === "error" ? "#D92D20" : s.status === "running" ? "#1F4FD8" : "#98A2B3" }}>
+              <motion.li key={s.key} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }} className="flex items-start gap-3 px-5 py-3">
+                <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                  s.status === "done" ? "bg-ok/15 text-ok" : s.status === "error" ? "bg-bad/15 text-bad" : s.status === "running" ? "bg-signal/15 text-signal" : "bg-ink/5 text-ink-faint"}`}>
                   {s.status === "done" ? <Check size={14} /> : s.status === "running" ? <Loader2 size={14} className="animate-spin" /> :
                     s.status === "error" ? <CircleAlert size={14} /> : s.status === "skipped" ? <SkipForward size={13} /> : i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className={`text-[14px] ${s.status ? "text-ink" : "text-ink-faint"}`}>{s.title}</div>
-                  <AnimatePresence>
-                    {s.message && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="meta mt-0.5 break-words">
-                        {s.message}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <div className={`text-[14px] ${s.status ? "text-ink" : "text-ink-faint"}`}>{t(`stage.${s.key}`)}</div>
+                  <AnimatePresence>{s.message && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="meta mt-0.5 break-words">{s.message}</motion.div>}</AnimatePresence>
                 </div>
-                {!!s.ms && s.ms > 300 && <span className="meta tabular-nums">{(s.ms / 1000).toFixed(1)} с</span>}
-              </li>
+                {!!s.ms && s.ms > 300 && <span className="meta tabular-nums">{(s.ms / 1000).toFixed(1)} s</span>}
+              </motion.li>
             ))}
           </ol>
         </div>
@@ -144,72 +108,53 @@ export default function NewAudit() {
 
   return (
     <div>
-      <PageHead title="Новый аудит требований"
-        sub="Статическая проверка документа до разработки по ISO/IEC/IEEE 29148 и IEEE 830 с FinTech-экспертизой." />
+      <PageHead title={t("new.title")} sub={t("new.sub")} />
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-          onDragLeave={() => setDrag(false)}
+        <motion.div
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
           onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files?.[0]); }}
-          onClick={() => input.current?.click()}
-          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && input.current?.click()}
-          role="button" tabIndex={0}
-          className={`card flex min-h-[340px] cursor-pointer flex-col items-center justify-center border-2 border-dashed px-8 text-center transition-colors ${drag ? "border-signal bg-signal-wash" : "border-line hover:border-signal/50"}`}>
+          onClick={() => input.current?.click()} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && input.current?.click()}
+          role="button" tabIndex={0} animate={{ scale: drag ? 1.015 : 1 }}
+          className={`card relative flex min-h-[360px] cursor-pointer flex-col items-center justify-center overflow-hidden border-2 border-dashed px-8 text-center transition-colors ${drag ? "border-signal bg-signal/5" : "border-line hover:border-signal/50"}`}>
+          <div className="absolute -bottom-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full opacity-25 blur-3xl grad-bg" />
           <input ref={input} type="file" hidden accept=".pdf,.docx,.md,.markdown,.txt,.html,.htm,.rtf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp" onChange={(e) => pick(e.target.files?.[0])} />
-          <FileUp size={36} strokeWidth={1.5} className="text-signal" />
-          {file ? (
-            <>
-              <div className="mt-4 text-lg font-medium">{file.name}</div>
-              <div className="meta">{(file.size / 1024).toFixed(1)} КБ · нажмите, чтобы выбрать другой файл</div>
-            </>
-          ) : (
-            <>
-              <div className="mt-4 text-lg font-medium">Перетащите документ требований сюда</div>
-              <div className="meta mt-1">или нажмите, чтобы выбрать файл · PDF, DOCX, MD, TXT, HTML, RTF, фото и сканы · до 20 МБ</div>
-            </>
-          )}
-        </div>
+          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity }} className="relative flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-glow grad-bg">
+            <FileUp size={30} strokeWidth={1.7} />
+          </motion.div>
+          {file ? (<>
+            <div className="relative mt-5 text-lg font-medium">{file.name}</div>
+            <div className="meta relative">{(file.size / 1024).toFixed(1)} KB · {t("new.other")}</div>
+          </>) : (<>
+            <div className="relative mt-5 text-lg font-medium">{t("new.drop")}</div>
+            <div className="meta relative mt-1 max-w-md">{t("new.dropHint")}</div>
+          </>)}
+        </motion.div>
         <div className="card flex flex-col gap-4 p-6">
           <div>
-            <label className="text-sm font-medium" htmlFor="prov">Модель анализа</label>
+            <label className="text-sm font-medium" htmlFor="prov">{t("new.model")}</label>
             <select id="prov" className="input mt-1.5" value={provider} onChange={(e) => setProvider(e.target.value)}>
-              {PROVIDERS.map((p) => (
-                <option key={p.v} value={p.v} disabled={!!p.v && p.v !== "offline" && health ? !health.providers[p.v] : false}>
-                  {p.label}{p.v && p.v !== "offline" && health && !health.providers[p.v] ? " — нет ключа" : ""}
-                </option>
-              ))}
+              {PROVIDERS.map((p) => {
+                const off = !!p && p !== "offline" && !!health && !health.providers[p];
+                return <option key={p} value={p} disabled={off}>{p === "" ? t("new.auto") : p === "offline" ? t("new.offline") : PLABEL[p]}{off ? ` — ${t("new.noKey")}` : ""}</option>;
+              })}
             </select>
-            <p className="meta mt-1.5">Сейчас по умолчанию: {health ? `${health.provider_label}, ${health.model}` : "—"}</p>
+            <p className="meta mt-1.5">{t("new.default")}: {health ? `${health.provider_label}, ${health.model}` : "—"}</p>
           </div>
           <div>
-            <label className="text-sm font-medium" htmlFor="model">Конкретная модель (необязательно)</label>
-            <input id="model" className="input mt-1.5" placeholder="например, claude-opus-5-5" value={model} onChange={(e) => setModel(e.target.value)} />
+            <label className="text-sm font-medium" htmlFor="model">{t("new.modelName")}</label>
+            <input id="model" className="input mt-1.5" placeholder="claude-opus-5-5" value={model} onChange={(e) => setModel(e.target.value)} />
           </div>
-          {health?.auth_required && !localStorage.getItem("lumen.token") && (
-            <p className="rounded-xl bg-signal-wash px-3 py-2 text-[13px] text-signal">
-              Сервер защищён: для проверки своего документа введите токен доступа в разделе «Настройки». Демо-прогон доступен без токена.
-            </p>
-          )}
+          {health?.auth_required && !localStorage.getItem("lumen.token") && <p className="rounded-xl bg-signal/10 px-3 py-2 text-[13px] text-signal">{t("new.token")}</p>}
           {error && <ErrorBox error={error} />}
-          <button className="btn-primary justify-center py-3" disabled={!file} onClick={start}>
-            <Sparkles size={16} />Запустить аудит
-          </button>
-          <div className="border-t border-line pt-4">
-            <button className="btn-line w-full justify-center" onClick={demo}><PlayCircle size={16} />Посмотреть демо-прогон</button>
-            <p className="meta mt-2">Демо использует подготовленный документ и смоделированные ответы модели. Он помечается в истории и не смешивается с реальными проверками.</p>
-          </div>
+          <button className="btn-primary mt-auto justify-center py-3" disabled={!file} onClick={start}><Sparkles size={16} />{t("new.start")}</button>
         </div>
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {[
-          ["Доказательства, а не мнения", "Каждое замечание цитирует документ дословно и указывает строку. Цитату, которой нет в тексте, агент помечает «требует проверки»."],
-          ["Вопросы вместо догадок", "Если в требовании не хватает числа или правила, LÜMEN формулирует вопрос владельцу с вариантами ответа и риском."],
-          ["Отраслевой взгляд", "Идемпотентность, денежные единицы, повторная доставка событий и права доступа — только там, где это применимо к документу."],
-        ].map(([t, d]) => (
-          <div key={t} className="rounded-2xl border border-line bg-white/60 p-5">
-            <div className="font-medium">{t}</div>
-            <p className="meta mt-1.5 leading-relaxed">{d}</p>
-          </div>
+        {[1, 2, 3].map((n) => (
+          <motion.div key={n} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * n }} className="card p-5">
+            <div className="font-medium">{t(`land.f${n}`)}</div>
+            <p className="meta mt-1.5 leading-relaxed">{t(`land.f${n}d`)}</p>
+          </motion.div>
         ))}
       </div>
     </div>

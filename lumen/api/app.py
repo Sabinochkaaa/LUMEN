@@ -254,6 +254,65 @@ def delete_audit(audit_id: str):
     return {"deleted": get_service().store.delete(audit_id)}
 
 
+@app.get("/api/compare", dependencies=[Depends(require_read)])
+def compare_audits(base: str, new: str):
+    from ..compare import compare
+
+    a, b = _get(base), _get(new)
+    return compare(a, b)
+
+
+@app.post("/api/translate", dependencies=[Depends(require_token), Depends(limit_audits)])
+async def translate(file: UploadFile = File(...), target: str = Form(...)):
+    from fastapi.concurrency import run_in_threadpool
+
+    from ..llm.client import LLMError
+    from ..parsing.loader import DocumentError
+    from ..translate import LANGS, translate_document
+
+    if target not in LANGS:
+        raise HTTPException(422, "Язык перевода: ru, kk или en")
+    name = Path(file.filename or "document").name
+    if Path(name).suffix.lower() not in SUPPORTED:
+        raise HTTPException(415, "Формат не поддерживается")
+    data = await file.read(MAX_UPLOAD + 1)
+    try:
+        validate_upload(name, data)
+    except UploadRejected as e:
+        raise HTTPException(422, str(e)) from None
+    import uuid as _uuid
+
+    svc = get_service()
+    path = svc.uploads / f"tr_{_uuid.uuid4().hex}_{re.sub(r'[^\w.\-]+', '_', name)[-80:]}"
+    path.write_bytes(data)
+    try:
+        tr = await run_in_threadpool(translate_document, path, target, display_name=name, cfg=svc.cfg)
+    except (LLMError, DocumentError, ValueError) as e:
+        raise HTTPException(422, str(e)) from None
+    finally:
+        path.unlink(missing_ok=True)
+    return {"source_name": tr.source_name, "target": tr.target, "markdown": tr.markdown, "chunks": tr.chunks,
+            "model": tr.model, "provider": tr.provider}
+
+
+class DocxBody(BaseModel):
+    markdown: str
+    title: str = ""
+
+
+@app.post("/api/translate/docx")
+def translate_docx(body: DocxBody):
+    from fastapi.responses import Response
+
+    from ..report.export import MIME
+    from ..translate import markdown_to_docx
+
+    if len(body.markdown) > 2_000_000:
+        raise HTTPException(413, "Слишком большой текст")
+    return Response(markdown_to_docx(body.markdown, body.title), media_type=MIME["docx"],
+                    headers={"content-disposition": 'attachment; filename="lumen_translation.docx"'})
+
+
 @app.get("/api/criteria")
 def criteria():
     from ..engine.criteria import REQUIREMENT_CRITERIA, SET_CRITERIA
