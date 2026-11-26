@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import AuditBuddy from "../components/AuditBuddy";
 import { AuditGate } from "../App";
 import { Audit, SEV_COLOR, SEV_ORDER, Severity } from "../api";
 import { CRIT_I18N, pick, useT } from "../i18n";
@@ -23,6 +24,7 @@ function View({ a }: { a: Audit }) {
   return (
     <div>
       <AuditHeader a={a} />
+      <AuditBuddy a={a} page="issues" />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {SEV_ORDER.map((s) => (
           <button key={s} onClick={() => toggle(s)} aria-pressed={sev.has(s)} className="chip border px-3 py-1 text-[13px] transition-all"

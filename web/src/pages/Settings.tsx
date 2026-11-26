@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AgentBuddy from "../components/AgentBuddy";
 import { api, Criterion } from "../api";
 import { useApp } from "../App";
 import { CRIT_I18N, pick, useT } from "../i18n";
@@ -28,6 +29,9 @@ export default function Settings() {
   return (
     <div>
       <PageHead title={t("set.title")} sub={t("set.sub")} />
+      <AgentBuddy compact agent={4} mood="idle"
+        say={health?.storage_degraded && health.storage_error ? t("ab.setDb", { err: health.storage_error }) : t("ab.set")}
+        onPick={() => window.dispatchEvent(new Event("lumen:support"))} />
       <section className="card mb-6 flex flex-wrap items-center gap-6 p-6">
         <div className="h2 mr-auto">{t("set.appearance")}</div>
         <div><div className="meta mb-1.5">{t("ui.language")}</div><LangSwitch /></div>

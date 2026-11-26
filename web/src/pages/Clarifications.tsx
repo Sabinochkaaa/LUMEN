@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AuditBuddy from "../components/AuditBuddy";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, RotateCcw, X } from "lucide-react";
 import { AuditGate, useApp } from "../App";
@@ -33,6 +34,7 @@ function View({ a, set }: { a: Audit; set: (a: Audit) => void }) {
   return (
     <div>
       <AuditHeader a={a} />
+      <AuditBuddy a={a} page="clarifications" />
       <div className="mb-5 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
         <div><h2 className="text-xl font-semibold">{t("q.title")}</h2><p className="meta mt-1 max-w-2xl">{t("q.sub")}</p></div>
         <div className="w-full md:w-64">

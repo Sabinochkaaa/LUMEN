@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AuditBuddy from "../components/AuditBuddy";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, CircleDot, PlusCircle } from "lucide-react";
@@ -35,6 +36,7 @@ function View({ a }: { a: Audit }) {
   return (
     <div>
       <AuditHeader a={a} />
+      <AuditBuddy a={a} page="compare" />
       <h2 className="text-xl font-semibold">{t("cmp.title")}</h2>
       <p className="meta mb-5 mt-1 max-w-2xl">{t("cmp.sub")}</p>
       {error && <ErrorBox error={error} />}

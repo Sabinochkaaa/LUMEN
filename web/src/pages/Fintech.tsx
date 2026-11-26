@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import AuditBuddy from "../components/AuditBuddy";
 import { AuditGate } from "../App";
 import { Audit, FintechCheck } from "../api";
 import { useT } from "../i18n";
@@ -20,6 +21,7 @@ function View({ a }: { a: Audit }) {
   return (
     <div>
       <AuditHeader a={a} />
+      <AuditBuddy a={a} page="fintech" />
       <h2 className="text-xl font-semibold">{t("fin.title")}</h2>
       <p className="meta mb-5 mt-1 max-w-3xl">{t("fin.sub")}</p>
       <div className="mb-6 flex flex-wrap gap-3">
