@@ -24,3 +24,4 @@ create table if not exists public.audits (
 );
 create index if not exists audits_analysed_at_idx on public.audits (analysed_at desc);
 alter table public.audits enable row level security;
+grant all on public.audits to service_role;

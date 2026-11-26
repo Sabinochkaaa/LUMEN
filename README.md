@@ -14,7 +14,7 @@ LÜMEN — ИИ-агент, который проводит **статическ
 | **LÜMEN Intelligence** | веб-панель: загрузка, живой прогресс, линза документа, граф, вопросы | `uvicorn lumen.api.app:app` → http://localhost:8000 |
 | **REST API** | загрузка, SSE-прогресс, результаты, отчёты, статусы вопросов | http://localhost:8000/docs |
 | **Генератор ТЗ** | идея текстом или голосом → черновик ТЗ по банковскому шаблону → сразу на проверку | раздел «Генератор ТЗ» в панели, `POST /api/generate` |
-| **Telegram-бот** | файл, фото или текст → вердикт, ИИ-чат по отчёту, отчёт в PDF/Word/Excel/HTML/MD/JSON | внутри API или `python -m lumen.bot` |
+| **Telegram-бот** | файл, фото, текст или голосовое → вердикт, ИИ-чат по отчёту, /generate — ТЗ по идее, /support — поддержка, отчёт в PDF/Word/Excel/HTML/MD/JSON | внутри API или `python -m lumen.bot` |
 
 ---
 
@@ -221,9 +221,8 @@ MD, JSON) · **Настройки** · кнопка «Поделиться» с�
 
 ## Деплой: Railway + Supabase
 
-1. **Supabase** (необязательно, для постоянной истории): SQL Editor → выполнить `supabase/migrations/001_audits.sql`,
-   затем `002_security.sql`;
-   взять `Project URL` и `service_role` ключ (Settings → API). При недоступности Supabase LÜMEN продолжит работу на
+1. **Supabase** (необязательно, для постоянной истории): SQL Editor → выполнить `supabase/setup.sql` (вся база одним запуском),
+   взять `Project URL` и секретный ключ `sb_secret_…` (Project Settings → API Keys). При недоступности Supabase LÜMEN продолжит работу на
    локальном хранилище.
 2. **Railway**: New Project → Deploy from GitHub → этот репозиторий. Сборка по `Dockerfile` (`railway.json`,
    healthcheck `/api/health`). Variables: `ANTHROPIC_API_KEY` (или `GEMINI_API_KEY`), `SUPABASE_URL`,

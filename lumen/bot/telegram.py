@@ -14,6 +14,7 @@ import html
 import json
 import logging
 import re
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -50,9 +51,17 @@ HELP = (
     "или просто вставьте текст требований сообщением.\n"
     "Я выделю требования, найду противоречия, пробелы и FinTech-риски, задам вопросы владельцу и пришлю отчёт.\n\n"
     "💬 Потом спрашивайте: «что не так с Ф-3?», «перепиши REQ-010», «почему NOT READY?», «пришли в Excel».\n"
-    "🌐 Перевод: пришлите файл с подписью «переведи на английский» (или казахский/русский), либо напишите это после анализа.\n\n"
-    "/format — формат отчёта по умолчанию\n/demo — демонстрационный прогон\n/last — последний отчёт\n/help — помощь"
+    "🌐 Перевод: пришлите файл с подписью «переведи на английский» (или казахский/русский), либо напишите это после анализа.\n"
+    "✍️ Генератор: «/generate кэшбэк 1% в кафе» — напишу черновик ТЗ по шаблону банка и сразу проверю.\n"
+    "🎙 Можно голосовыми.\n\n"
+    "/generate — написать ТЗ по идее\n/support — написать в поддержку\n/format — формат отчёта по умолчанию\n"
+    "/demo — демонстрационный прогон\n/last — последний отчёт\n/help — помощь"
 )
+# buttons under the welcome message and the report summary
+MENU_KB = {"inline_keyboard": [[{"text": "✍️ Сгенерировать ТЗ", "callback_data": "gen"},
+                                {"text": "🆘 Поддержка", "callback_data": "sup"}],
+                               [{"text": "🧪 Демо-проверка", "callback_data": "demo"}]]}
+GEN_WORDS = r"^(/generate|/gen)\b|^(сгенерируй|сгенерировать|напиши|составь|создай)\s+(мне\s+)?(тз|техзадание|техническое задание|требования)"
 
 
 def wanted_format(text: str) -> Optional[str]:
@@ -95,6 +104,8 @@ class TelegramBot:
         self.history: dict[int, list[tuple[str, str]]] = {}
         self.http = httpx.Client(timeout=70)
         self._llm = None
+        self.waiting: dict[int, str] = {}       # chat → "gen" | "ticket": the next message is an idea or a ticket
+        self.generated: dict[str, Path] = {}    # token → generated spec file, for the «Проверить» button
 
     # ------------------------------------------------------------------ transport
     def call(self, method: str, **params):
@@ -137,7 +148,9 @@ class TelegramBot:
     def run_forever(self) -> None:
         log.info("Telegram bot started")
         try:
-            self.call("setMyCommands", commands=[{"command": "format", "description": "Формат отчёта"},
+            self.call("setMyCommands", commands=[{"command": "generate", "description": "Написать ТЗ по идее"},
+                                                 {"command": "support", "description": "Написать в поддержку"},
+                                                 {"command": "format", "description": "Формат отчёта"},
                                                  {"command": "demo", "description": "Демо-прогон"},
                                                  {"command": "last", "description": "Последний отчёт"},
                                                  {"command": "help", "description": "Помощь"}])
@@ -167,8 +180,28 @@ class TelegramBot:
         text = (m.get("text") or m.get("caption") or "").strip()
         if ("voice" in m or "audio" in m) and not text:
             return self.voice(chat, m, u)
+        waiting = self.waiting.pop(chat, None)
         if text.startswith(("/start", "/help")):
-            self.send(chat, HELP)
+            self.send(chat, HELP, reply_markup=MENU_KB)
+        elif text.startswith("/support"):
+            rest = text[len("/support"):].strip()
+            if rest:
+                self.ticket(chat, rest)
+            else:
+                self.waiting[chat] = "ticket"
+                self.send(chat, "🆘 Опишите вопрос или проблему одним сообщением (можно голосовым) — передам команде LÜMEN.")
+        elif re.search(GEN_WORDS, text, re.I):
+            idea = re.sub(GEN_WORDS, "", text, flags=re.I).strip(" :—-")
+            if len(idea) >= 10:
+                self.generate(chat, idea)
+            else:
+                self.waiting[chat] = "gen"
+                self.send(chat, "✍️ Опишите идею одним сообщением (можно голосовым), например: «перевод по номеру телефона "
+                                "с лимитом 500 000 ₸ в сутки и подтверждением по SMS».")
+        elif waiting == "ticket" and text and not text.startswith("/"):
+            self.ticket(chat, text)
+        elif waiting == "gen" and text and not text.startswith("/"):
+            self.generate(chat, text)
         elif text.startswith("/format"):
             self.send(chat, "В каком формате присылать отчёт?", reply_markup=self.format_kb("setfmt"))
         elif text.startswith("/demo"):
@@ -380,6 +413,7 @@ class TelegramBot:
         kb = self.format_kb("f", r.id)
         kb["inline_keyboard"].insert(0, [{"text": f"❓ Вопросы ({len(r.questions)})", "callback_data": f"q:{r.id}"},
                                          {"text": "🔴 Все критичные", "callback_data": f"c:{r.id}"}])
+        kb["inline_keyboard"].append([{"text": "🆘 Поддержка", "callback_data": "sup"}])
         self.send(chat, "\n".join(lines), reply_markup=kb)
         if send_file:
             self.send_report(chat, r, self.fmt.get(chat, "pdf"))
@@ -393,6 +427,49 @@ class TelegramBot:
             self.send(chat, f"⚠️ Не удалось собрать {FORMATS.get(fmt, fmt)}: {html.escape(str(e)[:200])}. Пришлю HTML.")
             fmt, data = "html", render(r, "html")
         self.send_doc(chat, safe_name(r, fmt), data, f"{FORMATS.get(fmt, fmt)} · отчёт LÜMEN по «{html.escape(r.passport.document_name)}»")
+
+    def ticket(self, chat: int, text: str) -> None:
+        from ..support import save_ticket
+
+        ok, retry = limiter.allow(f"bot-ticket:{chat}", 5, 3600)
+        if not ok:
+            self.send(chat, f"⏳ Слишком много обращений. Попробуйте через {retry // 60 + 1} мин.")
+            return
+        t = save_ticket(self.svc.cfg.data_dir, text[:2000], self.history.get(chat) and
+                        [{"role": "user" if w == "Пользователь" else "agent", "text": x} for w, x in self.history[chat]],
+                        f"telegram:{chat}", "telegram", self.last.get(chat, ""), cfg=self.svc.cfg)
+        self.send(chat, f"📨 Передал команде LÜMEN, обращение №<code>{t['id']}</code>. Ответим сюда, в этот чат.")
+
+    def generate(self, chat: int, idea: str) -> None:
+        """LÜMEN Author in Telegram: the idea becomes a spec file, with a button to review it right away."""
+        ok, retry = limiter.allow(f"bot-gen:{chat}", 10, 3600)
+        if not ok:
+            self.send(chat, f"⏳ Лимит генераций на этот час исчерпан. Попробуйте через {retry // 60 + 1} мин.")
+            return
+
+        def work():
+            from ..generate import generate_spec
+
+            self.send(chat, "✍️ Пишу ТЗ по шаблону банка… обычно до минуты.")
+            self.typing(chat, "upload_document")
+            try:
+                res = generate_spec(idea, "ru", cfg=self.svc.cfg)
+            except Exception as e:
+                log.warning("generate failed: %s", str(e)[:200])
+                self.send(chat, "⚠️ Не получилось написать ТЗ — модель сейчас занята. Попробуйте через минуту: /generate")
+                return
+            slug = re.sub(r"[^\w]+", "_", res.title, flags=re.U).strip("_")[:50] or "spec"
+            token = uuid.uuid4().hex[:12]
+            path = self.svc.uploads / f"tg_{token}_{slug}.md"
+            path.write_text(res.markdown, encoding="utf-8")
+            self.generated[token] = path
+            gaps = len(re.findall(r"\[уточнить", res.markdown, re.I))
+            self.send_doc(chat, f"{slug}.md", res.markdown.encode("utf-8"),
+                          f"✍️ Черновик ТЗ «{html.escape(res.title)}» · пометок «уточнить»: {gaps}")
+            self.send(chat, "Проверить этот черновик командой агентов?",
+                      reply_markup={"inline_keyboard": [[{"text": "🔎 Проверить этот ТЗ", "callback_data": f"check:{token}"}]]})
+
+        threading.Thread(target=work, daemon=True, name="lumen-bot-generate").start()
 
     def chat(self, chat: int, text: str) -> None:
         ok, retry = limiter.allow(f"bot-msg:{chat}", self.svc.cfg.bot_messages_per_hour, 3600)
@@ -462,6 +539,24 @@ class TelegramBot:
         except Exception:
             pass
         kind = parts[0]
+        if kind == "sup":
+            self.waiting[chat] = "ticket"
+            self.send(chat, "🆘 Опишите вопрос или проблему одним сообщением (можно голосовым) — передам команде LÜMEN.")
+            return
+        if kind == "gen":
+            self.waiting[chat] = "gen"
+            self.send(chat, "✍️ Опишите идею одним сообщением (можно голосовым) — напишу черновик ТЗ по шаблону банка.")
+            return
+        if kind == "demo":
+            self.audit(chat, None, demo=True)
+            return
+        if kind == "check":
+            path = self.generated.pop(parts[1], None) if len(parts) > 1 else None
+            if path is None or not path.exists():
+                self.send(chat, "Черновик устарел — сгенерируйте ТЗ заново: /generate")
+            else:
+                self.audit(chat, None, path=path, name=path.name.split("_", 2)[-1])
+            return
         if kind == "setfmt":
             self.fmt[chat] = parts[1]
             self.send(chat, f"Готово: отчёты буду присылать в формате {FORMATS[parts[1]]}.")

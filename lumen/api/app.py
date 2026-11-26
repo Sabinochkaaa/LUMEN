@@ -45,6 +45,13 @@ async def lifespan(_app):
         threading.Thread(target=TelegramBot(settings.telegram_token, get_service()).run_forever, daemon=True,
                          name="lumen-telegram").start()
         log.info("Telegram-бот запущен внутри API")
+    support_token = os.environ.get("LUMEN_SUPPORT_BOT_TOKEN", "")
+    if support_token and settings.telegram_token and support_token != settings.telegram_token:
+        from ..bot.support_bot import SupportDesk
+
+        threading.Thread(target=SupportDesk(support_token, settings.telegram_token).run_forever, daemon=True,
+                         name="lumen-support-desk").start()
+        log.info("Бот службы поддержки запущен")
     yield
 
 
