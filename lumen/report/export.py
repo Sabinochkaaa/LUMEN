@@ -240,104 +240,228 @@ def _fonts() -> tuple[str, str]:
         if os.path.exists(reg):
             pdfmetrics.registerFont(TTFont("LumenSans", reg))
             pdfmetrics.registerFont(TTFont("LumenSans-Bold", bold if os.path.exists(bold) else reg))
+            from reportlab.lib.fonts import addMapping
+
+            for b, i in ((0, 0), (0, 1)):
+                addMapping("LumenSans", b, i, "LumenSans")
+            for b, i in ((1, 0), (1, 1)):
+                addMapping("LumenSans", b, i, "LumenSans-Bold")
             return "LumenSans", "LumenSans-Bold"
     raise RuntimeError("Для PDF нужен шрифт с кириллицей (DejaVu Sans или Arial). Установите fonts-dejavu-core.")
 
 
 def render_pdf(r: AuditResult) -> bytes:
+    """Decision first: page 1 answers «can we start, what to fix, what to ask»; evidence and appendix follow."""
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib.units import mm
-    from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    from reportlab.platypus import (CondPageBreak, KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table,
+                                    TableStyle)
+
+    from .digest import SEV_SHORT, VERDICT, VERDICT_HEX, build, short, where
 
     reg, bold = _fonts()
-    base = ParagraphStyle("b", fontName=reg, fontSize=9.5, leading=13.5)
-    small = ParagraphStyle("s", parent=base, fontSize=8.5, leading=11.5, textColor=colors.HexColor("#475467"))
-    quote = ParagraphStyle("q", parent=base, fontSize=8.8, leading=12, leftIndent=8, textColor=colors.HexColor("#0E1A33"),
-                           backColor=colors.HexColor("#E6F5FD"), borderPadding=4, spaceBefore=6, spaceAfter=6)
-    h0 = ParagraphStyle("h0", parent=base, fontName=bold, fontSize=17, leading=21, spaceAfter=6)
-    h1 = ParagraphStyle("h1", parent=base, fontName=bold, fontSize=13, leading=17, spaceBefore=10, spaceAfter=5,
-                        textColor=colors.HexColor("#1F4FD8"))
-    h2 = ParagraphStyle("h2", parent=base, fontName=bold, fontSize=10.5, leading=14, spaceBefore=6, spaceAfter=2)
+    C = colors.HexColor
+    NAVY, LINE, MUTE, TINT = C("#0E1A33"), C("#E4E8F0"), C("#667085"), C("#F5F7FB")
+    W = 176 * mm
+    base = ParagraphStyle("b", fontName=reg, fontSize=9.3, leading=13, textColor=NAVY)
+    small = ParagraphStyle("s", parent=base, fontSize=8, leading=10.5, textColor=MUTE)
+    tiny = ParagraphStyle("t", parent=small, fontSize=7.2, leading=9)
+    strong = ParagraphStyle("st", parent=base, fontName=bold)
+    h1 = ParagraphStyle("h1", parent=base, fontName=bold, fontSize=13.5, leading=17, spaceBefore=12, spaceAfter=6)
+    quote = ParagraphStyle("q", parent=small, textColor=C("#344054"), backColor=TINT, borderPadding=(3, 5, 3, 5),
+                           spaceBefore=3, spaceAfter=3)
 
     def P(text, style=base):
         return Paragraph(escape(str(text or "")).replace("\n", "<br/>"), style)
 
-    def tbl(rows, widths):
-        t = Table([[P(c, small if i else ParagraphStyle("th", parent=small, fontName=bold, textColor=colors.white))
-                    for c in row] for i, row in enumerate(rows)], colWidths=widths, repeatRows=1)
-        t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0E1A33")),
-                               ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#E4E8F0")),
-                               ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    def box(rows, widths, style):
+        t = Table(rows, colWidths=widths)
+        t.setStyle(TableStyle(style))
         return t
 
-    def finding(f: Finding):
-        col = colors.HexColor("#" + SEV_HEX[f.severity])
-        parts = [Paragraph(f'<font color="#{SEV_HEX[f.severity]}">■</font> <b>{escape(f.id)} · {f.severity} · '
-                           f'{escape(f.title)}</b>{" (требует проверки)" if f.status != "confirmed" else ""}',
-                           ParagraphStyle("fh", parent=base, fontName=bold)),
-                 P(f"{criterion_name(f.criterion)} · {_where(f)}" + (f" · {', '.join(f.req_ids)}" if f.req_ids else ""), small)]
-        if f.quote:
-            parts.append(P(f.quote[:900], quote))
-        for label, val in (("Что не так", f.problem), ("Риск", f.risk), ("Как исправить", f.fix),
-                           ("Улучшенная формулировка", f.rewrite)):
-            if val:
-                parts.append(Paragraph(f"<b>{label}:</b> {escape(val)}", base))
-        t = Table([[parts]], colWidths=[176 * mm])
-        t.setStyle(TableStyle([("LINEBEFORE", (0, 0), (0, -1), 2.5, col), ("LEFTPADDING", (0, 0), (-1, -1), 7),
-                               ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
-        return KeepTogether([t, Spacer(1, 4)])
+    d = build(r)
+    s, p = r.scores, r.passport
+    vlabel, vtext = VERDICT[r.readiness]
+    vcol = C("#" + VERDICT_HEX[r.readiness])
+    story: list = []
 
-    story = [P("LÜMEN REQUIREMENTS INTELLIGENCE", small),
-             P(f"Отчёт о проверке требований: «{r.passport.document_title or r.passport.document_name}»", h0)]
+    # ---------------------------------------------------------------- page 1: the decision
+    title = p.document_title or p.document_name
+    story.append(box([[Paragraph(f'<font color="#9FB3D9" size="7.5">LÜMEN · ПРОВЕРКА ТРЕБОВАНИЙ</font><br/>'
+                                 f'<font color="#FFFFFF" size="16"><b>{escape(title)}</b></font>',
+                                 ParagraphStyle("hd", parent=base, leading=20)),
+                       Paragraph(f'<font color="#C7D2E8">{escape(_date(p.analysed_at))}<br/>{escape(p.model)}</font>',
+                                 ParagraphStyle("hr", parent=tiny, alignment=2))]],
+                     [W * 0.68, W * 0.32],
+                     [("BACKGROUND", (0, 0), (-1, -1), NAVY), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                      ("LEFTPADDING", (0, 0), (-1, -1), 12), ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                      ("TOPPADDING", (0, 0), (-1, -1), 12), ("BOTTOMPADDING", (0, 0), (-1, -1), 12)]))
     if r.demo:
-        story.append(P("ДЕМОНСТРАЦИОННЫЙ ПРОГОН — не проверка документа организаторов.", h2))
-    s = r.scores
-    story += [P(READY[r.readiness], h2), P(r.readiness_reason),
-              P(f"Требований: {s.total_requirements} · замечаний: {s.findings_total} (CRITICAL {s.by_severity['CRITICAL']}, "
-                f"HIGH {s.by_severity['HIGH']}, MEDIUM {s.by_severity['MEDIUM']}, LOW {s.by_severity['LOW']}) · "
-                f"вопросов: {len(r.questions)} · индекс качества {s.quality_index}/100", small),
-              P("1. Паспорт прогона", h1), tbl([["Параметр", "Значение"]] + [list(x) for x in _passport_rows(r)], [40 * mm, 136 * mm])]
-    for w in r.warnings:
-        story.append(P(f"⚠ {w}", small))
-    story += [P("2. Как агент нарезал требования", h1),
-              tbl([["ID", "ID в документе", "Тип", "Место", "Краткая формулировка"]] +
-                  [[x.id, x.source_id if x.source_id_kind == "explicit" else "нет", TYPE_RU.get(x.type, x.type),
-                    f"строки {x.loc.line_start}–{x.loc.line_end}", x.summary] for x in r.requirements],
-                  [18 * mm, 24 * mm, 26 * mm, 26 * mm, 82 * mm]),
-              P("3. Проверка каждого требования", h1)]
-    for f in [f for f in r.findings if f.scope == "requirement"]:
-        story.append(finding(f))
-    story.append(P("4. Проверка всего набора", h1))
-    sset = {f.criterion for f in r.findings if f.status == "confirmed"}
-    story.append(tbl([["Свойство набора", "Основание", "Статус"]] +
-                     [[v[0], v[1], "дефект" if k in sset else "—"] for k, v in SET_CRITERIA.items()],
-                     [60 * mm, 90 * mm, 26 * mm]))
+        story.append(P("Демонстрационный прогон — не проверка документа организаторов.", small))
+    story.append(Spacer(1, 8))
+    verdict = [Paragraph(f'<font color="{vcol.hexval().replace("0x", "#")}" size="17"><b>{vlabel}</b></font>',
+                         ParagraphStyle("v", parent=base, leading=21)),
+               Spacer(1, 3), P(vtext, strong), Spacer(1, 2), P(short(r.readiness_reason, 230), small)]
+    score = [Paragraph(f'<font size="28"><b>{s.quality_index:.0f}</b></font><font size="10" color="#667085"> / 100</font>',
+                       ParagraphStyle("sc", parent=base, leading=32)), P("индекс качества", small)]
+    story.append(box([[verdict, score]], [W * 0.70, W * 0.30],
+                     [("BACKGROUND", (0, 0), (0, 0), TINT), ("LINEBEFORE", (0, 0), (0, 0), 4, vcol),
+                      ("BOX", (1, 0), (1, 0), 0.6, LINE), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                      ("LEFTPADDING", (0, 0), (-1, -1), 12), ("TOPPADDING", (0, 0), (-1, -1), 10),
+                      ("BOTTOMPADDING", (0, 0), (-1, -1), 10)]))
     story.append(Spacer(1, 6))
-    for f in [f for f in r.findings if f.scope == "set"]:
-        story.append(finding(f))
-    story.append(P("5. Вопросы к владельцу требований", h1))
-    for q in r.questions:
-        story.append(KeepTogether([Paragraph(f"<b>{q.id}</b> ({escape(', '.join(q.req_ids) or 'набор')}) {escape(q.question)}", base),
-                                   P(f"Зачем: {q.why}" + (f" Риск: {q.risk}" if q.risk else ""), small),
-                                   P("Варианты: " + " / ".join(q.options), small) if q.options else Spacer(1, 1),
-                                   Spacer(1, 4)]))
-    story.append(P("6. Итог и что исправить в первую очередь", h1))
-    story.append(P(READY[r.readiness], h2))
-    for i, pr in enumerate(r.priorities, start=1):
-        story.append(P(f"{i}. {pr}"))
+    sev = s.by_severity
+    tiles = [(s.total_requirements, "требований", NAVY), (sev["CRITICAL"], "критичных", C("#" + SEV_HEX["CRITICAL"])),
+             (sev["HIGH"], "высоких", C("#" + SEV_HEX["HIGH"])), (s.open_questions, "открытых вопросов", C("#6E3FF3"))]
+    story.append(box([[[Paragraph(f'<font size="17" color="{c.hexval().replace("0x", "#")}"><b>{n}</b></font>',
+                                  ParagraphStyle("k", parent=base, leading=20)), P(lbl, small)] for n, lbl, c in tiles]],
+                     [W / 4] * 4,
+                     [("BOX", (0, 0), (-1, -1), 0.6, LINE), ("LINEAFTER", (0, 0), (-2, 0), 0.6, LINE),
+                      ("LEFTPADDING", (0, 0), (-1, -1), 10), ("TOPPADDING", (0, 0), (-1, -1), 7),
+                      ("BOTTOMPADDING", (0, 0), (-1, -1), 7)]))
+    total = sum(sev[k] for k in ("CRITICAL", "HIGH", "MEDIUM", "LOW")) or 1
+    parts = [(k, sev[k]) for k in ("CRITICAL", "HIGH", "MEDIUM", "LOW") if sev[k]]
+    if parts:
+        story.append(Spacer(1, 6))
+        widths = [max(W * n / total, 2 * mm) for _, n in parts]
+        k = W / sum(widths)
+        story.append(box([[""] * len(parts)], [w * k for w in widths],
+                         [("BACKGROUND", (i, 0), (i, 0), C("#" + SEV_HEX[s_])) for i, (s_, _) in enumerate(parts)] +
+                         [("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                          ("ROWHEIGHTS", (0, 0), (-1, -1), 6)]))
+        story.append(Paragraph(f"Замечаний {s.findings_total}: " + " · ".join(
+            f'<font color="#{SEV_HEX[s_]}">■</font> {n} {SEV_SHORT[s_].lower()}' for s_, n in parts), tiny))
+
+    if d.fixes:
+        story.append(P("Исправьте в первую очередь", h1))
+        for i, f in enumerate(d.fixes, 1):
+            col = C("#" + SEV_HEX[f.severity])
+            how = f.rewrite or f.fix
+            body = [Paragraph(f"<b>{escape(f.title)}</b>", base),
+                    P(f"{SEV_SHORT[f.severity]} · {where(f)}" + (f" · {', '.join(f.req_ids[:3])}" if f.req_ids else ""), tiny),
+                    Spacer(1, 2), P(short(f.problem, 200))]
+            if how:
+                body.append(Paragraph(f'<font color="#1F4FD8"><b>{"Как написать" if f.rewrite else "Как исправить"}:</b></font> '
+                                      f'{escape(short(how, 230))}', quote))
+            num = Paragraph(f'<font size="13" color="{col.hexval().replace("0x", "#")}"><b>{i}</b></font>', base)
+            story.append(KeepTogether([box([[num, body]], [9 * mm, W - 9 * mm],
+                                           [("LINEBEFORE", (0, 0), (0, 0), 3, col), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                                            ("LEFTPADDING", (0, 0), (-1, -1), 7), ("TOPPADDING", (0, 0), (-1, -1), 4),
+                                            ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]), Spacer(1, 5)]))
+    if d.questions:
+        story.append(CondPageBreak(40 * mm))
+        story.append(P("Спросите у владельца требований", h1))
+        rows = [[Paragraph('<font color="#6E3FF3"><b>?</b></font>', base),
+                 [P(short(q.question, 230)), P(", ".join(q.req_ids[:3]) or "весь документ", tiny)]] for q in d.questions]
+        story.append(box(rows, [7 * mm, W - 7 * mm],
+                         [("LINEBELOW", (0, 0), (-1, -2), 0.4, LINE), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                          ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]))
+
+    # ---------------------------------------------------------------- page 2: where it hurts
+    story.append(CondPageBreak(90 * mm))
+    story.append(P("Карта требований", h1))
+    story.append(P(f"Каждая клетка — требование, цвет — самое серьёзное замечание к нему. Без замечаний: {d.clean} "
+                   f"из {len(d.heat)}.", small))
+    story.append(Spacer(1, 5))
+    per = 8
+    cells, style = [], [("GRID", (0, 0), (-1, -1), 2, colors.white), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                        ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]
+    for i in range(0, len(d.heat), per):
+        row = []
+        for j, (rid, sv, sc) in enumerate(d.heat[i:i + per]):
+            bg = C("#" + SEV_HEX[sv]) if sv else C("#E7F6EE")
+            fg = "#FFFFFF" if sv in ("CRITICAL", "HIGH", "LOW") else "#0E1A33"
+            row.append(Paragraph(f'<font color="{fg}" size="7"><b>{escape(rid)}</b><br/>{sc:.0f}</font>',
+                                 ParagraphStyle("hm", parent=tiny, alignment=1)))
+            style.append(("BACKGROUND", (j, i // per), (j, i // per), bg))
+        cells.append(row + [""] * (per - len(row)))
+    if cells:
+        story.append(box(cells, [W / per] * per, style))
+        legend = " ".join(f'<font color="#{SEV_HEX[k]}">■</font> {SEV_SHORT[k]}' for k in ("CRITICAL", "HIGH", "MEDIUM", "LOW"))
+        story.append(Paragraph(legend + ' <font color="#9AD8B4">■</font> Без замечаний · число — балл требования', tiny))
+    if d.fintech_gaps:
+        story.append(P("FinTech: чего не хватает", h1))
+        story.append(box([[P("Аспект", strong), P("Статус", strong), P("Что добавить", strong)]] +
+                         [[P(a), P("не описано" if st == "missing" else "частично", small), P(short(rec, 160), small)]
+                          for a, st, rec in d.fintech_gaps],
+                         [48 * mm, 22 * mm, W - 70 * mm],
+                         [("LINEBELOW", (0, 0), (-1, -1), 0.4, LINE), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                          ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
+
+    # ---------------------------------------------------------------- all findings, grouped by severity
+    def card(f: Finding):
+        col = C("#" + SEV_HEX[f.severity])
+        rev = ' <font color="#B54708">(требует проверки)</font>' if f.status != "confirmed" else ""
+        parts = [Paragraph(f"<b>{escape(f.id)} · {escape(f.title)}</b>{rev}", base),
+                 P(f"{criterion_name(f.criterion)}{' · ' + f.standard_ref if f.standard_ref else ''} · {where(f)}"
+                   + (f" · {', '.join(f.req_ids)}" if f.req_ids else ""), tiny)]
+        if f.quote:
+            parts.append(P("«" + short(f.quote, 320) + "»", quote))
+        for label, val in (("Проблема", f.problem), ("Риск", f.risk if f.severity in ("CRITICAL", "HIGH") else ""),
+                           ("Исправить", f.fix), ("Формулировка", f.rewrite)):
+            if val:
+                parts.append(Paragraph(f'<font color="#667085">{label}:</font> {escape(short(val, 420))}', base))
+        return KeepTogether([box([[parts]], [W], [("LINEBEFORE", (0, 0), (0, -1), 2.5, col),
+                                                  ("LEFTPADDING", (0, 0), (-1, -1), 8), ("TOPPADDING", (0, 0), (-1, -1), 3),
+                                                  ("BOTTOMPADDING", (0, 0), (-1, -1), 5)]), Spacer(1, 4)])
+
+    story.append(P(f"Все замечания ({len(r.findings)})", h1))
+    for sv in ("CRITICAL", "HIGH", "MEDIUM"):
+        fs = [f for f in r.findings if f.severity == sv]
+        if fs:
+            story.append(Paragraph(f'<font color="#{SEV_HEX[sv]}">■</font> <b>{SEV_SHORT[sv]} — {len(fs)}</b>',
+                                   ParagraphStyle("sg", parent=base, spaceBefore=6, spaceAfter=4)))
+            story.extend(card(f) for f in fs)
+    minor = [f for f in r.findings if f.severity in ("LOW", "INFO")]
+    if minor:
+        story.append(Paragraph(f'<font color="#{SEV_HEX["LOW"]}">■</font> <b>Улучшения — {len(minor)}</b>',
+                               ParagraphStyle("sg2", parent=base, spaceBefore=6, spaceAfter=4)))
+        story.append(box([[P(f.title, small), P(where(f), tiny), P(short(f.fix or f.problem, 150), small)] for f in minor],
+                         [60 * mm, 26 * mm, W - 86 * mm],
+                         [("LINEBELOW", (0, 0), (-1, -1), 0.4, LINE), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+
+    if r.questions:
+        story.append(P(f"Все вопросы владельцу ({len(r.questions)})", h1))
+        st = {"open": "открыт", "clarified": "уточнён", "rejected": "отклонён"}
+        story.append(box([[P(q.id, tiny), [P(q.question), P(("Варианты: " + " / ".join(q.options)) if q.options else "", tiny)]
+                                + ([P("Ответ: " + q.answer, small)] if q.answer else []), P(st[q.status], tiny)]
+                          for q in r.questions],
+                         [14 * mm, W - 34 * mm, 20 * mm],
+                         [("LINEBELOW", (0, 0), (-1, -1), 0.4, LINE), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                          ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]))
+
+    # ---------------------------------------------------------------- appendix: evidence trail
+    story.append(PageBreak())
+    story.append(P("Приложение. Как проводилась проверка", h1))
+    grid = [("LINEBELOW", (0, 0), (-1, -1), 0.3, LINE), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]
+    story.append(box([[P(k, tiny), P(v, tiny)] for k, v in _passport_rows(r)], [36 * mm, W - 36 * mm], grid))
+    for w in r.warnings:
+        story.append(P("⚠ " + w, tiny))
+    story.append(Spacer(1, 6))
+    sset = {f.criterion for f in r.findings if f.status == "confirmed"}
+    story.append(P("Свойства набора (ISO/IEC/IEEE 29148 п. 5.2.6, IEEE 830 п. 4.3)", strong))
+    story.append(box([[P(v[0], tiny), P(v[1], tiny), P("дефект" if k in sset else "в порядке", tiny)]
+                      for k, v in SET_CRITERIA.items()], [62 * mm, 88 * mm, 26 * mm], grid))
+    story.append(Spacer(1, 6))
+    story.append(P(f"Нарезка требований ({len(r.requirements)})", strong))
+    story.append(box([[P(x.id, tiny), P(x.source_id if x.source_id_kind == "explicit" else "—", tiny),
+                       P(TYPE_RU.get(x.type, x.type), tiny), P(f"строки {x.loc.line_start}–{x.loc.line_end}", tiny),
+                       P(x.summary, tiny)] for x in r.requirements],
+                     [16 * mm, 18 * mm, 24 * mm, 22 * mm, W - 80 * mm], grid))
 
     def footer(canvas, doc):
-        canvas.setFont(reg, 7.5)
-        canvas.setFillColor(colors.HexColor("#98A2B3"))
-        canvas.drawString(17 * mm, 10 * mm, f"{PRODUCT_NAME} · {r.passport.document_name} · коммит {r.passport.agent_commit}")
-        canvas.drawRightString(193 * mm, 10 * mm, f"стр. {doc.page}")
+        canvas.setFont(reg, 7)
+        canvas.setFillColor(C("#98A2B3"))
+        canvas.drawString(17 * mm, 9 * mm, f"LÜMEN {p.agent_version} · коммит {p.agent_commit} · {p.document_name}")
+        canvas.drawRightString(193 * mm, 9 * mm, str(doc.page))
 
     buf = io.BytesIO()
-    SimpleDocTemplate(buf, pagesize=A4, leftMargin=17 * mm, rightMargin=17 * mm, topMargin=15 * mm, bottomMargin=17 * mm,
-                      title=f"LÜMEN — {r.passport.document_name}", author="LÜMEN Core").build(story, onFirstPage=footer,
-                                                                                            onLaterPages=footer)
+    SimpleDocTemplate(buf, pagesize=A4, leftMargin=17 * mm, rightMargin=17 * mm, topMargin=13 * mm, bottomMargin=15 * mm,
+                      title=f"LÜMEN — {p.document_name}", author="LÜMEN Core").build(story, onFirstPage=footer,
+                                                                                    onLaterPages=footer)
     return buf.getvalue()
 
 

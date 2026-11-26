@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal, Optional
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -25,13 +25,16 @@ from ..config import PROVIDER_LABELS, agent_version, settings
 from ..parsing.loader import FORMATS, SUPPORTED
 from ..report.render import render_html, render_markdown
 from ..service import get_service
-from ..security import (SESSION_COOKIE, SESSION_TTL, UploadRejected, check_session, client_ip, limiter, make_session,
-                        security_headers, token_ok, validate_upload)
+from ..security import (SESSION_COOKIE, SESSION_TTL, UploadRejected, check_session, client_ip, edit_key, edit_key_ok,
+                        limiter, make_session, safe_filename, security_headers, token_ok, validate_upload)
 from ..storage.store import summary
 
 log = logging.getLogger("lumen.api")
 logging.getLogger("httpx").setLevel(logging.WARNING)  # httpx logs full URLs (Telegram token is in the URL)
 MAX_UPLOAD = 20 * 1024 * 1024
+MAX_BODY = MAX_UPLOAD + 1024 * 1024  # multipart overhead
+SSE_MAX_S = 30 * 60
+AUDIT_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 WEB_DIST = Path(__file__).resolve().parent.parent.parent / "web" / "dist"
 
 @asynccontextmanager
@@ -50,12 +53,18 @@ app = FastAPI(title=f"{PRODUCT_NAME} API", version=__version__, lifespan=lifespa
 _cors = os.environ.get("LUMEN_CORS", "" if settings.production else "*")
 if _cors:
     app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in _cors.split(",") if x.strip()],
-                       allow_methods=["GET", "POST", "PATCH", "DELETE"], allow_headers=["X-API-Token", "Content-Type"])
+                       allow_methods=["GET", "POST", "PATCH", "DELETE"], allow_headers=["X-API-Token", "Content-Type", "X-Edit-Key", "X-Requested-With"])
 
 
 @app.middleware("http")
 async def guard(request: Request, call_next):
     path = request.url.path
+    try:
+        too_big = int(request.headers.get("content-length") or 0) > MAX_BODY
+    except ValueError:
+        too_big = True
+    if too_big:  # refuse before Starlette spools a huge body to disk
+        return JSONResponse({"detail": "Запрос больше 20 МБ"}, status_code=413)
     if path.startswith("/api/") and path != "/api/health":
         ip = client_ip(request.headers, request.client.host if request.client else "unknown")
         ok, retry = limiter.allow(f"req:{ip}", settings.rate_requests_per_min, 60)
@@ -190,13 +199,13 @@ async def create_audit(file: UploadFile = File(...), provider: Optional[str] = F
     if provider and provider not in PROVIDER_LABELS and provider not in ("auto", "claude"):
         raise HTTPException(422, f"Неизвестный провайдер: {provider}")
     svc = get_service()
-    safe = re.sub(r"[^\w.\-]+", "_", name)[-80:]
+    safe = safe_filename(name)
     import uuid as _uuid
 
     path = svc.uploads / f"{_uuid.uuid4().hex}_{safe}"
     path.write_bytes(data)
     job = svc.submit(path, name, provider=None if provider in (None, "", "auto") else provider, model=model or None)
-    return {"job_id": job.id, "audit_id": job.id, "events": f"/api/audits/{job.id}/events"}
+    return {"job_id": job.id, "audit_id": job.id, "events": f"/api/audits/{job.id}/events", "edit_key": edit_key(job.id)}
 
 
 def demo_access(request: Request) -> None:
@@ -207,7 +216,8 @@ def demo_access(request: Request) -> None:
 @app.post("/api/demo", dependencies=[Depends(demo_access), Depends(limit_audits)])
 def create_demo():
     job = get_service().submit_demo()
-    return {"job_id": job.id, "audit_id": job.id, "events": f"/api/audits/{job.id}/events", "demo": True}
+    return {"job_id": job.id, "audit_id": job.id, "events": f"/api/audits/{job.id}/events", "demo": True,
+            "edit_key": edit_key(job.id)}
 
 
 @app.get("/api/demo/document", dependencies=[Depends(demo_access)])
@@ -219,6 +229,8 @@ def demo_document():
 
 @app.get("/api/audits/{audit_id}/events", dependencies=[Depends(require_read)])
 async def events(audit_id: str):
+    if not AUDIT_ID.match(audit_id):
+        raise HTTPException(404, "Прогон не найден")
     job = get_service().jobs.get(audit_id)
     if job is None:
         r = get_service().store.get(audit_id)
@@ -233,8 +245,8 @@ async def events(audit_id: str):
         return StreamingResponse(done_stream(), media_type="text/event-stream")
 
     async def stream():
-        sent = 0
-        while True:
+        sent, started = 0, asyncio.get_running_loop().time()
+        while asyncio.get_running_loop().time() - started < SSE_MAX_S:
             with job.cond:
                 batch = job.events[sent:]
             for ev in batch:
@@ -260,6 +272,8 @@ def list_audits(limit: int = Query(100, ge=1, le=500)):
 
 
 def _get(audit_id: str):
+    if not AUDIT_ID.match(audit_id):
+        raise HTTPException(404, "Прогон не найден")
     r = get_service().store.get(audit_id)
     if r is None:
         job = get_service().jobs.get(audit_id)
@@ -292,8 +306,9 @@ def report(audit_id: str, fmt: Literal["md", "html", "json", "pdf", "docx", "xls
             headers = {"content-disposition": f'attachment; filename="{fname}"'}
         try:
             return Response(export_render(r, fmt), media_type=MIME[fmt], headers=headers)
-        except Exception as e:
-            raise HTTPException(500, f"Не удалось сформировать {fmt.upper()}: {e}") from None
+        except Exception:
+            log.exception("report export failed: %s %s", audit_id, fmt)
+            raise HTTPException(500, f"Не удалось сформировать {fmt.upper()}. Скачайте HTML или Markdown.") from None
     if fmt == "md":
         return PlainTextResponse(render_markdown(r), media_type="text/markdown; charset=utf-8", headers=headers)
     if fmt == "html":
@@ -306,8 +321,17 @@ class QuestionPatch(BaseModel):
     answer: Optional[str] = None
 
 
-@app.patch("/api/audits/{audit_id}/questions/{qid}", dependencies=[Depends(require_run)])
+def require_editor(audit_id: str, request: Request) -> None:
+    """Answers change readiness, so only the author of the audit (edit key from the upload response) or an admin."""
+    if is_admin(request) or edit_key_ok(audit_id, request.headers.get("x-edit-key")):
+        return
+    raise HTTPException(403, "Отвечать на вопросы может автор проверки (с этого браузера) или администратор")
+
+
+@app.patch("/api/audits/{audit_id}/questions/{qid}", dependencies=[Depends(require_editor)])
 def patch_question(audit_id: str, qid: str, body: QuestionPatch):
+    if body.answer is not None and len(body.answer) > 4000:
+        raise HTTPException(422, "Ответ длиннее 4000 символов")
     try:
         r = get_service().update_question(audit_id, qid, body.status, body.answer)
     except KeyError:
@@ -352,7 +376,7 @@ async def translate(file: UploadFile = File(...), target: str = Form(...)):
     import uuid as _uuid
 
     svc = get_service()
-    path = svc.uploads / f"tr_{_uuid.uuid4().hex}_{re.sub(r'[^\w.\-]+', '_', name)[-80:]}"
+    path = svc.uploads / f"tr_{_uuid.uuid4().hex}_{safe_filename(name)}"
     path.write_bytes(data)
     try:
         tr = await run_in_threadpool(translate_document, path, target, display_name=name, cfg=svc.cfg)
@@ -376,7 +400,7 @@ def translate_docx(body: DocxBody):
     from ..report.export import MIME
     from ..translate import markdown_to_docx
 
-    if len(body.markdown) > 2_000_000:
+    if len(body.markdown) > 1_000_000:
         raise HTTPException(413, "Слишком большой текст")
     return Response(markdown_to_docx(body.markdown, body.title), media_type=MIME["docx"],
                     headers={"content-disposition": 'attachment; filename="lumen_translation.docx"'})
@@ -400,6 +424,8 @@ if WEB_DIST.exists():
 
     @app.get("/{path:path}", include_in_schema=False)
     def spa(path: str):
+        if path.startswith("api/"):  # unknown API routes are JSON 404, not the HTML app
+            raise HTTPException(404, "Метод API не найден")
         target = WEB_DIST / path
         if path and target.is_file() and WEB_DIST in target.resolve().parents:
             return FileResponse(target)

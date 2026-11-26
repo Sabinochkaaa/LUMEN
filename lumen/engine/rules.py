@@ -10,7 +10,7 @@ from collections import defaultdict
 
 from ..models import Document, Finding, Location, Question, Relation, Requirement
 from .criteria import criterion_basis, criterion_ref
-from .evidence import EvidenceIndex, norm
+from .evidence import EvidenceIndex
 from .extractor import Extraction
 
 VAGUE_TERMS = [

@@ -62,6 +62,19 @@ function headers(): Record<string, string> {
   return { "X-Requested-With": "lumen" };
 }
 
+/** Edit key from the upload response: lets this browser answer the audit's questions (others only read). */
+const EDIT = "lumen.edit.";
+function keep(r: { audit_id: string; edit_key?: string }) {
+  try { if (r.edit_key) localStorage.setItem(EDIT + r.audit_id, r.edit_key); } catch { /* storage disabled */ }
+  return r;
+}
+export function canEdit(id: string): boolean {
+  try { return !!localStorage.getItem(EDIT + id); } catch { return false; }
+}
+function editHeader(id: string): Record<string, string> {
+  try { const k = localStorage.getItem(EDIT + id); return k ? { "X-Edit-Key": k } : {}; } catch { return {}; }
+}
+
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   const r = await fetch(BASE + path, { ...init, headers: { ...headers(), ...(init.headers || {}) } });
   if (!r.ok) {
@@ -86,9 +99,9 @@ export const api = {
     fd.append("file", file);
     if (provider) fd.append("provider", provider);
     if (model) fd.append("model", model);
-    return req<{ audit_id: string }>("/api/audits", { method: "POST", body: fd });
+    return req<{ audit_id: string; edit_key?: string }>("/api/audits", { method: "POST", body: fd }).then(keep);
   },
-  demo: () => req<{ audit_id: string }>("/api/demo", { method: "POST" }),
+  demo: () => req<{ audit_id: string; edit_key?: string }>("/api/demo", { method: "POST" }).then(keep),
   compare: (base: string, next: string) => req<CompareResult>(`/api/compare?base=${base}&new=${next}`),
   translate: (file: File, target: string) => {
     const fd = new FormData();
@@ -107,7 +120,7 @@ export const api = {
   patchQuestion: (id: string, qid: string, body: { status?: string; answer?: string }) =>
     req<{ question: Question; scores: Scores; readiness: Readiness; readiness_reason: string }>(
       `/api/audits/${id}/questions/${qid}`,
-      { method: "PATCH", body: JSON.stringify(body), headers: { "content-type": "application/json" } }),
+      { method: "PATCH", body: JSON.stringify(body), headers: { "content-type": "application/json", ...editHeader(id) } }),
   reportUrl: (id: string, fmt: "md" | "html" | "json" | "pdf" | "docx" | "xlsx", download = false) =>
     `${BASE}/api/audits/${id}/report.${fmt}${download ? "?download=true" : ""}`,
   /** SSE over fetch: the token travels in a header, never in the URL (and so never in server logs). */

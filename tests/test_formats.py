@@ -57,7 +57,8 @@ def test_exports(tmp_path, cfg):
     assert pdf.startswith(b"%PDF") and len(pdf) > 5000
     import pymupdf
 
-    assert "Паспорт прогона" in "".join(pg.get_text() for pg in pymupdf.open(stream=pdf, filetype="pdf"))
+    text = "".join(pg.get_text() for pg in pymupdf.open(stream=pdf, filetype="pdf"))
+    assert "Исправьте в первую очередь" in text and "Нарезка требований" in text and "F-001" in text
     doc = Document(paths["docx"])
     body = "\n".join(p.text for p in doc.paragraphs)
     assert "Как агент нарезал требования" in body and "F-001" in body

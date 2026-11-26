@@ -267,6 +267,9 @@ const D: Record<string, [string, string, string]> = {
   "rel.traces_to": ["прослеживается к", "байланысты", "traces to"],
   // clarifications
   "q.title": ["Вопросы к владельцу требований", "Талаптар иесіне сұрақтар", "Questions for the requirements owner"],
+  "q.readOnly": ["Ответы может фиксировать автор проверки (браузер, с которого загружен документ) или администратор. Вы видите вопросы в режиме чтения.",
+    "Жауаптарды тексеруді бастаған адам (құжат жүктелген браузер) немесе әкімші бекіте алады. Сіз сұрақтарды тек оқу режимінде көріп отырсыз.",
+    "Answers can be recorded by the author of this audit (the browser that uploaded the document) or an admin. You are viewing in read-only mode."],
   "q.sub": ["LÜMEN задаёт вопросы там, где по тексту нельзя однозначно понять поведение системы. Варианты — предложения, а не факты. Зафиксируйте ответ, и он попадёт в отчёт.",
     "LÜMEN мәтіннен жүйенің әрекетін бір мағыналы түсіну мүмкін болмаған жерде сұрақ қояды. Нұсқалар — фактілер емес, ұсыныстар. Жауапты бекітіңіз, ол есепке енеді.",
     "LÜMEN asks where the text doesn’t pin down system behaviour. Options are suggestions, not facts. Record the answer and it goes into the report."],
