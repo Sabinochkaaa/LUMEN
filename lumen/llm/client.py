@@ -254,7 +254,8 @@ class ClaudeCLIClient(LLMClient):
         cmd = [exe, "-p", "--output-format", "json", "--model", self.model, "--append-system-prompt", system,
                "--disallowedTools", "Bash,Edit,Write,WebFetch,WebSearch,Read,Glob,Grep,Task"]
         try:
-            proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=self.settings.timeout_s * 3)
+            proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                  timeout=self.settings.timeout_s * 3)
         except subprocess.TimeoutExpired:
             raise httpx.TimeoutException("claude-cli timeout") from None
         try:
