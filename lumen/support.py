@@ -94,7 +94,8 @@ FAQ: list[tuple[str, str, str]] = [
     ("генератор сгенерировать написать создать тз черновик идея с нуля", "Может ли LÜMEN написать ТЗ?",
      "Да, раздел «Генератор ТЗ»: опишите идею текстом или голосом — Аналитик напишет черновик по банковскому шаблону "
      "с нумерацией Ф-1, Ф-2, критериями приёмки и нефункциональными требованиями. Чего нет в идее, агент не выдумывает, "
-     "а помечает «[уточнить: …]». Кнопка «Проверить этот ТЗ» сразу отправляет черновик на проверку командой."),
+     "а помечает «[уточнить: …]». Кнопка «Проверить этот ТЗ» сразу отправляет черновик на проверку командой. В Telegram-боте: /generate и идея "
+     "(можно голосовым)."),
     ("голос голосовой микрофон говорить надиктовать распознавание не работает микрофон", "Можно ли говорить голосом?",
      "Да, нажмите на микрофон в чате поддержки или в «Генераторе ТЗ» и говорите — текст появится сам. Распознавание "
      "делает браузер (Chrome, Edge, Safari) на русском, казахском или английском, по языку интерфейса."),
@@ -367,7 +368,6 @@ def save_ticket(data_dir, message: str, history: list[dict] | None, contact: str
     """
     import json
     import logging
-    import os
     import time
     import uuid
     from pathlib import Path
@@ -392,18 +392,13 @@ def save_ticket(data_dir, message: str, history: list[dict] | None, contact: str
         folder.mkdir(parents=True, exist_ok=True)
         with open(folder / "tickets.jsonl", "a", encoding="utf-8") as fh:
             fh.write(json.dumps(t, ensure_ascii=False) + "\n")
-    chat, token = os.environ.get("LUMEN_SUPPORT_CHAT_ID", ""), os.environ.get("TELEGRAM_BOT_TOKEN", "")
-    if chat and token:
-        try:
-            import httpx
+    from html import escape
 
-            text = (f"🆘 Обращение {t['id']} ({channel})\n\n{t['message']}"
-                    + (f"\n\nКонтакт: {t['contact']}" if t["contact"] else "")
-                    + (f"\nПроверка: {t['audit_id']}" if t["audit_id"] else ""))
-            httpx.post(f"https://api.telegram.org/bot{token}/sendMessage", json={"chat_id": chat, "text": text},
-                       timeout=10)
-        except Exception:
-            pass  # the ticket is saved anyway
+    from .bot.support_bot import notify_team
+
+    notify_team(f"🆘 <b>Обращение {t['id']}</b> ({escape(channel)})\n\n{escape(t['message'])}"
+                + (f"\n\nКонтакт: {escape(t['contact'])}" if t["contact"] else "")
+                + (f"\nПроверка: {escape(t['audit_id'])}" if t["audit_id"] else ""))
     return t
 
 

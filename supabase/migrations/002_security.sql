@@ -5,3 +5,4 @@ create index if not exists audits_private_idx on public.audits (private);
 -- Доступ только сервисным ключом backend: RLS включён, политик для anon/authenticated нет.
 alter table public.audits enable row level security;
 revoke all on public.audits from anon, authenticated;
+grant all on public.audits to service_role;
