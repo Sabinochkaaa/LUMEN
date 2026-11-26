@@ -3,7 +3,7 @@
 **AI-Powered Requirements Quality & Compliance Platform** · BCC-HUB × MNU FinTech Hackathon 2026
 
 LÜMEN — ИИ-агент, который проводит **статическую проверку документа требований до разработки**: читает документ
-(PDF, DOCX, MD, TXT), выделяет отдельные требования, проверяет каждое и весь набор по критериям
+(PDF, DOCX, MD, TXT, HTML, RTF, фото и сканы через OCR), выделяет отдельные требования, проверяет каждое и весь набор по критериям
 **ISO/IEC/IEEE 29148:2018 (п. 5.2.5, 5.2.6)** и **IEEE Std 830-1998 (п. 4.3)**, добавляет экспертный FinTech-аудит,
 формирует **вопросы владельцу требований** и выпускает отчёт на русском языке, в котором каждое замечание
 привязано к строке документа и подкреплено дословной цитатой.
@@ -13,7 +13,7 @@ LÜMEN — ИИ-агент, который проводит **статическ
 | **LÜMEN Core** (CLI) | агент: документ → отчёт, одной командой | `python -m lumen -i docs/requirements.md -o reports/audit_report.md` |
 | **LÜMEN Intelligence** | веб-панель: загрузка, живой прогресс, линза документа, граф, вопросы | `uvicorn lumen.api.app:app` → http://localhost:8000 |
 | **REST API** | загрузка, SSE-прогресс, результаты, отчёты, статусы вопросов | http://localhost:8000/docs |
-| **Telegram-бот** | прислали файл → получили вердикт, критичные дефекты и HTML-отчёт | `python -m lumen.bot` |
+| **Telegram-бот** | файл, фото или текст → вердикт, ИИ-чат по отчёту, отчёт в PDF/Word/Excel/HTML/MD/JSON | внутри API или `python -m lumen.bot` |
 
 ---
 
@@ -122,8 +122,9 @@ cp .env.example .env                                  # Windows: copy .env.examp
 python -m lumen --input docs/requirements.md --output reports/audit_report.md
 ```
 
-* вход — путь к документу (PDF, DOCX, MD, TXT), выход — путь к отчёту; директория создаётся автоматически;
+* вход — путь к документу (PDF, DOCX, MD, TXT, HTML, RTF, PNG/JPG), выход — путь к отчёту; директория создаётся автоматически;
 * рядом с `audit_report.md` ложатся `audit_report.html` (интерактивный) и `audit_report.json` (машиночитаемый);
+  нужны PDF, Word или Excel — добавьте `--formats md,html,json,pdf,docx,xlsx`;
 * в терминале — прогресс 15 этапов и итог; код выхода `0` — успех, `1` — ошибка чтения/анализа, `2` — неверные аргументы.
 
 ```bash
@@ -148,14 +149,23 @@ uvicorn lumen.api.app:app --port 8000             # http://localhost:8000, API �
 · **FinTech-риски** · **Отчёты** (MD, HTML, JSON) · **Настройки**.
 
 Основные эндпоинты: `POST /api/audits` (multipart `file`, `provider`, `model`) · `GET /api/audits/{id}/events`
-(SSE) · `GET /api/audits/{id}` · `GET /api/audits/{id}/report.{md|html|json}` · `PATCH /api/audits/{id}/questions/{qid}`
+(SSE) · `GET /api/audits/{id}` · `GET /api/audits/{id}/report.{md|html|json|pdf|docx|xlsx}` · `PATCH /api/audits/{id}/questions/{qid}`
 · `POST /api/demo` · `GET /api/health`.
 
 ## Telegram-бот
 
-Создайте бота у [@BotFather](https://t.me/BotFather), впишите `TELEGRAM_BOT_TOKEN` в `.env`. Бот запускается вместе
-с API (`LUMEN_BOT_IN_API=1`) или отдельно: `python -m lumen.bot`. Пришлите боту файл — он покажет прогресс,
-вердикт, главные дефекты, кнопки «Вопросы», «Все критичные», «Отчёт HTML/MD» и ссылку в веб-панель (`LUMEN_PUBLIC_URL`).
+**Отдельный сервер не нужен:** бот работает внутри того же сервиса, что и API (`LUMEN_BOT_IN_API=1`, по умолчанию).
+Создайте бота у [@BotFather](https://t.me/BotFather) и впишите `TELEGRAM_BOT_TOKEN`. Локально — `python -m lumen.bot`
+(не запускайте две копии с одним токеном одновременно: Telegram отдаёт обновления только одной).
+
+Что умеет:
+* принимает документ в любом поддерживаемом формате — PDF, Word, Markdown, TXT, HTML, RTF, **фото или скан** (OCR) —
+  или текст требований, вставленный прямо в сообщение;
+* показывает прогресс, вердикт готовности и главные дефекты; кнопки «Вопросы» и «Все критичные»;
+* присылает отчёт в формате на выбор — **PDF, Word, Excel, HTML, Markdown, JSON** (кнопки, `/format` или просто
+  «скинь в Excel»); формат по умолчанию — PDF;
+* **ИИ-чат по отчёту**: «почему NOT READY?», «что не так с Ф-3?», «перепиши REQ-010», «пришли таблицей». Ответы
+  строятся только по результатам аудита со ссылками на ID замечаний; без ключа модели чат отключается, отчёты работают.
 
 ## Деплой: Railway + Supabase
 
@@ -174,7 +184,7 @@ pip install -r requirements-dev.txt
 pytest -q
 ```
 
-31 автотест работает **без платного ключа** (правила + Mock LLM): PDF, DOCX, пустой и повреждённый файл,
+36 автотестов работают **без платного ключа** (правила + Mock LLM): PDF, DOCX, пустой и повреждённый файл,
 документ без идентификаторов, неоднозначность, противоречия, дубли, неполнота, отсутствие критериев приёмки,
 проблемы API-контракта, недостаточно данных, ошибка LLM API, невалидный ответ модели (повтор и безопасный отказ),
 выдуманные цитаты и ID, генерация отчёта, маскирование секретов, контракты провайдеров Claude/Gemini/OpenAI на заглушках HTTP, REST API, токен доступа, Telegram-бот.

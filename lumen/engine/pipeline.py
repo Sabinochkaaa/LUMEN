@@ -577,7 +577,7 @@ def finalize(result: AuditResult, output: str | Path, progress: Optional[Progres
     tr.events = list(result.stages)
     out = Path(output)
     tr.start("report")
-    base = out.with_suffix("") if out.suffix.lower() in (".md", ".html", ".json") else out
+    base = out.with_suffix("") if out.suffix.lower() in (".md", ".html", ".json", ".pdf", ".docx", ".xlsx") else out
     paths: dict[str, Path] = {}
     md = render_markdown(result)
     html = render_html(result)
@@ -586,7 +586,7 @@ def finalize(result: AuditResult, output: str | Path, progress: Optional[Progres
     try:
         base.parent.mkdir(parents=True, exist_ok=True)
         main_fmt = out.suffix.lower().lstrip(".") or "md"
-        targets = {"md": base.with_suffix(".md"), "html": base.with_suffix(".html"), "json": base.with_suffix(".json")}
+        targets = {k: base.with_suffix("." + k) for k in ("md", "html", "json", "pdf", "docx", "xlsx")}
         if main_fmt in targets:
             targets[main_fmt] = out
         for fmt in formats:
@@ -595,8 +595,12 @@ def finalize(result: AuditResult, output: str | Path, progress: Optional[Progres
                 pth.write_text(md, encoding="utf-8")
             elif fmt == "html":
                 pth.write_text(html, encoding="utf-8")
-            else:
+            elif fmt == "json":
                 pth.write_text(result.model_dump_json(indent=1), encoding="utf-8")
+            else:
+                from ..report.export import render as export_render
+
+                pth.write_bytes(export_render(result, fmt))
             paths[fmt] = pth
     except OSError as e:
         tr.error("save", str(e))

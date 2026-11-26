@@ -86,7 +86,7 @@ export const api = {
     req<{ question: Question; scores: Scores; readiness: Readiness; readiness_reason: string }>(
       `/api/audits/${id}/questions/${qid}`,
       { method: "PATCH", body: JSON.stringify(body), headers: { "content-type": "application/json" } }),
-  reportUrl: (id: string, fmt: "md" | "html" | "json", download = false) =>
+  reportUrl: (id: string, fmt: "md" | "html" | "json" | "pdf" | "docx" | "xlsx", download = false) =>
     `${BASE}/api/audits/${id}/report.${fmt}${download ? "?download=true" : ""}`,
   events: (id: string) => new EventSource(`${BASE}/api/audits/${id}/events`),
 };

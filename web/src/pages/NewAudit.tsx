@@ -41,7 +41,7 @@ export default function NewAudit() {
 
   const pick = (f?: File | null) => {
     if (!f) return;
-    if (!/\.(pdf|docx|md|markdown|txt)$/i.test(f.name)) { setError("Поддерживаются PDF, DOCX, MD и TXT."); return; }
+    if (!/\.(pdf|docx|md|markdown|txt|html?|rtf|png|jpe?g|webp|tiff?|bmp)$/i.test(f.name)) { setError("Поддерживаются PDF, DOCX, MD, TXT, HTML, RTF и изображения."); return; }
     if (f.size > 20 * 1024 * 1024) { setError("Файл больше 20 МБ."); return; }
     setError(""); setFile(f); preview(f);
   };
@@ -114,7 +114,7 @@ export default function NewAudit() {
                 {Array.from({ length: 22 }).map((_, i) => (
                   <div key={i} className="mb-3 h-3 rounded bg-line" style={{ width: `${40 + ((i * 37) % 55)}%` }} />
                 ))}
-                <p className="meta absolute bottom-4 left-6">PDF и DOCX извлекаются на сервере — текст появится в отчёте с номерами строк и страниц.</p>
+                <p className="meta absolute bottom-4 left-6">Текст извлекается на сервере (для фото и сканов — через OCR) и появится в отчёте с номерами строк.</p>
               </div>
             )}
           </div>
@@ -159,7 +159,7 @@ export default function NewAudit() {
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && input.current?.click()}
           role="button" tabIndex={0}
           className={`card flex min-h-[340px] cursor-pointer flex-col items-center justify-center border-2 border-dashed px-8 text-center transition-colors ${drag ? "border-signal bg-signal-wash" : "border-line hover:border-signal/50"}`}>
-          <input ref={input} type="file" hidden accept=".pdf,.docx,.md,.markdown,.txt" onChange={(e) => pick(e.target.files?.[0])} />
+          <input ref={input} type="file" hidden accept=".pdf,.docx,.md,.markdown,.txt,.html,.htm,.rtf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp" onChange={(e) => pick(e.target.files?.[0])} />
           <FileUp size={36} strokeWidth={1.5} className="text-signal" />
           {file ? (
             <>
@@ -169,7 +169,7 @@ export default function NewAudit() {
           ) : (
             <>
               <div className="mt-4 text-lg font-medium">Перетащите документ требований сюда</div>
-              <div className="meta mt-1">или нажмите, чтобы выбрать файл · PDF, DOCX, MD, TXT · до 20 МБ</div>
+              <div className="meta mt-1">или нажмите, чтобы выбрать файл · PDF, DOCX, MD, TXT, HTML, RTF, фото и сканы · до 20 МБ</div>
             </>
           )}
         </div>

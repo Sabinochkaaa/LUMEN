@@ -14,8 +14,9 @@ from pathlib import Path
 from ..models import Document, Line
 from .structure import build_blocks
 
-SUPPORTED = {".md", ".markdown", ".txt", ".pdf", ".docx"}
-FORMATS = ["pdf", "docx", "md", "txt"]
+IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".bmp"}
+SUPPORTED = {".md", ".markdown", ".txt", ".pdf", ".docx", ".html", ".htm", ".rtf"} | IMAGE_EXT
+FORMATS = ["pdf", "docx", "md", "txt", "html", "rtf", "png", "jpg"]
 
 
 class DocumentError(Exception):
@@ -31,7 +32,8 @@ def load_document(path: str | Path, display_name: str | None = None) -> Document
     ext = p.suffix.lower()
     if ext not in SUPPORTED:
         raise DocumentError(
-            f"Формат «{ext or 'без расширения'}» не поддерживается. Поддерживаются: PDF, DOCX, MD, TXT."
+            f"Формат «{ext or 'без расширения'}» не поддерживается. Поддерживаются: PDF, DOCX, MD, TXT, HTML, RTF "
+            "и изображения (PNG, JPG — через OCR)."
         )
     raw = p.read_bytes()
     if not raw.strip():
@@ -48,6 +50,15 @@ def load_document(path: str | Path, display_name: str | None = None) -> Document
     elif ext == ".pdf":
         lines, pages, warnings = _pdf_lines(raw)
         fmt = "pdf"
+    elif ext in (".html", ".htm"):
+        lines = _text_lines(_html_to_md(_decode(raw)))
+        fmt = "html"
+    elif ext == ".rtf":
+        lines = _txt_to_lines(_rtf_to_text(raw))
+        fmt = "rtf"
+    elif ext in IMAGE_EXT:
+        lines, warnings = _image_lines(raw)
+        fmt = "image"
     else:
         lines, warnings = _docx_lines(p)
         fmt = "docx"
@@ -188,6 +199,110 @@ def _pdf_lines(raw: bytes) -> tuple[list[Line], int, list[str]]:
                 meta.append((pno, f"стр. {pno}"))
     lines = [Line(no=i + 1, text=t, page=meta[i][0], origin=meta[i][1]) for i, t in enumerate(out)]
     return lines, doc.page_count, warnings
+
+
+def _html_to_md(html_text: str) -> str:
+    """HTML → markdown-like text (headings, lists, tables, paragraphs) without extra dependencies."""
+    from html.parser import HTMLParser
+
+    class P(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.out: list[str] = []
+            self.buf = ""
+            self.skip = 0
+            self.row: list[str] | None = None
+            self.cell = ""
+            self.in_cell = False
+            self.first_row = False
+
+        def flush(self, prefix: str = ""):
+            t = re.sub(r"\s+", " ", self.buf).strip()
+            if t:
+                self.out += [prefix + t, ""]
+            self.buf = ""
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("script", "style", "head"):
+                self.skip += 1
+            elif tag in ("p", "div", "br", "section", "article") and not self.in_cell:
+                self.flush()
+            elif re.fullmatch(r"h[1-6]", tag):
+                self.flush()
+            elif tag == "li":
+                self.flush()
+            elif tag == "table":
+                self.flush()
+                self.first_row = True
+            elif tag == "tr":
+                self.row = []
+            elif tag in ("td", "th"):
+                self.in_cell, self.cell = True, ""
+
+        def handle_endtag(self, tag):
+            if tag in ("script", "style", "head"):
+                self.skip = max(0, self.skip - 1)
+            elif re.fullmatch(r"h[1-6]", tag):
+                self.flush("#" * int(tag[1]) + " ")
+            elif tag == "li":
+                self.flush("* ")
+            elif tag in ("p", "div", "section", "article") and not self.in_cell:
+                self.flush()
+            elif tag in ("td", "th") and self.row is not None:
+                self.row.append(re.sub(r"\s+", " ", self.cell).strip().replace("|", "/"))
+                self.in_cell = False
+            elif tag == "tr" and self.row:
+                self.out.append("| " + " | ".join(self.row) + " |")
+                if self.first_row:
+                    self.out.append("|" + "|".join([" --- "] * len(self.row)) + "|")
+                    self.first_row = False
+                self.row = None
+            elif tag == "table":
+                self.out.append("")
+
+        def handle_data(self, data):
+            if self.skip:
+                return
+            if self.in_cell:
+                self.cell += data
+            else:
+                self.buf += data
+
+    parser = P()
+    parser.feed(html_text)
+    parser.flush()
+    return "\n".join(parser.out)
+
+
+def _rtf_to_text(raw: bytes) -> str:
+    """Minimal RTF → text: drops control groups, decodes \\'hh (cp1251) and \\uN escapes."""
+    s = raw.decode("latin-1", errors="replace")
+    for dest in ("fonttbl", "colortbl", "stylesheet", "info", "pict", "header", "footer", "listtable", "listoverridetable"):
+        s = re.sub(r"\{(?:\\\*)?\\" + dest + r"(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}", "", s)
+    s = re.sub(r"\{\\\*[^{}]*\}", "", s)
+    s = re.sub(r"\\u(-?\d+)\??", lambda m: chr(int(m.group(1)) % 65536), s)
+    s = re.sub(r"\\'([0-9a-fA-F]{2})", lambda m: bytes([int(m.group(1), 16)]).decode("cp1251", errors="replace"), s)
+    s = re.sub(r"\\(par|line|row)\b ?", "\n", s)
+    s = re.sub(r"\\cell\b ?", " | ", s)
+    s = re.sub(r"\\tab\b ?", "    ", s)
+    s = re.sub(r"\\[a-zA-Z]+-?\d* ?", "", s)
+    s = s.replace("{", "").replace("}", "").replace("\\\\", "\\")
+    return re.sub(r"\n{3,}", "\n\n", s).strip()
+
+
+def _image_lines(raw: bytes) -> tuple[list[Line], list[str]]:
+    try:
+        import io
+
+        import pytesseract  # type: ignore
+        from PIL import Image  # type: ignore
+
+        text = pytesseract.image_to_string(Image.open(io.BytesIO(raw)), lang="rus+eng")
+    except ImportError as e:
+        raise DocumentError("Для изображений нужен OCR: pip install pytesseract pillow и системный tesseract (rus).") from e
+    except Exception as e:
+        raise DocumentError(f"Не удалось распознать изображение: {e}") from e
+    return _txt_to_lines(text), ["Текст получен из изображения через OCR — возможны неточности распознавания."]
 
 
 def _ocr_page(page) -> str:
