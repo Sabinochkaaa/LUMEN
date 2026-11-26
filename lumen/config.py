@@ -24,6 +24,12 @@ DEFAULT_MODELS = {
     "mock": "mock-llm",
     "offline": "rules-only",
 }
+# Резервные модели при исчерпании квоты/недоступности (переопределяются LLM_FALLBACK_MODELS через запятую)
+DEFAULT_FALLBACKS = {
+    "gemini": ["gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemma-3-27b-it"],
+    "anthropic": ["claude-sonnet-5-5", "claude-haiku-5-5"],
+    "claude-cli": ["claude-sonnet-5-5"],
+}
 PROVIDER_LABELS = {
     "anthropic": "Anthropic Claude API",
     "claude-cli": "Claude Code CLI",
@@ -94,6 +100,12 @@ class Settings:
         if self.model and self.resolve_provider() == provider:
             return self.model
         return DEFAULT_MODELS.get(provider, "")
+
+    def fallback_models(self, provider: str) -> list[str]:
+        raw = _env("LLM_FALLBACK_MODELS")
+        if raw:
+            return [m.strip() for m in raw.split(",") if m.strip()]
+        return list(DEFAULT_FALLBACKS.get(provider, []))
 
     def secrets(self) -> list[str]:
         return [x for x in (self.anthropic_api_key, self.gemini_api_key, self.openai_api_key,

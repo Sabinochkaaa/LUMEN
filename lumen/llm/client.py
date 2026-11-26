@@ -83,6 +83,7 @@ class LLMClient:
         self.settings = settings
         self.usage = Usage()
         self._lock = threading.Lock()
+        self.fallbacks = [m for m in settings.fallback_models(self.provider) if m != model]
 
     # -- to implement
     def _call(self, system: str, user: str, schema: dict, name: str) -> tuple[Any, int, int]:
@@ -117,32 +118,85 @@ class LLMClient:
                           "\nВерни ТОЛЬКО валидный JSON строго по схеме.")
         raise LLMError(f"Модель вернула невалидный ответ на шаге «{name}» после {attempts} попыток: {last_err[:300]}")
 
+    def _error_text(self, resp: httpx.Response) -> str:
+        """Human part of a provider error (no JSON skeleton), secrets masked."""
+        try:
+            data = resp.json()
+            err = data.get("error", data) if isinstance(data, dict) else data
+            msg = err.get("message") if isinstance(err, dict) else str(err)
+        except Exception:
+            msg = resp.text
+        return _mask(re.sub(r"\s+", " ", str(msg or "")).strip()[:500], self._secrets())
+
+    @staticmethod
+    def _retry_delay(resp: httpx.Response, default: float) -> float:
+        ra = resp.headers.get("retry-after")
+        if ra and ra.replace(".", "", 1).isdigit():
+            return float(ra)
+        m = re.search(r'"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"', resp.text)
+        return float(m.group(1)) if m else default
+
+    @staticmethod
+    def _quota_exhausted(code: int, text: str) -> bool:
+        low = text.lower()
+        if code != 429 or not ("quota" in low or "resource_exhausted" in low or "billing" in low):
+            return False
+        if "limit: 0" in low or "per day" in low or "perday" in low:
+            return True  # no free tier for this model, or the daily quota is spent
+        return "retrydelay" not in low  # per-minute limits come with retryDelay → wait instead of switching
+
     def _call_with_backoff(self, system, user, schema, name):
         delay = 2.0
-        for attempt in range(5):
+        tried: list[str] = []
+        attempt = 0
+        while True:
             try:
                 return self._call(system, user, schema, name)
             except httpx.HTTPStatusError as e:
                 code = e.response.status_code
-                body = _mask(e.response.text[:400], self._secrets())
-                if code in (429, 500, 502, 503, 504, 529) and attempt < 4:
-                    retry_after = e.response.headers.get("retry-after")
-                    wait = float(retry_after) if retry_after and retry_after.isdigit() else delay
+                msg = self._error_text(e.response)
+                quota = self._quota_exhausted(code, e.response.text)
+                missing_model = code == 404 and bool(tried)
+                if (quota or missing_model) and self._next_model(tried):
+                    log.warning("LLM %s: модель %s недоступна (%s) — переключаюсь на %s",
+                                name, tried[-1], "квота" if quota else "нет модели", self.model)
+                    continue
+                if code in (429, 500, 502, 503, 504, 529) and not quota and attempt < 4:
+                    wait = self._retry_delay(e.response, delay)
                     log.warning("LLM %s: HTTP %s, повтор через %.0f с", name, code, wait)
                     time.sleep(min(wait, 60))
                     delay *= 2
+                    attempt += 1
                     continue
-                self.usage.failures += 1
-                hint = " Проверьте API-ключ в .env." if code in (401, 403) else ""
-                raise LLMError(f"Ошибка API {self.provider} (HTTP {code}): {body}.{hint}") from None
+                with self._lock:
+                    self.usage.failures += 1
+                if quota:
+                    raise LLMError(
+                        f"Квота модели {self.model} ({self.provider}) исчерпана или недоступна на вашем тарифе. "
+                        f"Выберите модель с бесплатной квотой (LLM_MODEL) или резервные (LLM_FALLBACK_MODELS). "
+                        f"Ответ провайдера: {msg[:240]}") from None
+                hint = " Проверьте API-ключ." if code in (401, 403) else ""
+                raise LLMError(f"Ошибка API {self.provider} (HTTP {code}): {msg}.{hint}") from None
             except (httpx.TimeoutException, httpx.TransportError) as e:
                 if attempt < 3:
                     time.sleep(delay)
                     delay *= 2
+                    attempt += 1
                     continue
-                self.usage.failures += 1
+                with self._lock:
+                    self.usage.failures += 1
                 raise LLMError(f"Сеть/тайм-аут при обращении к {self.provider}: {_mask(str(e), self._secrets())}") from None
-        raise LLMError("Превышено число повторов обращения к модели")
+
+    def _next_model(self, tried: list[str]) -> bool:
+        """Switch to the next fallback model (shared by all threads of this client)."""
+        with self._lock:
+            if self.model not in tried:
+                tried.append(self.model)
+            for m in self.fallbacks:
+                if m not in tried and m != self.model:
+                    self.model = m
+                    return True
+            return False
 
     def _secrets(self) -> list[str]:
         return self.settings.secrets()

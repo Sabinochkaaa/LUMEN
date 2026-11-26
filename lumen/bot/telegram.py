@@ -331,7 +331,14 @@ class TelegramBot:
             ans: ChatAnswer = client.structured(prompts.CHAT_SYSTEM, prompts.chat_prompt(context, hist, text),
                                                 ChatAnswer, "telegram-chat")
         except LLMError as e:
-            self.send(chat, f"⚠️ Модель сейчас недоступна: {html.escape(str(e)[:200])}")
+            log.warning("chat LLM error: %s", e)
+            quota = "Квота" in str(e)
+            msg = ("⚠️ ИИ-чат временно недоступен: у модели закончилась бесплатная квота. "
+                   if quota else "⚠️ ИИ-чат временно недоступен: модель не ответила. ")
+            if r:
+                self.send(chat, msg + "Отчёт доступен — выберите формат:", reply_markup=self.format_kb("f", r.id))
+            else:
+                self.send(chat, msg + "Пришлите документ требований — анализ правилами работает и без ИИ 📎")
             return
         hist += [("Пользователь", text), ("LÜMEN", ans.answer)]
         del hist[:-12]
