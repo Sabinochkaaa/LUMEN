@@ -88,7 +88,7 @@ class Settings:
     temperature: str = field(default_factory=lambda: _env("LLM_TEMPERATURE"))
     max_retries: int = field(default_factory=lambda: int(_env("LLM_MAX_RETRIES", "3") or 3))
     timeout_s: float = field(default_factory=lambda: float(_env("LLM_TIMEOUT", "600") or 600))
-    batch_size: int = field(default_factory=lambda: int(_env("LUMEN_BATCH_SIZE", "8") or 8))
+    batch_size: int = field(default_factory=lambda: int(_env("LUMEN_BATCH_SIZE", "12") or 12))
     data_dir: Path = field(default_factory=lambda: Path(_env("LUMEN_DATA_DIR", "data")))
     supabase_url: str = field(default_factory=lambda: _env("SUPABASE_URL"))
     supabase_key: str = field(default_factory=lambda: _env("SUPABASE_SERVICE_KEY"))
