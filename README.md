@@ -198,13 +198,13 @@ MD, JSON) · **Настройки** · кнопка «Поделиться» с�
    локальном хранилище.
 2. **Railway**: New Project → Deploy from GitHub → этот репозиторий. Сборка по `Dockerfile` (`railway.json`,
    healthcheck `/api/health`). Variables: `ANTHROPIC_API_KEY` (или `GEMINI_API_KEY`), `SUPABASE_URL`,
-   `SUPABASE_SERVICE_KEY`, `TELEGRAM_BOT_TOKEN`, `LUMEN_PUBLIC_URL`, `LUMEN_API_TOKEN` (закрыть запуск аудитов),
+   `SUPABASE_SERVICE_KEY`, `TELEGRAM_BOT_TOKEN`, `LUMEN_PUBLIC_URL`, `LUMEN_ADMIN_PASSWORD` (вход администратора),
    `LUMEN_ENCRYPTION_KEY` (шифрование).
    Коммит агента берётся из `RAILWAY_GIT_COMMIT_SHA` и попадает в паспорт прогона.
 
 ## Безопасность
 
-HTTPS + HSTS, шифрование сохранённых отчётов **AES-256-GCM**, токен доступа, лимиты запросов, проверка файлов по
+HTTPS + HSTS, шифрование сохранённых отчётов **AES-256-GCM**, вход администратора (HttpOnly-сессия, защита от подбора и CSRF), лимиты запросов, проверка файлов по
 содержимому (исполняемые файлы, макросы, zip-бомбы), строгий CSP, приватные прогоны из бота, защита от prompt
 injection, контейнер без root. Подробно и список переменных — [SECURITY.md](SECURITY.md). Схема проекта простыми
 словами — [docs/GUIDE.md](docs/GUIDE.md).

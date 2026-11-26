@@ -5,10 +5,12 @@ import { Trash2 } from "lucide-react";
 import { api, AuditSummary } from "../api";
 import { useT } from "../i18n";
 import ReportLink from "../components/ReportLink";
+import { useApp } from "../App";
 import { Empty, ErrorBox, Loading, PageHead, ReadinessBadge, fmtDate, rise, stagger } from "../components/ui";
 
 export default function Reports() {
   const { t, lang } = useT();
+  const { admin } = useApp();
   const [items, setItems] = useState<AuditSummary[] | null>(null);
   const [error, setError] = useState("");
   const [confirm, setConfirm] = useState<string | null>(null);
@@ -34,10 +36,10 @@ export default function Reports() {
               {(["pdf", "docx", "xlsx", "html", "md", "json"] as const).map((f) => (
                 <ReportLink key={f} className="btn-ghost px-2.5 py-1.5 text-[13px] uppercase" id={x.id} fmt={f} open={f === "pdf" || f === "html"}>{f === "docx" ? "Word" : f === "xlsx" ? "Excel" : f}</ReportLink>
               ))}
-              {confirm === x.id ? (<>
+              {admin && (confirm === x.id ? (<>
                 <button className="btn-ghost px-2.5 text-bad" onClick={() => remove(x.id)}>{t("rep.delete")}</button>
                 <button className="btn-ghost px-2.5" onClick={() => setConfirm(null)}>{t("ui.cancel")}</button>
-              </>) : <button className="btn-ghost px-2.5" onClick={() => setConfirm(x.id)} aria-label={t("rep.delete")}><Trash2 size={15} /></button>}
+              </>) : <button className="btn-ghost px-2.5" onClick={() => setConfirm(x.id)} aria-label={t("rep.delete")}><Trash2 size={15} /></button>)}
             </div>
           </motion.div>
         ))}

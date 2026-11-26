@@ -2,7 +2,7 @@ import { cloneElement, createContext, useCallback, useContext, useEffect, useSta
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useOutlet, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  FilePlus2, FileText, GitFork, HelpCircle, Landmark, LayoutDashboard, Languages, ListChecks, Menu, Settings as Cog, ShieldAlert, X,
+  FilePlus2, FileText, GitFork, HelpCircle, Landmark, LayoutDashboard, Languages, ListChecks, Lock, Menu, Settings as Cog, ShieldAlert, ShieldCheck, X,
 } from "lucide-react";
 import { api, Audit, Health } from "./api";
 import { LangProvider, useT } from "./i18n";
@@ -23,8 +23,8 @@ import Settings from "./pages/Settings";
 import { Empty, ErrorBox, LangSwitch, Loading, Logo, ThemeSwitch } from "./components/ui";
 
 // ---------------------------------------------------------------- shared state
-interface Ctx { health: Health | null; lastId: string | null; setLastId: (id: string) => void }
-const AppCtx = createContext<Ctx>({ health: null, lastId: null, setLastId: () => {} });
+interface Ctx { health: Health | null; lastId: string | null; setLastId: (id: string) => void; admin: boolean; refreshAuth: () => void }
+const AppCtx = createContext<Ctx>({ health: null, lastId: null, setLastId: () => {}, admin: false, refreshAuth: () => {} });
 export const useApp = () => useContext(AppCtx);
 
 export function useAudit() {
@@ -62,7 +62,7 @@ const NAV = [
 ];
 
 function Sidebar({ onNav }: { onNav?: () => void }) {
-  const { lastId, health } = useApp();
+  const { lastId, health, admin } = useApp();
   const { t } = useT();
   return (
     <aside className="flex h-full w-64 flex-col border-r border-line bg-surface/80 backdrop-blur-xl">
@@ -97,6 +97,11 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
             {health ? t("status.online") : t("status.offline")}
           </div>
           {health && <div className="mt-1 truncate text-ink-faint" title={health.model}>{health.provider_label}</div>}
+          {health?.login_enabled && (
+            <NavLink to="/settings" onClick={onNav} className="mt-2 flex items-center gap-1.5 font-medium text-ink-soft hover:text-ink">
+              {admin ? <><ShieldCheck size={13} className="text-ok" />{t("nav.admin")}</> : <><Lock size={13} />{t("nav.signIn")}</>}
+            </NavLink>
+          )}
         </div>
       </div>
     </aside>
@@ -165,9 +170,11 @@ function Root() {
   const [health, setHealth] = useState<Health | null>(null);
   const [lastId, setLast] = useState<string | null>(() => localStorage.getItem("lumen.last"));
   const setLastId = useCallback((id: string) => { localStorage.setItem("lumen.last", id); setLast(id); }, []);
-  useEffect(() => { api.health().then(setHealth).catch(() => setHealth(null)); }, []);
+  const [admin, setAdmin] = useState(false);
+  const refreshAuth = useCallback(() => { api.me().then((m) => setAdmin(m.admin)).catch(() => setAdmin(false)); }, []);
+  useEffect(() => { api.health().then(setHealth).catch(() => setHealth(null)); refreshAuth(); }, [refreshAuth]);
   return (
-    <AppCtx.Provider value={{ health, lastId, setLastId }}>
+    <AppCtx.Provider value={{ health, lastId, setLastId, admin, refreshAuth }}>
       <Routes>
         <Route index element={<Landing />} />
         <Route element={<Shell />}>

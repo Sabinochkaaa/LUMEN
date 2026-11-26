@@ -14,7 +14,7 @@ type Stage = { key: string; title: string; status?: StageEvent["status"]; messag
 
 export default function NewAudit() {
   const nav = useNavigate();
-  const { health } = useApp();
+  const { health, admin } = useApp();
   const { t } = useT();
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
@@ -144,7 +144,7 @@ export default function NewAudit() {
             <label className="text-sm font-medium" htmlFor="model">{t("new.modelName")}</label>
             <input id="model" className="input mt-1.5" placeholder="claude-opus-5-5" value={model} onChange={(e) => setModel(e.target.value)} />
           </div>
-          {health?.auth_required && !localStorage.getItem("lumen.token") && <p className="rounded-xl bg-signal/10 px-3 py-2 text-[13px] text-signal">{t("new.token")}</p>}
+          {health?.auth_required && !admin && <p className="rounded-xl bg-signal/10 px-3 py-2 text-[13px] text-signal">{t("new.adminNeeded")}</p>}
           {error && <ErrorBox error={error} />}
           <button className="btn-primary mt-auto justify-center py-3" disabled={!file} onClick={start}><Sparkles size={16} />{t("new.start")}</button>
         </div>

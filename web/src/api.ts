@@ -48,7 +48,7 @@ export interface AuditSummary {
 export interface Health {
   status: string; version: string; commit: string; provider: string; provider_label: string; model: string;
   providers: Record<string, boolean>; storage: string; storage_degraded: boolean; auth_required: boolean; telegram: boolean; formats: string[];
-  private_mode: boolean; public_demo: boolean; encryption: boolean;
+  private_mode: boolean; public_demo: boolean; encryption: boolean; public_audits: boolean; login_enabled: boolean;
 }
 export interface CmpItem { id: string; severity: Severity; title: string; criterion: string; where: string }
 export interface CompareSide { id: string; document: string; analysed_at: string; quality_index: number; readiness: Readiness; findings: number; requirements: number }
@@ -57,9 +57,9 @@ export interface Criterion { key: string; name: string; ref: string; definition:
 
 const BASE = (import.meta as any).env?.VITE_API_URL ?? "";
 
+/** Admin auth is an HttpOnly session cookie (never readable by JS); this header proves the request comes from our UI. */
 function headers(): Record<string, string> {
-  const t = localStorage.getItem("lumen.token");
-  return t ? { "X-API-Token": t } : {};
+  return { "X-Requested-With": "lumen" };
 }
 
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -74,6 +74,9 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   health: () => req<Health>("/api/health"),
+  me: () => req<{ admin: boolean; login_enabled: boolean; public_audits: boolean }>("/api/auth/me"),
+  login: (password: string) => req<{ admin: boolean }>("/api/auth/login", { method: "POST", body: JSON.stringify({ password }), headers: { "content-type": "application/json" } }),
+  logout: () => req<{ admin: boolean }>("/api/auth/logout", { method: "POST" }),
   criteria: () => req<{ requirement: Criterion[]; set: Criterion[]; fintech: { key: string; name: string }[] }>("/api/criteria"),
   list: () => req<{ items: AuditSummary[]; running: { id: string; document_name: string; status: string }[] }>("/api/audits"),
   get: (id: string) => req<Audit>(`/api/audits/${id}`),

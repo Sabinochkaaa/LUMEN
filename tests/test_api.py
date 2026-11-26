@@ -64,31 +64,63 @@ def test_demo(client):
     assert a["demo"] is True and a["passport"]["mode"] == "mock"
 
 
-def test_token_protection(client, monkeypatch):
+def test_public_audits_and_admin_login(client, monkeypatch):
     from lumen.config import settings
+    from lumen.security import limiter
 
-    monkeypatch.setattr(settings, "api_token", "t0k")
+    limiter._hits.clear()
+    monkeypatch.setattr(settings, "api_token", "")
+    monkeypatch.setattr(settings, "admin_password_raw", "S3cret-admin")
+    monkeypatch.setattr(settings, "env", "production")
     files = {"file": ("r.md", "# S\n\n## Функциональные\n* **F-1.** Тест требования.".encode())}
+    # guests can run audits (public mode) but cannot delete
+    assert client.post("/api/audits", files=files).status_code == 200
+    assert client.delete("/api/audits/x").status_code == 401
+    assert client.get("/api/auth/me").json() == {"admin": False, "login_enabled": True, "public_audits": True}
+    # wrong password, then right password → HttpOnly session cookie
+    assert client.post("/api/auth/login", json={"password": "nope"}).status_code == 401
+    r = client.post("/api/auth/login", json={"password": "S3cret-admin"})
+    assert r.status_code == 200 and "httponly" in r.headers["set-cookie"].lower() and "samesite=strict" in r.headers["set-cookie"].lower()
+    assert client.get("/api/auth/me").json()["admin"] is True
+    # CSRF guard: cookie-authenticated writes need the frontend header
+    assert client.delete("/api/audits/x").status_code == 401
+    assert client.delete("/api/audits/x", headers={"X-Requested-With": "lumen"}).status_code == 200
+    client.post("/api/auth/logout")
+    assert client.get("/api/auth/me").json()["admin"] is False
+    # scripts can still use the header token
+    assert client.delete("/api/audits/x", headers={"X-API-Token": "S3cret-admin"}).status_code == 200
+    # closed mode: guests cannot run audits
+    monkeypatch.setattr(settings, "public_audits", False)
     assert client.post("/api/audits", files=files).status_code == 401
-    assert client.post("/api/audits", files=files, headers={"X-API-Token": "wrong"}).status_code == 401
-    assert client.post("/api/audits", files=files, headers={"X-API-Token": "t0k"}).status_code == 200
-    assert client.post("/api/demo").status_code == 200  # demo is public: scripted answers, no model cost
-    monkeypatch.setattr(settings, "public_demo", False)
-    assert client.post("/api/demo").status_code == 401
+    assert client.post("/api/audits", files=files, headers={"X-API-Token": "S3cret-admin"}).status_code == 200
+    assert client.post("/api/demo").status_code == 200  # demo stays public
+    limiter._hits.clear()
+
+
+def test_login_bruteforce_limit(client, monkeypatch):
+    from lumen.config import settings
+    from lumen.security import limiter
+
+    limiter._hits.clear()
+    monkeypatch.setattr(settings, "admin_password_raw", "S3cret-admin")
+    codes = [client.post("/api/auth/login", json={"password": f"x{i}"}).status_code for i in range(6)]
+    assert codes[:5] == [401] * 5 and codes[5] == 429
+    limiter._hits.clear()
 
 
 def test_private_mode_and_delete_rules(client, monkeypatch):
     from lumen.config import settings
 
     monkeypatch.setattr(settings, "private_mode", True)
-    monkeypatch.setattr(settings, "api_token", "t0k")
+    monkeypatch.setattr(settings, "admin_password_raw", "t0k")
+    monkeypatch.setattr(settings, "env", "production")
     assert client.get("/api/audits").status_code == 401
     assert client.get("/api/audits", headers={"X-API-Token": "t0k"}).status_code == 200
     assert client.get("/api/health").status_code == 200
     monkeypatch.setattr(settings, "private_mode", False)
+    monkeypatch.setattr(settings, "admin_password_raw", "")
     monkeypatch.setattr(settings, "api_token", "")
-    monkeypatch.setattr(settings, "env", "production")
-    assert client.delete("/api/audits/x").status_code == 403
+    assert client.delete("/api/audits/x").status_code == 403  # production without a password: deletion disabled
 
 
 def test_security_headers(client):

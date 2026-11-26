@@ -229,3 +229,32 @@ def open_json(cipher: Optional[Cipher], obj: dict) -> str:
             raise RuntimeError("Данные зашифрованы, но LUMEN_ENCRYPTION_KEY не задан.")
         return cipher.open(obj["data"])
     return json.dumps(obj, ensure_ascii=False)
+
+
+# ------------------------------------------------------------------ admin sessions (signed, HttpOnly cookie)
+SESSION_COOKIE = "lumen_session"
+SESSION_TTL = 12 * 3600
+
+
+def _session_key(secret: str) -> bytes:
+    return hashlib.sha256(b"lumen-session-v1|" + secret.encode()).digest()
+
+
+def make_session(secret: str, ttl: int = SESSION_TTL) -> str:
+    payload = base64.urlsafe_b64encode(json.dumps({"r": "admin", "exp": int(time.time()) + ttl}).encode()).decode().rstrip("=")
+    sig = hmac.new(_session_key(secret), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{sig}"
+
+
+def check_session(secret: str, token: Optional[str]) -> bool:
+    if not secret or not token or "." not in token:
+        return False
+    payload, sig = token.rsplit(".", 1)
+    good = hmac.new(_session_key(secret), payload.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, good):
+        return False
+    try:
+        data = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+    except Exception:
+        return False
+    return data.get("r") == "admin" and int(data.get("exp", 0)) > time.time()
