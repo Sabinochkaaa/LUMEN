@@ -488,9 +488,39 @@ def _stems(text: str) -> set[str]:
     return {w[:5] for w in re.findall(r"[а-яёa-z]{4,}", text.lower()) if w not in stop}
 
 
+def term_rules(ctx: RuleContext, max_terms: int = 7) -> None:
+    """R-TERM: domain terms with known ambiguity that the document never defines → finding + question."""
+    from ..knowledge.glossary import TERMS, defined_in_document
+
+    req_text = "\n".join(r.quote for r in ctx.ex.requirements).lower()
+    n = 0
+    for t in TERMS:
+        if not t.ask or n >= max_terms:
+            continue
+        rx = re.compile(t.pattern, re.I)
+        if not rx.search(req_text) or (t.context and not re.search(t.context, req_text, re.I)):
+            continue
+        if defined_in_document(t, ctx.doc_text):
+            continue
+        holder = next((r for r in ctx.ex.requirements if rx.search(r.quote)), None)
+        if holder is None:
+            continue
+        users = [r.id for r in ctx.ex.requirements if rx.search(r.quote)]
+        q, loc = ctx.quote_for(holder, rx)
+        ctx.add(req_ids=users[:6], criterion="unambiguous", severity=t.severity, rule_id=f"R-TERM-{t.key}",
+                title=f"Термин «{t.term}» не определён в документе", quote=q, loc=loc, basis="expert",
+                problem=f"{t.definition} В документе термин используется ({', '.join(users[:6])}), но не определён.",
+                risk="Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+                fix=f"Добавить определение «{t.term}» в раздел терминов и использовать его единообразно.")
+        ctx.ask(users[:6], t.ask, f"Термин «{t.term}» допускает несколько толкований (справочник LÜMEN).",
+                "Неверное толкование приведёт к переделке логики и критериев приёмки.", list(t.options), f"R-TERM-{t.key}")
+        n += 1
+
+
 def run_rules(doc: Document, ex: Extraction, ev: EvidenceIndex) -> RuleContext:
     ctx = RuleContext(doc, ex, ev)
     requirement_rules(ctx)
     api_rules(ctx)
     set_rules(ctx)
+    term_rules(ctx)
     return ctx

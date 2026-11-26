@@ -11,7 +11,9 @@ const PROVIDERS = [
   { v: "", label: "Автовыбор (по ключам на сервере)" },
   { v: "anthropic", label: "Claude — Anthropic API" },
   { v: "gemini", label: "Gemini — Google AI Studio" },
-  { v: "openai", label: "OpenAI-совместимый (OpenRouter, DeepSeek…)" },
+  { v: "openrouter", label: "OpenRouter — бесплатные модели" },
+  { v: "groq", label: "Groq — бесплатно и быстро" },
+  { v: "openai", label: "OpenAI-совместимый (DeepSeek, локальные…)" },
   { v: "claude-cli", label: "Claude Code CLI" },
   { v: "offline", label: "Без LLM — только правила" },
 ];
