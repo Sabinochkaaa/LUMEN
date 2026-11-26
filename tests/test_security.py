@@ -80,7 +80,8 @@ def test_session_signing():
 
     tok = make_session("pw")
     assert check_session("pw", tok) and not check_session("other", tok)
-    assert not check_session("pw", tok[:-2] + "00") and not check_session("pw", "garbage")
+    bad = tok[:-1] + ("0" if tok[-1] != "0" else "1")  # always a different signature (was flaky 1 in 256)
+    assert not check_session("pw", bad) and not check_session("pw", "garbage")
     assert not check_session("pw", make_session("pw", ttl=-1))
 
 
