@@ -36,7 +36,7 @@ export default function AuditBuddy({ a, page }: { a: Audit; page: Page }) {
   };
   const c = cfg[page];
   return (
-    <AgentBuddy compact agent={c.agent} mood={c.mood ?? "idle"} say={c.say}
+    <AgentBuddy agent={c.agent} mood={c.mood ?? "idle"} say={c.say}
       onPick={c.go ? () => nav(`/audits/${a.id}/${c.go}`) : c.agent === 4 ? () => window.dispatchEvent(new Event("lumen:support")) : undefined} />
   );
 }

@@ -89,7 +89,9 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!r.ok) {
     let msg = `Ошибка ${r.status}`;
     try { msg = (await r.json()).detail ?? msg; } catch { /* not json */ }
-    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
+    const err = new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
+    (err as Error & { status?: number }).status = r.status;
+    throw err;
   }
   return r.json();
 }

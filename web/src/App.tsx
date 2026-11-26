@@ -6,6 +6,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import RobotIcon from "./components/RobotIcon";
+import AgentBuddy from "./components/AgentBuddy";
 import { api, Audit, Health } from "./api";
 import { LangProvider, useT } from "./i18n";
 import { ThemeProvider } from "./theme";
@@ -37,16 +38,29 @@ export function useAudit() {
   const { setLastId } = useApp();
   const [audit, setAudit] = useState<Audit | null>(null);
   const [error, setError] = useState("");
+  const [missing, setMissing] = useState(false);
   const reload = useCallback(() => {
-    api.get(id).then((a) => { setAudit(a); setError(""); }).catch((e) => setError(String(e.message || e)));
+    api.get(id).then((a) => { setAudit(a); setError(""); setMissing(false); })
+      .catch((e) => { setError(String(e.message || e)); setMissing(e?.status === 404); });
   }, [id]);
   useEffect(() => { setAudit(null); reload(); if (id) setLastId(id); }, [id, reload, setLastId]);
-  return { audit, setAudit, error, reload, id };
+  return { audit, setAudit, error, missing, reload, id };
 }
 
 export function AuditGate({ children }: { children: (a: Audit, set: (a: Audit) => void) => JSX.Element }) {
-  const { audit, setAudit, error } = useAudit();
+  const { audit, setAudit, error, missing } = useAudit();
   const { t } = useT();
+  const nav = useNavigate();
+  const loc = useLocation();
+  const { setLastId } = useApp();
+  // a report that is gone (deleted, or kept only on a server disk that was reset): forget it and open the newest one
+  useEffect(() => {
+    if (!missing) return;
+    setLastId("");
+    const section = loc.pathname.split("/").slice(3).join("/");
+    nav(`/pick/${section}`, { replace: true });
+  }, [missing, loc.pathname, nav, setLastId]);
+  if (missing) return <Loading />;
   if (error) return <ErrorBox error={error} />;
   if (!audit) return <Loading text={t("ui.loadingAudit")} />;
   return children(audit, setAudit);
@@ -169,14 +183,23 @@ function Pick() {
   const [items, setItems] = useState<{ id: string }[] | null>(null);
   useEffect(() => { api.list().then((r) => setItems(r.items)).catch(() => setItems([])); }, []);
   useEffect(() => { if (items?.length) nav(`/audits/${items[0].id}/${section}`, { replace: true }); }, [items, nav, section]);
-  if (items === null) return <Loading />;
-  return <Empty title={t("ov.emptyT")} text={t("ov.emptyD")} action={<NavLink to="/new" className="btn-primary">{t("land.cta")}</NavLink>} />;
+  if (items === null || items.length) return <Loading />;
+  const agent = section.startsWith("issues") || section.startsWith("compare") ? 1 : section.startsWith("fintech") ? 2 : section.startsWith("clarif") ? 4 : 0;
+  return (
+    <div>
+      <AgentBuddy agent={agent} mood="idle" say={t("ab.noAudit")} onPick={() => nav("/new")} />
+      <Empty title={t("ov.emptyT")} text={t("ov.emptyD")} action={<NavLink to="/new" className="btn-primary">{t("land.cta")}</NavLink>} />
+    </div>
+  );
 }
 
 function Root() {
   const [health, setHealth] = useState<Health | null>(null);
   const [lastId, setLast] = useState<string | null>(() => localStorage.getItem("lumen.last"));
-  const setLastId = useCallback((id: string) => { localStorage.setItem("lumen.last", id); setLast(id); }, []);
+  const setLastId = useCallback((id: string) => {
+    if (id) localStorage.setItem("lumen.last", id); else localStorage.removeItem("lumen.last");
+    setLast(id || null);
+  }, []);
   const [admin, setAdmin] = useState(false);
   const refreshAuth = useCallback(() => { api.me().then((m) => setAdmin(m.admin)).catch(() => setAdmin(false)); }, []);
   useEffect(() => { api.health().then(setHealth).catch(() => setHealth(null)); refreshAuth(); }, [refreshAuth]);
