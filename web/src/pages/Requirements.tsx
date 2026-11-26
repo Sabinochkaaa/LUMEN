@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import AuditBuddy from "../components/AuditBuddy";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
@@ -33,6 +34,7 @@ function View({ a }: { a: Audit }) {
   return (
     <div>
       <AuditHeader a={a} />
+      <AuditBuddy a={a} page="requirements" />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />

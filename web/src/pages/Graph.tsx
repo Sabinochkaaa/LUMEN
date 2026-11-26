@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import AuditBuddy from "../components/AuditBuddy";
 import { Background, Controls, Edge, MarkerType, Node, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { AuditGate } from "../App";
@@ -53,6 +54,7 @@ function View({ a }: { a: Audit }) {
   return (
     <div>
       <AuditHeader a={a} />
+      <AuditBuddy a={a} page="graph" />
       <div className="mb-3 flex flex-wrap items-center gap-4">
         {Object.entries(RC).map(([k, c]) => <span key={k} className="meta flex items-center gap-1.5"><span className="h-0.5 w-5" style={{ background: c }} />{t(`rel.${k}`)} {a.relations.filter((r) => r.type === k).length}</span>)}
         <span className="meta flex items-center gap-1.5"><span className="h-0 w-5 border-t-2 border-dashed border-ink-faint" />{t("g.needs")}</span>

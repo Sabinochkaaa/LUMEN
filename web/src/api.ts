@@ -47,7 +47,7 @@ export interface AuditSummary {
 }
 export interface Health {
   status: string; version: string; commit: string; provider: string; provider_label: string; model: string;
-  providers: Record<string, boolean>; storage: string; storage_degraded: boolean; auth_required: boolean; telegram: boolean; formats: string[];
+  providers: Record<string, boolean>; storage: string; storage_degraded: boolean; storage_error?: string | null; storage_key?: string | null; auth_required: boolean; telegram: boolean; formats: string[];
   private_mode: boolean; public_demo: boolean; encryption: boolean; public_audits: boolean; login_enabled: boolean;
 }
 export interface CmpItem { id: string; severity: Severity; title: string; criterion: string; where: string }

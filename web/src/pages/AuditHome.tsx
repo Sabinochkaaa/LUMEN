@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import AuditBuddy from "../components/AuditBuddy";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -31,6 +32,7 @@ function View({ a }: { a: Audit }) {
   return (
     <div>
       <AuditHeader a={a} />
+      <AuditBuddy a={a} page="home" />
       <motion.div variants={stagger} initial="hidden" animate="show">
         <motion.section variants={rise} className="card relative mb-6 grid gap-8 overflow-hidden p-6 md:grid-cols-[auto_1fr] md:p-8">
           <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-15 blur-3xl grad-bg" />
