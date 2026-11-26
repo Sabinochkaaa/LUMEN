@@ -62,7 +62,8 @@ export default function SupportWidget() {
       setMsgs((m) => [...m, { role: "agent", text: r.answer, suggestions: r.suggestions, escalate: r.escalate }]);
       if (r.escalate) setHandoff(true);
     } catch (e: any) {
-      setMsgs((m) => [...m, { role: "agent", text: e.message, escalate: true }]);
+      const slow = e?.name === "TimeoutError" || e?.name === "AbortError";
+      setMsgs((m) => [...m, { role: "agent", text: slow ? t("sup.timeout") : e.message, escalate: true }]);
     } finally { setBusy(false); }
   };
   const submit = (e: FormEvent) => { e.preventDefault(); ask(text); };

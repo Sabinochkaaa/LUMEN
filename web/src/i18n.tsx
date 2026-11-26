@@ -77,6 +77,7 @@ const D: Record<string, [string, string, string]> = {
   "sup.close": ["Закрыть", "Жабу", "Close"],
   "sup.handoff": ["Передать команде", "Командаға беру", "Hand to the team"],
   "sup.contact": ["Email или Telegram для ответа", "Жауап үшін email не Telegram", "Email or Telegram for the reply"],
+  "sup.timeout": ["Сервер сейчас занят и не ответил вовремя. Повторите вопрос через минуту или передайте его команде.", "Сервер бос емес, уақытында жауап бермеді. Бір минуттан кейін қайталаңыз немесе командаға жіберіңіз.", "The server is busy and did not answer in time. Try again in a minute or send it to the team."],
   "sup.sent": ["Передал команде, обращение №", "Командаға берілді, өтініш №", "Sent to the team, ticket #"],
   "sup.aboutAudit": ["Отвечаю с учётом открытой проверки", "Ашық тексеріс бойынша жауап беремін", "Answering about the open audit"],
   "sup.q1": ["Какие форматы поддерживаются?", "Қандай форматтар қолдау табады?", "Which formats are supported?"],

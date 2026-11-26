@@ -112,7 +112,7 @@ export const api = {
   },
   support: (message: string, history: ChatTurn[], lang: string, audit_id?: string) =>
     req<SupportReply>("/api/support", { method: "POST", body: JSON.stringify({ message, history, lang, audit_id }),
-      headers: { "content-type": "application/json" } }),
+      headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(25000) }),
   ticket: (message: string, contact: string, history: ChatTurn[], audit_id?: string) =>
     req<{ id: string; ok: boolean }>("/api/support/ticket", { method: "POST", body: JSON.stringify({ message, contact, history, audit_id }),
       headers: { "content-type": "application/json" } }),

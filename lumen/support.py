@@ -56,9 +56,50 @@ FAQ: list[tuple[str, str, str]] = [
      "Отчёты шифруются AES-256-GCM до записи в базу, исходный файл удаляется после анализа, а документ для модели — "
      "только данные, а не инструкции. На демо-сервере используются бесплатные модели, поэтому реальные "
      "конфиденциальные ТЗ лучше проверять в развёртывании внутри контура компании."),
-    ("бот telegram телеграм", "Как работает Telegram-бот?",
-     "Отправьте боту файл или фото ТЗ — он пришлёт вердикт, главные исправления и PDF. Потом можно задавать вопросы об "
-     "отчёте обычными словами. Проверки из бота приватные и не попадают в общий список."),
+    ("бот telegram телеграм тг работает пользоваться", "Как работает Telegram-бот?",
+     "Откройте бота в Telegram и нажмите «Старт». Отправьте файл или фото ТЗ прямо в чат — бот покажет ход проверки, "
+     "а затем пришлёт вердикт, 5 главных исправлений, вопросы владельцу и PDF-отчёт. После этого можно писать обычными "
+     "словами: «что исправить первым?», «объясни F-003», «пришли в ворде» или «в excel». Проверки из бота приватные: "
+     "они не попадают в общий список на сайте. Если отчёта ещё нет, бот отвечает как служба поддержки."),
+    ("бот команды старт start help помощь меню", "Какие команды у бота?",
+     "/start и /help — инструкция, /demo — пример проверки без своего файла, /last — последний отчёт, /format — "
+     "в каком формате присылать отчёт (PDF, Word, Excel…). Остальное делается без команд: пришлите файл или задайте "
+     "вопрос текстом."),
+    ("критичный critical high medium low серьезность критичность уровень дефект", "Что значат уровни критичности?",
+     "CRITICAL — ошибка приведёт к неверным деньгам, нарушению закона или безопасности, разработку начинать нельзя. "
+     "HIGH — без исправления команда поймёт требование по-разному или не сможет его протестировать. MEDIUM — стоит "
+     "исправить до тестирования. LOW — стиль и мелкие неточности."),
+    ("fintech финтех банк банковские риски деньги проверка платеж", "Что проверяет FinTech-эксперт?",
+     "FinTech-эксперт ищет банковские риски: единицы и округление сумм, валюты, часовые пояса и границы месяца, "
+     "повторную доставку событий (идемпотентность), возвраты, лимиты, защиту персональных и карточных данных, "
+     "аудит действий и требования регулятора."),
+    ("агенты команда аналитик скептик переводчик поддержка роботы кто", "Какие агенты работают в LÜMEN?",
+     "Пять агентов: Аналитик нарезает документ на требования и проверяет каждое; Скептик перепроверяет серьёзные "
+     "замечания, чтобы не было ложных тревог; FinTech-эксперт ищет банковские риски; Переводчик переводит ТЗ на "
+     "русский, казахский и английский; Поддержка — это я, отвечаю на вопросы 24/7."),
+    ("тиын тенге единицы сумма валюта копейка", "Почему агент ругается на тиыны и тенге?",
+     "₸ — это знак тенге, а тиын — 1/100 тенге. Если сумма покупки хранится в тиынах, а порог в тенге и в ТЗ не "
+     "сказано, где переводить одно в другое, разработчик может сравнить их напрямую и ошибиться в 100 раз. Агент "
+     "просит явно указать единицы."),
+    ("кэш одинаковый тот же результат повторно заново снова перепроверить", "Почему показан тот же результат?",
+     "Если тот же файл уже проверялся той же моделью, LÜMEN выдаёт сохранённый результат — так сайт и бот дают "
+     "одинаковый отчёт и не тратят лимиты. Кэш живёт ограниченное время и сбрасывается при обновлении сервера; "
+     "изменённый файл проверяется заново."),
+    ("резервная модель недоступна основная flash lite предупреждение", "Почему написано «основная модель недоступна»?",
+     "Бесплатные модели иногда перегружены или упираются в лимит. Тогда LÜMEN автоматически переключается на "
+     "резервную модель и честно пишет об этом в отчёте. Результат остаётся проверенным: цитаты сверяются с документом."),
+    ("удалить отчет стереть история", "Как удалить отчёт?",
+     "Удалять отчёты может администратор: в «Отчётах» у каждого отчёта есть значок корзины. Исходный файл и так "
+     "удаляется сразу после анализа."),
+    ("поделиться ссылка отправить коллеге", "Как поделиться отчётом?",
+     "На странице проверки нажмите «Поделиться» — появится ссылка на отчёт. Можно также скачать PDF или Word и "
+     "отправить файлом."),
+    ("язык казахский английский интерфейс сменить", "Можно ли сменить язык интерфейса?",
+     "Да, переключатель RU / KZ / EN в шапке сайта. Отчёт формируется на языке интерфейса, а я отвечаю на том языке, "
+     "на котором вы пишете."),
+    ("кто сделал авторы хакатон команда разработчики", "Кто создал LÜMEN?",
+     "LÜMEN создан командой для BCC-HUB × MNU FinTech Hackathon 2026. Код открыт на GitHub: "
+     "github.com/Sabinochkaaa/LUMEN."),
     ("ошибка не работает сломалось 429 лимит квота недоступен", "Что-то не работает",
      "Если появилось «Лимит исчерпан» — подождите указанное время. Если модель ИИ временно недоступна, агент всё равно "
      "выдаст отчёт по правилам с вердиктом «мало данных»; повторите проверку позже. Если ошибка повторяется — "
@@ -109,23 +150,51 @@ def kb_text() -> str:
     return "\n\n".join(f"В: {q}\nО: {a}" for _, q, a in FAQ)
 
 
+# short or slang words people really type, mapped to the words the FAQ uses
+SYN = {"тг": "телеграм", "tg": "телеграм", "тгбот": "телеграм бот", "пдф": "pdf", "ворд": "word", "эксель": "excel",
+       "тз": "документ", "кз": "казахский"}
+
 STOP = {"как", "что", "это", "для", "или", "так", "мне", "можно", "есть", "the", "and", "how", "what"}
 
 
 def _words(text: str) -> set[str]:
-    return {w[:6] for w in re.findall(r"[a-zа-яёәғқңөұүһі0-9]+", text.lower()) if len(w) > 2 and w not in STOP}
+    raw = re.findall(r"[a-zа-яёәғқңөұүһі0-9]+", text.lower().replace("ё", "е"))
+    raw = " ".join(SYN.get(w, w) for w in raw).split()
+    return {w[:6] for w in raw if len(w) > 2 and w not in STOP}
 
 
-def faq_match(message: str) -> Optional[tuple[str, str]]:
-    """Best FAQ entry by shared word stems (first 6 letters, so «отчёта» meets «отчёт»)."""
+def _faq_best(message: str) -> tuple[Optional[tuple[str, str]], int, int]:
     msg = _words(message)
     best, score = None, 0
     for keys, q, a in FAQ:
         s = len(msg & _words(keys + " " + q))
         if s > score:
             best, score = (q, a), s
+    return best, score, len(msg)
+
+
+def faq_match(message: str) -> Optional[tuple[str, str]]:
+    """Best FAQ entry by shared word stems (first 6 letters, so «отчёта» meets «отчёт»)."""
+    best, score, n = _faq_best(message)
     # a long message needs two shared stems: one common word must not hijack an unrelated question
-    return best if score >= (2 if len(msg) >= 5 else 1) else None
+    return best if score >= (2 if n >= 5 else 1) else None
+
+
+# questions about the user's own report go to the model, which sees that report
+ABOUT_REPORT = re.compile(r"\b(F-\d+|REQ-\d+)|мо[йеёия]\s+(отч|док|тз)|этот\s+(отч|док)|замечани|исправ|почему\s+(у меня|тут)",
+                          re.IGNORECASE)
+# a support reply must come fast: never wait for long retry back-offs of a busy free model
+DEADLINE_S = 12.0
+_pool = None
+
+
+def _run_with_deadline(fn, timeout: float):
+    global _pool
+    from concurrent.futures import ThreadPoolExecutor
+
+    if _pool is None:
+        _pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="support")
+    return _pool.submit(fn).result(timeout=timeout)
 
 
 def audit_context(r) -> str:
@@ -142,6 +211,12 @@ def audit_context(r) -> str:
 def answer(message: str, history: list[dict] | None = None, lang: str = "ru", audit=None, client=None) -> Reply:
     message = (message or "").strip()[:2000]
     lang = lang if lang in LANG_NAME else "ru"
+    # instant answer for clear product questions (Russian knowledge base; other languages go to the model)
+    best, score, n = _faq_best(message)
+    confident = best is not None and score >= (2 if n >= 4 else 1)
+    if confident and lang == "ru" and not (audit is not None and ABOUT_REPORT.search(message)):
+        q, a = best
+        return Reply(a, "faq", False, _related(q))
     if client is not None:
         from .llm.client import LLMError
 
@@ -150,18 +225,25 @@ def answer(message: str, history: list[dict] | None = None, lang: str = "ru", au
         user = (f"ДАННЫЕ ПРОВЕРКИ ПОЛЬЗОВАТЕЛЯ:\n<audit>\n{audit_context(audit) if audit else 'нет'}\n</audit>\n\n"
                 f"ИСТОРИЯ:\n{hist or '—'}\n\nСООБЩЕНИЕ:\n<message>\n{message}\n</message>")
         try:
-            res: SupportAnswer = client.structured(SYSTEM.format(lang=LANG_NAME[lang], kb=kb_text()), user,
-                                                   SupportAnswer, "support")
+            res: SupportAnswer = _run_with_deadline(
+                lambda: client.structured(SYSTEM.format(lang=LANG_NAME[lang], kb=kb_text()), user, SupportAnswer, "support"),
+                DEADLINE_S)
             return Reply(res.answer.strip(), "llm", res.escalate, [s for s in res.suggestions if s][:3])
-        except LLMError:
-            pass  # fall back to the FAQ below
+        except (LLMError, TimeoutError, Exception):
+            pass  # model busy or slow: fall back to the FAQ below
     hit = faq_match(message)
     if hit:
         q, a = hit
-        others = [x[1] for x in FAQ if x[1] != q][:3]
-        return Reply(a, "faq", False, others)
+        return Reply(a, "faq", False, _related(q))
     return Reply("Я пока не знаю ответа на этот вопрос. Нажмите «Передать команде» и оставьте контакт — "
                  "человек из команды LÜMEN ответит вам.", "faq", True, [FAQ[0][1], FAQ[1][1], FAQ[3][1]])
+
+
+def _related(q: str) -> list[str]:
+    """Three follow-up questions near the one just answered (neighbours in the FAQ order)."""
+    qs = [x[1] for x in FAQ]
+    i = qs.index(q) if q in qs else 0
+    return [x for x in (qs[(i + 1) % len(qs)], qs[(i + 2) % len(qs)], qs[(i - 1) % len(qs)]) if x != q][:3]
 
 
 # ---------------------------------------------------------------- hand-over to a person
