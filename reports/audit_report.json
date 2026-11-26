@@ -1,21 +1,21 @@
 {
- "id": "58d22baaf523",
+ "id": "c02696f1d10c4da19309",
  "passport": {
   "document_name": "requirements.md",
   "document_title": "Уведомление о расходах по карте",
   "document_format": "markdown",
   "document_sha256": "e7dae55e5453a250d93e335f5ff9c7f775f4457ccddd333f4a67e47b20d74381",
-  "analysed_at": "2026-11-26T19:37:40+05:00",
-  "provider": "offline",
-  "model": "rules-only",
+  "analysed_at": "2026-11-27T01:00:43+05:00",
+  "provider": "gemini",
+  "model": "gemini-flash-lite-latest",
   "agent_version": "1.0.0",
-  "agent_commit": "7824eed-dirty",
-  "mode": "offline",
-  "duration_s": 0.0,
-  "llm_calls": 0,
-  "llm_failures": 0,
-  "tokens_in": 0,
-  "tokens_out": 0
+  "agent_commit": "1c3619b90b3e",
+  "mode": "llm",
+  "duration_s": 45.9,
+  "llm_calls": 12,
+  "llm_failures": 5,
+  "tokens_in": 104005,
+  "tokens_out": 25434
  },
  "requirements": [
   {
@@ -82,7 +82,7 @@
     "section": "BPMN схема процесса"
    },
    "quote": "Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.",
-   "summary": "Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.",
+   "summary": "BPMN-процесс обработки покупки и отправки пуш-уведомления",
    "type": "architecture",
    "context": []
   },
@@ -201,7 +201,7 @@
     "section": "Требования к данным"
    },
    "quote": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
-   "summary": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "summary": "Требования к составу и единицам хранения данных расходов",
    "type": "data",
    "context": []
   },
@@ -218,7 +218,7 @@
     "section": "Требования к интеграции"
    },
    "quote": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.",
-   "summary": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API».",
+   "summary": "Интеграция настроек и идемпотентность процессинга",
    "type": "integration",
    "context": []
   },
@@ -235,7 +235,7 @@
     "section": "Критерии приемки"
    },
    "quote": "Исходные условия: Расходы 48 500 ₸, порог 50 000 ₸; Действие: Провести покупку на 1 500 ₸; Ожидаемый результат: Итог 50 000 ₸ и один push",
-   "summary": "Исходные условия: Расходы 48 500 ₸, порог 50 000 ₸; Действие: Провести покупку на 1 500 ₸; Ожидаемый результат: Итог 50…",
+   "summary": "Критерий приёмки достижения порога расходов",
    "type": "acceptance",
    "context": []
   },
@@ -252,7 +252,7 @@
     "section": "Критерии приемки"
    },
    "quote": "Исходные условия: Покупка 31 января в 23:58 на 4 000 ₸; Действие: Провести 1 февраля в 00:03 по Алматы; Ожидаемый результат: Февральский счётчик вырос на 4 000 ₸",
-   "summary": "Исходные условия: Покупка 31 января в 23:58 на 4 000 ₸; Действие: Провести 1 февраля в 00:03 по Алматы; Ожидаемый резул…",
+   "summary": "Критерий приёмки учета месяца по часовому поясу Алматы",
    "type": "acceptance",
    "context": []
   },
@@ -269,7 +269,7 @@
     "section": "Критерии приемки"
    },
    "quote": "Исходные условия: Расходы 19 900 ₸, порог 20 000 ₸; Действие: Перевести 500 ₸; Ожидаемый результат: Счётчик показывает 19 900 ₸",
-   "summary": "Исходные условия: Расходы 19 900 ₸, порог 20 000 ₸; Действие: Перевести 500 ₸; Ожидаемый результат: Счётчик показывает…",
+   "summary": "Критерий приёмки исключения переводов из расходов",
    "type": "acceptance",
    "context": []
   },
@@ -303,7 +303,7 @@
     "section": "Общие параметры"
    },
    "quote": "Description: Сохранение порога. Функциональные требования: чтение порога\nREST type: GET\nAuthorization: Bearer, сессия владельца карты\nController: AlertsController\nURL type: Dev / Prod\nRequest URL: Dev: /alerts/saveLimit . Prod: —\nCURL: curl -G \"$BASE/alerts/saveLimit\" -H \"Authorization: Bearer $TOKEN\" --data 'cardId=demo-42&amount=50000&enabled=1'\nSwagger: —\nGitlab project: Учебный контур\nFramework: Учебный контур\nAuthor: Школа тестирования\nDeveloper: Команда практикума",
-   "summary": "Таблица «Общие параметры»: Description, REST type, Authorization, Controller, URL type, Request URL",
+   "summary": "Общие параметры и описание сохранения порога через REST API",
    "type": "api",
    "context": []
   },
@@ -740,67 +740,67 @@
   {
    "req_id": "REQ-001",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 89.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-002",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "issue",
+    "verifiable": "na",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 92.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-003",
    "criteria": {
     "unambiguous": "issue",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
     "singular": "issue",
-    "feasible": "unknown",
+    "feasible": "ok",
     "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 93.0,
    "verdict": "warn",
@@ -809,44 +809,44 @@
   {
    "req_id": "REQ-004",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "issue",
+    "verifiable": "na",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "issue",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 82.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-005",
    "criteria": {
     "unambiguous": "issue",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 76.0,
    "verdict": "warn",
@@ -856,22 +856,22 @@
    "req_id": "REQ-006",
    "criteria": {
     "unambiguous": "issue",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
+    "complete": "issue",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
     "singular": "issue",
-    "feasible": "unknown",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
-   "score": 72.0,
+   "score": 52.0,
    "verdict": "fail",
    "summary_llm": ""
   },
@@ -879,20 +879,20 @@
    "req_id": "REQ-007",
    "criteria": {
     "unambiguous": "issue",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 96.0,
    "verdict": "warn",
@@ -901,136 +901,136 @@
   {
    "req_id": "REQ-008",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
-   "score": 98.5,
-   "verdict": "pass",
+   "score": 90.5,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-009",
    "criteria": {
     "unambiguous": "issue",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
+    "complete": "ok",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
     "singular": "issue",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "na"
    },
-   "score": 87.0,
+   "score": 69.0,
    "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-010",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
+    "unambiguous": "ok",
+    "complete": "issue",
     "verifiable": "issue",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "issue",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "issue"
    },
-   "score": 92.0,
-   "verdict": "warn",
+   "score": 68.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-011",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
     "consistent": "issue",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "issue",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "ok"
    },
-   "score": 92.0,
-   "verdict": "warn",
+   "score": 48.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-012",
    "criteria": {
     "unambiguous": "issue",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "complete": "issue",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "issue",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 92.0,
-   "verdict": "warn",
+   "score": 38.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-013",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1039,21 +1039,21 @@
   {
    "req_id": "REQ-014",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1062,21 +1062,21 @@
   {
    "req_id": "REQ-015",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1085,182 +1085,182 @@
   {
    "req_id": "REQ-016",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "issue",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "issue",
+    "implementation_free": "ok",
+    "inputs_defined": "issue",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "na",
+    "boundaries": "ok"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 90.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-017",
    "criteria": {
-    "unambiguous": "unknown",
+    "unambiguous": "issue",
     "complete": "issue",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "issue",
+    "feasible": "ok",
+    "traceable": "ok",
     "correct": "issue",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "issue",
+    "boundaries": "ok"
    },
-   "score": 64.0,
+   "score": 24.0,
    "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-018",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "issue",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "issue",
+    "acceptance": "issue",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 72.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-019",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "issue",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "issue",
+    "acceptance": "issue",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 92.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-020",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "issue",
+    "complete": "issue",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "issue",
+    "acceptance": "issue",
+    "boundaries": "ok"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 92.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-021",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "issue",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "issue",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 92.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-022",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "issue",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "issue",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 80.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-023",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1269,21 +1269,21 @@
   {
    "req_id": "REQ-024",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1292,113 +1292,113 @@
   {
    "req_id": "REQ-025",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "issue",
+    "boundaries": "na"
    },
-   "score": 98.5,
-   "verdict": "pass",
+   "score": 86.5,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-026",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "issue",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 100.0,
+   "score": 97.0,
    "verdict": "pass",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-027",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "issue",
+    "acceptance": "issue",
+    "boundaries": "ok"
    },
-   "score": 100.0,
+   "score": 94.5,
    "verdict": "pass",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-028",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
     "consistent": "issue",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
-   "score": 96.0,
-   "verdict": "warn",
+   "score": 90.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-029",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "issue",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1407,90 +1407,90 @@
   {
    "req_id": "REQ-030",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
     "consistent": "issue",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 98.5,
-   "verdict": "pass",
+   "score": 90.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-031",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
     "consistent": "issue",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "ok",
+    "outputs_defined": "na",
+    "errors_defined": "na",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 98.5,
-   "verdict": "pass",
+   "score": 90.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-032",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "issue",
+    "complete": "issue",
+    "verifiable": "ok",
+    "consistent": "issue",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "issue",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "na",
+    "boundaries": "ok"
    },
-   "score": 92.0,
-   "verdict": "warn",
+   "score": 64.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-033",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1499,44 +1499,44 @@
   {
    "req_id": "REQ-034",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
     "consistent": "issue",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
-   "score": 96.0,
-   "verdict": "warn",
+   "score": 80.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-035",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "issue",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "na",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1545,21 +1545,21 @@
   {
    "req_id": "REQ-036",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
     "traceable": "ok",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1568,44 +1568,44 @@
   {
    "req_id": "REQ-037",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "issue",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "issue",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 80.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-038",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1614,21 +1614,21 @@
   {
    "req_id": "REQ-039",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
    "score": 100.0,
    "verdict": "pass",
@@ -1637,76 +1637,131 @@
   {
    "req_id": "REQ-040",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "ok",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "ok",
+    "boundaries": "ok"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 90.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-041",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
-    "consistent": "unknown",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "unambiguous": "ok",
+    "complete": "issue",
+    "verifiable": "ok",
+    "consistent": "ok",
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "ok",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "issue",
+    "errors_defined": "ok",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 92.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-042",
    "criteria": {
-    "unambiguous": "unknown",
-    "complete": "unknown",
-    "verifiable": "unknown",
+    "unambiguous": "issue",
+    "complete": "ok",
+    "verifiable": "ok",
     "consistent": "issue",
-    "necessary": "unknown",
-    "singular": "unknown",
-    "feasible": "unknown",
-    "traceable": "issue",
-    "correct": "unknown",
-    "implementation_free": "unknown",
-    "inputs_defined": "unknown",
-    "outputs_defined": "unknown",
-    "errors_defined": "unknown",
-    "acceptance": "unknown",
-    "boundaries": "unknown"
+    "necessary": "ok",
+    "singular": "ok",
+    "feasible": "ok",
+    "traceable": "ok",
+    "correct": "issue",
+    "implementation_free": "ok",
+    "inputs_defined": "na",
+    "outputs_defined": "ok",
+    "errors_defined": "ok",
+    "acceptance": "na",
+    "boundaries": "na"
    },
-   "score": 84.0,
-   "verdict": "warn",
+   "score": 62.0,
+   "verdict": "fail",
    "summary_llm": ""
   }
  ],
  "findings": [
   {
    "id": "F-001",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-011"
+   ],
+   "criterion": "consistent",
+   "severity": "CRITICAL",
+   "title": "Смешение единиц измерения (тиыны и тенге)",
+   "quote": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "loc": {
+    "line_start": 49,
+    "line_end": 49,
+    "page": null,
+    "section": "Требования к данным"
+   },
+   "problem": "Сумма покупки хранится в тиынах, а порог — в тенге. Прямое сравнение приведёт к логической ошибке (разница в 100 раз).",
+   "risk": "Критическая финансовая ошибка: уведомления будут отправляться некорректно или вообще перестанут срабатывать.",
+   "fix": "Привести все денежные поля к единой единице измерения (тиыны).",
+   "rewrite": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки и порог в тиынах, а также признак отправки.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 0.98
+  },
+  {
+   "id": "F-002",
+   "scope": "set",
+   "req_ids": [
+    "REQ-012",
+    "REQ-017"
+   ],
+   "criterion": "set_consistent",
+   "severity": "CRITICAL",
+   "title": "Противоречие метода HTTP и изменения состояния системы",
+   "quote": "[строка 52] Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.\n[строка 104] REST type | GET",
+   "loc": {
+    "line_start": 52,
+    "line_end": 52,
+    "page": null,
+    "section": "Требования к интеграции"
+   },
+   "problem": "В требованиях к интеграции указано сохранение настроек через REST API (REQ-012), однако метод объявлен с типом GET (REQ-017). Согласно спецификации HTTP (RFC 9110), метод GET является безопасным и не должен изменять состояние на сервере.",
+   "risk": "Проблемы при кэшировании запросов инфраструктурой, прокси-серверами или браузерами, приводящие к тому, что настройки не будут сохраняться.",
+   "fix": "Изменить тип запроса с GET на POST или PUT.",
+   "rewrite": "REST type | POST",
+   "source": "llm",
+   "rule_id": "LLM-conflict",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 0.95
+  },
+  {
+   "id": "F-003",
    "scope": "requirement",
    "req_ids": [
     "REQ-006",
@@ -1734,7 +1789,144 @@
    "confidence": 1.0
   },
   {
-   "id": "F-002",
+   "id": "F-004",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-006"
+   ],
+   "criterion": "complete",
+   "severity": "HIGH",
+   "title": "Не определена обработка возвратов, пришедших в другом месяце",
+   "quote": "Ф-2. Месяц определяется по дате совершения покупки в Алматы. В расходы входят проведённые покупки. Возврат уменьшает расходы месяца исходной покупки. Переводы и снятие наличных исключаются.",
+   "loc": {
+    "line_start": 38,
+    "line_end": 38,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Если покупка была в январе, а возврат пришёл в феврале, не указано, пересчитывается ли закрытый январский счётчик и может ли баланс уйти в минус.",
+   "risk": "Искажение исторической отчётности и некорректная отправка повторных пуш-уведомлений.",
+   "fix": "Уточнить правила учёта возвратов за прошлые периоды.",
+   "rewrite": "Возврат уменьшает расходы месяца исходной покупки. Если исходный месяц закрыт, <уточнить: пересчет не выполняется / корректируется текущий баланс>.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-005",
+   "scope": "set",
+   "req_ids": [
+    "REQ-004",
+    "REQ-009"
+   ],
+   "criterion": "integration_contract",
+   "severity": "HIGH",
+   "title": "Отсутствует контракт события процессинга",
+   "quote": "Процессинг → сервис расходов: проведена покупка. Сервис расходов → настройки: получить порог карты. Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.",
+   "loc": {
+    "line_start": 43,
+    "line_end": 43,
+    "page": null,
+    "section": "Sequence Diagram"
+   },
+   "problem": "Взаимодействие между карточным процессингом и сервисом расходов упомянуто на схеме, но формат сообщения, поля (сумма, валюта, MCC, дата) и гарантии доставки не описаны.",
+   "risk": "Разработчики сервиса расходов и процессинга могут использовать несовместимые структуры данных при интеграции.",
+   "fix": "Описать контракт события о покупке от процессинга с указанием формата (например, JSON/Kafka), полей и ключа идемпотентности.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "LLM-integration",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-006",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-010"
+   ],
+   "criterion": "verifiable",
+   "severity": "HIGH",
+   "title": "Отсутствуют перцентиль и профиль нагрузки для НФТ",
+   "quote": "Сервис передаёт push на отправку в течение минуты после получения события.",
+   "loc": {
+    "line_start": 46,
+    "line_end": 46,
+    "page": null,
+    "section": "Нефункциональные требования"
+   },
+   "problem": "Не указано, для какого процента запросов (например, 95% или 99%) действует лимит в одну минуту и при какой нагрузке (TPS).",
+   "risk": "Невозможность объективно принять нагрузочное тестирование.",
+   "fix": "Добавить перцентиль и целевые показатели TPS.",
+   "rewrite": "95% push-уведомлений передаются на отправку сервису рассылки ≤ 60 с после получения события при нагрузке до <уточнить: N> TPS.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Verifiable; IEEE 830 §4.3.6",
+   "confidence": 0.95
+  },
+  {
+   "id": "F-007",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-012"
+   ],
+   "criterion": "unambiguous",
+   "severity": "HIGH",
+   "title": "Не определен механизм обеспечения идемпотентности",
+   "quote": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.",
+   "loc": {
+    "line_start": 52,
+    "line_end": 52,
+    "page": null,
+    "section": "Требования к интеграции"
+   },
+   "problem": "Не указано, за счет чего достигается идемпотентность (например, по уникальному идентификатору операции) и как долго хранятся ключи дедупликации.",
+   "risk": "Двойной учет сумм при повторной доставке сообщений из шины.",
+   "fix": "Описать использование уникального идентификатора операции (operationId) для проверки дубликатов.",
+   "rewrite": "При повторной доставке события процессинга с тем же `operationId` система игнорирует его, сохраняя текущий итог расходов.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-008",
+   "scope": "set",
+   "req_ids": [
+    "REQ-012",
+    "REQ-016"
+   ],
+   "criterion": "set_complete",
+   "severity": "HIGH",
+   "title": "Отсутствует метод API для чтения настроек",
+   "quote": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.",
+   "loc": {
+    "line_start": 52,
+    "line_end": 52,
+    "page": null,
+    "section": "Требования к интеграции"
+   },
+   "problem": "В спецификации Части B описан единственный метод /alerts/saveLimit, используемый для сохранения, но в интеграционных требованиях указано, что приложение также читает настройки.",
+   "risk": "Мобильное приложение не сможет получить текущие значения порога и состояния переключателя при открытии экрана.",
+   "fix": "Добавить спецификацию метода GET /alerts/getLimit для чтения текущих настроек карты.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "LLM-gap",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.95
+  },
+  {
+   "id": "F-009",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_validatable",
@@ -1759,7 +1951,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-003",
+   "id": "F-010",
    "scope": "requirement",
    "req_ids": [
     "REQ-017"
@@ -1778,7 +1970,7 @@
    "risk": "Кэширование/предзагрузка прокси и браузеров может повторно изменить настройку; параметры попадают в URL и логи; повышается риск CSRF.",
    "fix": "Использовать PUT (замена настройки) или POST, параметры передавать в теле JSON.",
    "rewrite": "REST type: PUT; Request URL: /alerts/limit; тело: {\"cardId\", \"amount\", \"enabled\"}.",
-   "source": "rule",
+   "source": "rule+llm",
    "rule_id": "API-GET-MUTATION",
    "status": "confirmed",
    "basis": "normative",
@@ -1786,7 +1978,171 @@
    "confidence": 1.0
   },
   {
-   "id": "F-004",
+   "id": "F-011",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-018"
+   ],
+   "criterion": "complete",
+   "severity": "HIGH",
+   "title": "Не указан механизм и источник проверки сессии",
+   "quote": "Проверить пользовательскую сессию.",
+   "loc": {
+    "line_start": 117,
+    "line_end": 117,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "problem": "Не уточняется, как именно проверяется сессия (токен, куки, интеграция с OAuth-сервером) и какой код возвращается при её истечении.",
+   "risk": "Нестандартная реализация авторизации в контроллере.",
+   "fix": "Уточнить детали валидации сессии.",
+   "rewrite": "Проверить валидность Bearer-токена сессии владельца карты во внешнем сервисе аутентификации.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-012",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-022"
+   ],
+   "criterion": "complete",
+   "severity": "HIGH",
+   "title": "Непонятно, что значит «прежнее состояние» при отклонении суммы",
+   "quote": "При отклонении суммы вернуть прежнее состояние и результат ERROR.",
+   "loc": {
+    "line_start": 121,
+    "line_end": 121,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "problem": "Если запрос содержит невалидную сумму, настройки ещё не были заменены, поэтому возвращать «прежнее состояние» технически нечего (или это сохранение старого значения).",
+   "risk": "Неправильная логика транзакции или кэширования.",
+   "fix": "Уточнить формулировку про неизменность текущей настройки.",
+   "rewrite": "При некорректной сумме не изменять действующую настройку в базе данных и вернуть JSON с результатом ERROR.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-013",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-028",
+    "REQ-034"
+   ],
+   "criterion": "consistent",
+   "severity": "HIGH",
+   "title": "Параметр «amount» имеет разные типы: integer, string",
+   "quote": "amount | integer | 32 bit | Да | 1 000–1 000 000 | Порог в тенге | limit_kzt",
+   "loc": {
+    "line_start": 143,
+    "line_end": 143,
+    "page": null,
+    "section": "Query-параметры"
+   },
+   "problem": "«amount» описан как integer (REQ-028) и string (REQ-034).",
+   "risk": "Ошибки сериализации/парсинга, потеря точности сумм, разная валидация на клиенте и сервере.",
+   "fix": "Определить единый тип «amount» в запросе и ответе (для денег — integer в минимальных единицах).",
+   "rewrite": "amount | integer | 32 bit | Порог в тенге | limit_kzt",
+   "source": "rule+llm",
+   "rule_id": "API-TYPE-MISMATCH",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-014",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-030",
+    "REQ-031"
+   ],
+   "criterion": "consistent",
+   "severity": "HIGH",
+   "title": "Content-Type: application/json при отсутствии тела запроса",
+   "quote": "Content-Type: application/json .",
+   "loc": {
+    "line_start": 147,
+    "line_end": 147,
+    "page": null,
+    "section": "Request body"
+   },
+   "problem": "Объявлен JSON-формат тела, но тело не используется.",
+   "risk": "Неоднозначность для клиентов и шлюзов; признак незавершённого контракта.",
+   "fix": "Либо перенести параметры в тело JSON, либо убрать Content-Type.",
+   "rewrite": "Для текущего GET-запроса заголовок Content-Type не требуется.",
+   "source": "rule+llm",
+   "rule_id": "API-CT-NOBODY",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-015",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-032"
+   ],
+   "criterion": "correct",
+   "severity": "HIGH",
+   "title": "Упоминание кода 201 для операционного метода чтения/сохранения настроек по GET",
+   "quote": "Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.",
+   "loc": {
+    "line_start": 151,
+    "line_end": 151,
+    "page": null,
+    "section": "Ответ"
+   },
+   "problem": "Метод имеет тип GET (согласно строке 104), стандарт HTTP не предусматривает возврат кода 201 (Created) для GET-запросов.",
+   "risk": "Нарушение стандарта HTTP RFC 9110, некорректная обработка клиентами.",
+   "fix": "Убрать упоминание кода 201, так как метод использует GET.",
+   "rewrite": "Успешным является ответ с кодом 200.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Correct; IEEE 830 §4.3.1",
+   "confidence": 0.95
+  },
+  {
+   "id": "F-016",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-037"
+   ],
+   "criterion": "correct",
+   "severity": "HIGH",
+   "title": "Некорректное наименование статуса 200 как Created",
+   "quote": "#### 200. Successful — Created",
+   "loc": {
+    "line_start": 165,
+    "line_end": 165,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "problem": "Статус 200 указывает на успешное выполнение (OK), тогда как Created соответствует стандарту HTTP 201.",
+   "risk": "Путаница при интеграции и автоматическом тестировании API клиентов.",
+   "fix": "Изменить наименование статуса 200 на OK.",
+   "rewrite": "200. Successful — OK. Ответ в случае успешного выполнения метода.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Correct; IEEE 830 §4.3.1",
+   "confidence": 0.98
+  },
+  {
+   "id": "F-017",
    "scope": "set",
    "req_ids": [],
    "criterion": "consistent",
@@ -1811,7 +2167,163 @@
    "confidence": 1.0
   },
   {
-   "id": "F-005",
+   "id": "F-018",
+   "scope": "set",
+   "req_ids": [
+    "REQ-040",
+    "REQ-042"
+   ],
+   "criterion": "set_consistent",
+   "severity": "HIGH",
+   "title": "Противоречие кодов статусов HTTP при возврате ошибки 404",
+   "quote": "[строка 175] Ответ в случае, если на указанный ресурс доступ запрещен.\n[строка 189] Для чужой карты возвращается 404, как и для отсутствующей карты.",
+   "loc": {
+    "line_start": 175,
+    "line_end": 175,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "problem": "В разделе статусов под заголовком 403 описан возврат ошибки 404 для чужой или отсутствующей карты, что противоречит семантике HTTP-статусов (403 Forbidden vs 404 Not Found).",
+   "risk": "Неправильная обработка ошибок клиентским приложением.",
+   "fix": "Вынести описание ошибки для чужой или отсутствующей карты в отдельный блок статуса 404.",
+   "rewrite": "404. Ответ в случае, если карта не найдена или принадлежит другому клиенту.",
+   "source": "llm",
+   "rule_id": "LLM-conflict",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-019",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-042"
+   ],
+   "criterion": "consistent",
+   "severity": "HIGH",
+   "title": "Раздел статуса 403 описывает возврат 404",
+   "quote": "Для чужой карты возвращается 404, как и для отсутствующей карты.",
+   "loc": {
+    "line_start": 189,
+    "line_end": 189,
+    "page": null,
+    "section": "403. Unsuccessful — Forbidden"
+   },
+   "problem": "В разделе «403. Unsuccessful — Forbidden» указано, что возвращается 404.",
+   "risk": "Неясно, когда возникает статус из заголовка; противоречивый контракт.",
+   "fix": "Определить условия для 403 и 404 раздельно или удалить неиспользуемый.",
+   "rewrite": "При запросе для чужой карты возвращается статус 403 Forbidden с сообщением об ошибке доступа.",
+   "source": "rule+llm",
+   "rule_id": "API-STATUS-SECTION",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-020",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "fintech",
+   "severity": "HIGH",
+   "title": "FinTech: Конкурентные транзакции — не описано",
+   "quote": "",
+   "loc": null,
+   "problem": "Не описана обработка одновременного поступления нескольких покупок по одной карте.",
+   "risk": "Отраслевой риск платёжной системы.",
+   "fix": "Внедрить механизмы блокировки (распределенные локи или optimistic locking) при обновлении счётчика расходов во избежание race condition.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "FIN-concurrency",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN Risk Engine",
+   "confidence": 0.75
+  },
+  {
+   "id": "F-021",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-034"
+   ],
+   "criterion": "consistent",
+   "severity": "HIGH",
+   "title": "Тип amount в ответе отличается от запроса",
+   "quote": "Parameter: amount; Format: string; Logic: При успехе; Description: Порог в тенге; DB field: limit_kzt",
+   "loc": {
+    "line_start": 156,
+    "line_end": 156,
+    "page": null,
+    "section": "Ответ"
+   },
+   "problem": "В запросе amount имеет тип integer, а в ответе — string, что создает несогласованность контракта API. [Цитата модели не найдена в документе дословно — показан текст требования.]",
+   "risk": "Ошибки десериализации у клиентов API.",
+   "fix": "Привести типы поля amount к единому стандарту (integer везде).",
+   "rewrite": "Parameter: amount; Format: integer; Logic: При успехе; Description: Порог в тенге; DB field: limit_kzt",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "needs_review",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 0.95
+  },
+  {
+   "id": "F-022",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-001"
+   ],
+   "criterion": "verifiable",
+   "severity": "MEDIUM",
+   "title": "Цель неконкретна и не имеет критериев проверки",
+   "quote": "Дать клиенту возможность узнать о достижении личного бюджета в момент покупки.",
+   "loc": {
+    "line_start": 23,
+    "line_end": 23,
+    "page": null,
+    "section": "Цели"
+   },
+   "problem": "Формулировка является бизнес-целью, но не содержит проверяемых метрик (например, времени доставки уведомления).",
+   "risk": "Невозможно объективно оценить успешность реализации функционала.",
+   "fix": "Дополнить требование измеримым критерием успешности доставки.",
+   "rewrite": "Клиент получает уведомление о достижении лимита расходов в течение <уточнить: N> секунд с момента авторизации транзакции.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Verifiable; IEEE 830 §4.3.6",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-023",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-002"
+   ],
+   "criterion": "complete",
+   "severity": "MEDIUM",
+   "title": "Архитектурная схема обрывочна и не детализирует протоколы",
+   "quote": "Мобильное приложение → сервис настроек. Карточный процессинг → учёт расходов → сервис push.",
+   "loc": {
+    "line_start": 26,
+    "line_end": 26,
+    "page": null,
+    "section": "Архитектура решения"
+   },
+   "problem": "Описание разбито на два изолированных предложения без указания протоколов взаимодействия и синхронизации между контурами процессинга и настроек.",
+   "risk": "Разные разработчики могут реализовать несовместимые интеграционные интерфейсы.",
+   "fix": "Описать единую схему потоков данных с указанием протоколов (например, REST, Kafka).",
+   "rewrite": "Мобильное приложение взаимодействует с сервисом настроек по REST API. Карточный процессинг передает события операций через шину данных в сервис учёта расходов, который инициирует отправку через сервис push.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-024",
    "scope": "requirement",
    "req_ids": [
     "REQ-003",
@@ -1840,7 +2352,34 @@
    "confidence": 1.0
   },
   {
-   "id": "F-006",
+   "id": "F-025",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-004"
+   ],
+   "criterion": "errors_defined",
+   "severity": "MEDIUM",
+   "title": "В процессной схеме отсутствуют ветки обработки ошибок",
+   "quote": "Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push → завершение.",
+   "loc": {
+    "line_start": 34,
+    "line_end": 34,
+    "page": null,
+    "section": "BPMN схема процесса"
+   },
+   "problem": "Не описано поведение системы при сбое сервиса отправки push или недоступности хранилища расходов.",
+   "risk": "При сбоях интеграций процесс может зависнуть или транзакция пройдёт без фиксации.",
+   "fix": "Добавить альтернативные ветки BPMN для обработки таймаутов и ошибок.",
+   "rewrite": "Проведение покупки → пересчёт расходов → проверка порога → при достижении отправка push (в случае ошибки — повтор/логирование) → завершение.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 0.85
+  },
+  {
+   "id": "F-026",
    "scope": "requirement",
    "req_ids": [
     "REQ-005"
@@ -1867,7 +2406,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-007",
+   "id": "F-027",
    "scope": "requirement",
    "req_ids": [
     "REQ-005"
@@ -1894,7 +2433,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-008",
+   "id": "F-028",
    "scope": "requirement",
    "req_ids": [
     "REQ-005"
@@ -1921,7 +2460,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-009",
+   "id": "F-029",
    "scope": "requirement",
    "req_ids": [
     "REQ-006"
@@ -1948,7 +2487,89 @@
    "confidence": 1.0
   },
   {
-   "id": "F-010",
+   "id": "F-030",
+   "scope": "set",
+   "req_ids": [
+    "REQ-008",
+    "REQ-025"
+   ],
+   "criterion": "set_consistent",
+   "severity": "MEDIUM",
+   "title": "Дублирование правила сохранения накопленных расходов при изменении порога",
+   "quote": "[строка 40] Ф-4. При изменении порога накопленная сумма сохраняется. Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.\n[строка 126] Изменение порога сохраняет накопленные расходы.",
+   "loc": {
+    "line_start": 40,
+    "line_end": 40,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Одно и то же правило бизнес-логики дословно или практически дублируется в функциональных требованиях и особых правилах API.",
+   "risk": "Избыточность текста требований, риск рассинхронизации при обновлении.",
+   "fix": "Оставить требование в одном месте (в функциональных требованиях), а в API сделать ссылку.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "LLM-duplicate",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-031",
+   "scope": "set",
+   "req_ids": [
+    "REQ-008"
+   ],
+   "criterion": "fintech",
+   "severity": "MEDIUM",
+   "title": "FinTech: Согласованность данных — описано неполно",
+   "quote": "Ф-4. При изменении порога накопленная сумма сохраняется. Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.",
+   "loc": {
+    "line_start": 40,
+    "line_end": 40,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Упомянуто сохранение накопленных расходов при изменении порога, но нет гарантий атомарности транзакций.",
+   "risk": "Отраслевой риск платёжной системы.",
+   "fix": "Обеспечить атомарность обновления настроек в БД с использованием ACID-транзакций.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "FIN-consistency",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN Risk Engine",
+   "confidence": 0.75
+  },
+  {
+   "id": "F-032",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-009"
+   ],
+   "criterion": "verifiable",
+   "severity": "MEDIUM",
+   "title": "Отсутствуют критерии проверки взаимодействия",
+   "quote": "Процессинг → сервис расходов: проведена покупка. Сервис расходов → настройки: получить порог карты. Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.",
+   "loc": {
+    "line_start": 43,
+    "line_end": 43,
+    "page": null,
+    "section": "Sequence Diagram"
+   },
+   "problem": "Шаг описан высокоуровнево без указания протоколов, форматов сообщений и таймаутов, что затрудняет сквозное тестирование.",
+   "risk": "Разночтения между командами при реализации интеграционных контрактов.",
+   "fix": "Добавить ссылки на спецификации API/событий шины данных.",
+   "rewrite": "Сервис расходов принимает событие покупки по контракту <уточнить: ID контракта> и запрашивает порог.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Verifiable; IEEE 830 §4.3.6",
+   "confidence": 0.85
+  },
+  {
+   "id": "F-033",
    "scope": "requirement",
    "req_ids": [
     "REQ-010"
@@ -1975,7 +2596,34 @@
    "confidence": 1.0
   },
   {
-   "id": "F-011",
+   "id": "F-034",
+   "scope": "set",
+   "req_ids": [
+    "REQ-010"
+   ],
+   "criterion": "set_complete",
+   "severity": "MEDIUM",
+   "title": "Не описано поведение при отключенном сервисе уведомлений или недоступности push-сервера",
+   "quote": "Сервис передаёт push на отправку в течение минуты после получения события.",
+   "loc": {
+    "line_start": 46,
+    "line_end": 46,
+    "page": null,
+    "section": "Нефункциональные требования"
+   },
+   "problem": "Отсутствуют требования на случай сбоя отправки push-уведомления (очередь сообщений, повторные попытки, отброс или логирование).",
+   "risk": "Потеря уведомлений при кратковременной недоступности шлюза push-уведомлений.",
+   "fix": "Уточнить политику повторов (retry policy) и TTL для недоставленных push-уведомлений.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "LLM-gap",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.6 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.85
+  },
+  {
+   "id": "F-035",
    "scope": "requirement",
    "req_ids": [
     "REQ-011"
@@ -2002,7 +2650,34 @@
    "confidence": 1.0
   },
   {
-   "id": "F-012",
+   "id": "F-036",
+   "scope": "set",
+   "req_ids": [
+    "REQ-011"
+   ],
+   "criterion": "fintech",
+   "severity": "MEDIUM",
+   "title": "FinTech: Точность денежных вычислений и минимальные единицы — описано неполно",
+   "quote": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "loc": {
+    "line_start": 49,
+    "line_end": 49,
+    "page": null,
+    "section": "Требования к данным"
+   },
+   "problem": "Суммы покупок предписано хранить в тиынах, а пороги в тенге, но нет явного правила конвертации. [Критичность снижена перепроверкой с HIGH: Замечание частично дублирует V1 по сути смешения единиц измерения, критичность HIGH избыточна, так как это скорее архитектурный пробел нормализации, а не блокир]",
+   "risk": "Отраслевой риск платёжной системы.",
+   "fix": "Добавить правило перевода тенге в тиыны (×100) при сравнении расходов с порогом во избежание ошибок округления.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "FIN-precision",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN Risk Engine",
+   "confidence": 0.75
+  },
+  {
+   "id": "F-037",
    "scope": "requirement",
    "req_ids": [
     "REQ-012"
@@ -2029,7 +2704,34 @@
    "confidence": 1.0
   },
   {
-   "id": "F-013",
+   "id": "F-038",
+   "scope": "set",
+   "req_ids": [
+    "REQ-012"
+   ],
+   "criterion": "fintech",
+   "severity": "MEDIUM",
+   "title": "FinTech: Повторная доставка событий — описано неполно",
+   "quote": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.",
+   "loc": {
+    "line_start": 52,
+    "line_end": 52,
+    "page": null,
+    "section": "Требования к интеграции"
+   },
+   "problem": "Упомянуто сохранение исходного итога при повторной доставке, но не раскрыт механизм дедупликации.",
+   "risk": "Отраслевой риск платёжной системы.",
+   "fix": "Описать использование идентификатора операции (operation ID) в качестве ключа идемпотентности шины событий.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "FIN-redelivery",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN Risk Engine",
+   "confidence": 0.75
+  },
+  {
+   "id": "F-039",
    "scope": "set",
    "req_ids": [],
    "criterion": "modifiable",
@@ -2054,7 +2756,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-014",
+   "id": "F-040",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_validatable",
@@ -2079,7 +2781,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-015",
+   "id": "F-041",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_traceable",
@@ -2104,7 +2806,88 @@
    "confidence": 1.0
   },
   {
-   "id": "F-016",
+   "id": "F-042",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-017"
+   ],
+   "criterion": "singular",
+   "severity": "MEDIUM",
+   "title": "Содержит несколько разнородных описаний в одном поле",
+   "quote": "Description | Сохранение порога. Функциональные требования: чтение порога",
+   "loc": {
+    "line_start": 103,
+    "line_end": 103,
+    "page": null,
+    "section": "Общие параметры"
+   },
+   "problem": "Поле Description объединяет описание сохранения порога и упоминание чтения порога.",
+   "risk": "Путаница при генерации документации и поиске требований.",
+   "fix": "Разделить описание на отдельные логические элементы.",
+   "rewrite": "Description: Сохранение порога расходов по карте.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Singular",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-043",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-017"
+   ],
+   "criterion": "verifiable",
+   "severity": "MEDIUM",
+   "title": "Отсутствует критерий приёмки для метода",
+   "quote": "Description | Сохранение порога. Функциональные требования: чтение порога",
+   "loc": {
+    "line_start": 103,
+    "line_end": 103,
+    "page": null,
+    "section": "Общие параметры"
+   },
+   "problem": "Для метода не указаны прямые критерии проверки успешности и неуспешности выполнения.",
+   "risk": "Разные сценарии тестирования у разработчиков и тестировщиков.",
+   "fix": "Добавить привязку к критериям приёмки или тест-кейсам.",
+   "rewrite": "<уточнить: добавить ссылки на тест-кейсы приёмки метода>",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Verifiable; IEEE 830 §4.3.6",
+   "confidence": 0.85
+  },
+  {
+   "id": "F-044",
+   "scope": "set",
+   "req_ids": [
+    "REQ-017"
+   ],
+   "criterion": "fintech",
+   "severity": "MEDIUM",
+   "title": "FinTech: Идемпотентность операций — описано неполно",
+   "quote": "REST type | GET",
+   "loc": {
+    "line_start": 104,
+    "line_end": 104,
+    "page": null,
+    "section": "Общие параметры"
+   },
+   "problem": "Указано сохранение результата при повторной доставке событий, однако метод сохранения настроек сделан через GET. [Критичность снижена перепроверкой с HIGH: Дублирует проблему V2 (некорректное использование GET для изменения состояния), критичность снижена до MEDIUM как повторное наблюдение.]",
+   "risk": "Отраслевой риск платёжной системы.",
+   "fix": "Изменить метод сохранения настроек с GET на POST/PUT в соответствии с RFC 9110, так как метод изменяет состояние системы.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "FIN-idempotency",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN Risk Engine",
+   "confidence": 0.75
+  },
+  {
+   "id": "F-045",
    "scope": "requirement",
    "req_ids": [
     "REQ-017"
@@ -2131,7 +2914,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-017",
+   "id": "F-046",
    "scope": "requirement",
    "req_ids": [
     "REQ-017"
@@ -2158,35 +2941,142 @@
    "confidence": 1.0
   },
   {
-   "id": "F-018",
+   "id": "F-047",
    "scope": "requirement",
    "req_ids": [
-    "REQ-028",
-    "REQ-034"
+    "REQ-018"
    ],
-   "criterion": "consistent",
+   "criterion": "errors_defined",
    "severity": "MEDIUM",
-   "title": "Параметр «amount» имеет разные типы: integer, string",
-   "quote": "amount | integer | 32 bit | Да | 1 000–1 000 000 | Порог в тенге | limit_kzt",
+   "title": "Не указан код ошибки при невалидной сессии",
+   "quote": "Проверить пользовательскую сессию.",
    "loc": {
-    "line_start": 143,
-    "line_end": 143,
+    "line_start": 117,
+    "line_end": 117,
     "page": null,
-    "section": "Query-параметры"
+    "section": "Логика работы метода"
    },
-   "problem": "«amount» описан как integer (REQ-028) и string (REQ-034).",
-   "risk": "Ошибки сериализации/парсинга, потеря точности сумм, разная валидация на клиенте и сервере.",
-   "fix": "Определить единый тип «amount» в запросе и ответе (для денег — integer в минимальных единицах).",
-   "rewrite": "",
-   "source": "rule",
-   "rule_id": "API-TYPE-MISMATCH",
+   "problem": "Требование не ссылается на код 401 Unauthorized при невалидной сессии в рамках этого шага. [Критичность снижена перепроверкой с HIGH: Дефект реален (в шаге 1 не указан конкретный код возврата), но критичность HIGH завышена, так как в дальнейшем тексте (строки 174, 183) код 401 для Unauthorized]",
+   "risk": "Разработчик может вернуть неверный HTTP-статус.",
+   "fix": "Явно указать возвращаемый статус ошибки.",
+   "rewrite": "Проверить пользовательскую сессию; при истечении или невалидности вернуть статус 401.",
+   "source": "llm",
+   "rule_id": "LLM-req",
    "status": "confirmed",
-   "basis": "normative",
-   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
-   "confidence": 1.0
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 0.9
   },
   {
-   "id": "F-019",
+   "id": "F-048",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-019"
+   ],
+   "criterion": "complete",
+   "severity": "MEDIUM",
+   "title": "Не указан источник данных для проверки принадлежности карты",
+   "quote": "Проверить принадлежность карты клиенту.",
+   "loc": {
+    "line_start": 118,
+    "line_end": 118,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "problem": "Не указано, какая именно система или БД используется для проверки связи клиента и карты.",
+   "risk": "Ошибки интеграции с процессингом или бэк-офисом.",
+   "fix": "Указать источник данных для проверки связки.",
+   "rewrite": "Проверить по справочнику процессинга принадлежность карты `cardId` текущему клиенту из сессии.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.85
+  },
+  {
+   "id": "F-049",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-020"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Не определены конкретные правила проверки суммы и переключателя",
+   "quote": "Проверить сумму и переключатель.",
+   "loc": {
+    "line_start": 119,
+    "line_end": 119,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "problem": "Фраза слишком общая и не описывает диапазоны (1 000 – 1 000 000) и допустимые значения переключателя (0 или 1).",
+   "risk": "Пропуск валидации граничных значений на бэкенде.",
+   "fix": "Конкретизировать диапазоны и допустимые значения проверки.",
+   "rewrite": "Проверить, что `amount` находится в диапазоне от 1 000 до 1 000 000 включительно, а `enabled` равен 0 или 1.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 0.95
+  },
+  {
+   "id": "F-050",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-021"
+   ],
+   "criterion": "complete",
+   "severity": "MEDIUM",
+   "title": "Не описан формат успешного ответа при замене настройки",
+   "quote": "Заменить настройку и вернуть результат сохранения.",
+   "loc": {
+    "line_start": 120,
+    "line_end": 120,
+    "page": null,
+    "section": "Логика работы метода"
+   },
+   "problem": "Не указана структура успешного JSON-ответа (например, поля result, amount, enabled).",
+   "risk": "Клиентское приложение может не распарсить ответ.",
+   "fix": "Добавить ссылку на структуру ответа 200 OK.",
+   "rewrite": "Заменить настройку в хранилище и вернуть JSON с результатом ОК и сохранёнными параметрами.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Complete; IEEE 830 §4.3.3",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-051",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-025"
+   ],
+   "criterion": "acceptance",
+   "severity": "MEDIUM",
+   "title": "Отсутствует критерий приёмки для сохранения расходов при изменении порога",
+   "quote": "Изменение порога сохраняет накопленные расходы.",
+   "loc": {
+    "line_start": 126,
+    "line_end": 126,
+    "page": null,
+    "section": "Особые правила"
+   },
+   "problem": "Для требования не указан явный сценарий проверки (дано — когда — тогда) с конкретными числовыми значениями.",
+   "risk": "Риск пропустить дефект, при котором изменение порога случайно сбрасывает счётчик расходов.",
+   "fix": "Добавить критерий приёмки с проверкой неизменности накопленной суммы расходов при обновлении порога.",
+   "rewrite": "Критерий приёмки: при текущих расходах 15 000 ₸ изменение порога с 20 000 ₸ на 30 000 ₸ оставляет счётчик расходов равным 15 000 ₸.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-052",
    "scope": "requirement",
    "req_ids": [
     "REQ-032"
@@ -2213,7 +3103,61 @@
    "confidence": 1.0
   },
   {
-   "id": "F-020",
+   "id": "F-053",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-032"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Неоднозначное перечисление кодов ответов",
+   "quote": "Если результат 200 или 201 — успешный. Если результат 400, 401 и далее — неуспешный.",
+   "loc": {
+    "line_start": 151,
+    "line_end": 151,
+    "page": null,
+    "section": "Ответ"
+   },
+   "problem": "Формулировка «и далее» и упоминание кода 201 для GET-запроса создают неопределенность.",
+   "risk": "Разработчики могут неверно обработать несуществующие коды ответов.",
+   "fix": "Явно перечислить все поддерживаемые коды ответов (200, 400, 401, 403, 500).",
+   "rewrite": "Успешным является ответ с кодом 200. Неуспешные ответы возвращают коды 400, 401, 403 и 500.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 0.95
+  },
+  {
+   "id": "F-054",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-041"
+   ],
+   "criterion": "outputs_defined",
+   "severity": "MEDIUM",
+   "title": "Не описан формат ответа для ошибки 500",
+   "quote": "Ответ в случае, если произошла внутренняя ошибка сервера.",
+   "loc": {
+    "line_start": 176,
+    "line_end": 176,
+    "page": null,
+    "section": "200. Successful — Created"
+   },
+   "problem": "В тексте требования не указана структура JSON-ответа для статуса 500, хотя внизу документа пример приведён. Требуется явное описание формата.",
+   "risk": "Разработчики могут реализовать произвольный формат тела ответа, что нарушит контракт API.",
+   "fix": "Добавить спецификацию структуры ответа для ошибки 500.",
+   "rewrite": "Для статуса 500 сервер возвращает JSON вида {\"message\":\"<уточнить: текст ошибки>\"}.",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-055",
    "scope": "requirement",
    "req_ids": [
     "REQ-042"
@@ -2240,34 +3184,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-021",
-   "scope": "requirement",
-   "req_ids": [
-    "REQ-042"
-   ],
-   "criterion": "consistent",
-   "severity": "MEDIUM",
-   "title": "Раздел статуса 403 описывает возврат 404",
-   "quote": "Для чужой карты возвращается 404, как и для отсутствующей карты.",
-   "loc": {
-    "line_start": 189,
-    "line_end": 189,
-    "page": null,
-    "section": "403. Unsuccessful — Forbidden"
-   },
-   "problem": "В разделе «403. Unsuccessful — Forbidden» указано, что возвращается 404.",
-   "risk": "Неясно, когда возникает статус из заголовка; противоречивый контракт.",
-   "fix": "Определить условия для 403 и 404 раздельно или удалить неиспользуемый.",
-   "rewrite": "",
-   "source": "rule",
-   "rule_id": "API-STATUS-SECTION",
-   "status": "confirmed",
-   "basis": "normative",
-   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
-   "confidence": 1.0
-  },
-  {
-   "id": "F-022",
+   "id": "F-056",
    "scope": "set",
    "req_ids": [],
    "criterion": "ranked",
@@ -2287,7 +3204,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-023",
+   "id": "F-057",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_traceable",
@@ -2307,7 +3224,101 @@
    "confidence": 1.0
   },
   {
-   "id": "F-024",
+   "id": "F-058",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "fintech",
+   "severity": "MEDIUM",
+   "title": "FinTech: Тайм-ауты — не описано",
+   "quote": "",
+   "loc": null,
+   "problem": "Тайм-ауты при взаимодействии между мобильным приложением, процессингом и сервисом уведомлений не описаны.",
+   "risk": "Отраслевой риск платёжной системы.",
+   "fix": "Указать требования к таймаутам сетевых вызовов (например, ≤ 3 сек) и поведение систем при их превышении.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "FIN-timeouts",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN Risk Engine",
+   "confidence": 0.75
+  },
+  {
+   "id": "F-059",
+   "scope": "set",
+   "req_ids": [],
+   "criterion": "fintech",
+   "severity": "MEDIUM",
+   "title": "FinTech: Недоступность внешних сервисов — не описано",
+   "quote": "",
+   "loc": null,
+   "problem": "Поведение при недоступности сервиса push-уведомлений или хранилища настроек не описано.",
+   "risk": "Отраслевой риск платёжной системы.",
+   "fix": "Описать стратегию graceful degradation при сбое внешних сервисов доставки уведомлений.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "FIN-unavailability",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "LÜMEN Risk Engine",
+   "confidence": 0.75
+  },
+  {
+   "id": "F-060",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-027"
+   ],
+   "criterion": "errors_defined",
+   "severity": "MEDIUM",
+   "title": "Не описано поведение при неверном формате cardId",
+   "quote": "Parameter: cardId; Format: string; Size: 1–64; Mandatory: Да; Logic: Карта клиента; Description: Идентификатор карты; DB field: card_id",
+   "loc": {
+    "line_start": 142,
+    "line_end": 142,
+    "page": null,
+    "section": "Query-параметры"
+   },
+   "problem": "Не указан код ответа и текст ошибки при передаче пустой строки, символов > 64 или спецсимволов. [Цитата модели не найдена в документе дословно — показан текст требования.]",
+   "risk": "Разные разработчики могут вернуть разные коды ошибок (400 или 500).",
+   "fix": "Указать, что при несоответствии формата параметра cardId возвращается статус 400 с описанием ошибки.",
+   "rewrite": "При передаче cardId неверного формата или размера возвращать HTTP 400 с сообщением «Некорректный запрос».",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "needs_review",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 0.9
+  },
+  {
+   "id": "F-061",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-001"
+   ],
+   "criterion": "traceable",
+   "severity": "LOW",
+   "title": "Отсутствует связь с бизнес-целями или кодом задачи",
+   "quote": "Дать клиенту возможность узнать о достижении личного бюджета в момент покупки.",
+   "loc": {
+    "line_start": 23,
+    "line_end": 23,
+    "page": null,
+    "section": "Цели"
+   },
+   "problem": "Требование не имеет идентификатора источника или привязки к верхнеуровневым бизнес-целям компании.",
+   "risk": "Сложно проследить обоснованность разработки при аудите.",
+   "fix": "Добавить ID бизнес-требования.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "confirmed",
+   "basis": "normative",
+   "standard_ref": "IEEE 830 §4.3.8; ISO 29148 §5.2.8",
+   "confidence": 0.8
+  },
+  {
+   "id": "F-062",
    "scope": "requirement",
    "req_ids": [
     "REQ-003"
@@ -2334,7 +3345,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-025",
+   "id": "F-063",
    "scope": "requirement",
    "req_ids": [
     "REQ-006"
@@ -2361,7 +3372,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-026",
+   "id": "F-064",
    "scope": "requirement",
    "req_ids": [
     "REQ-006"
@@ -2388,7 +3399,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-027",
+   "id": "F-065",
    "scope": "requirement",
    "req_ids": [
     "REQ-009"
@@ -2415,7 +3426,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-028",
+   "id": "F-066",
    "scope": "set",
    "req_ids": [
     "REQ-008",
@@ -2443,35 +3454,34 @@
    "confidence": 0.67
   },
   {
-   "id": "F-029",
+   "id": "F-067",
    "scope": "requirement",
    "req_ids": [
-    "REQ-030",
-    "REQ-031"
+    "REQ-026"
    ],
-   "criterion": "consistent",
+   "criterion": "verifiable",
    "severity": "LOW",
-   "title": "Content-Type: application/json при отсутствии тела запроса",
-   "quote": "Content-Type: application/json .",
+   "title": "Архитектурная схема описана текстом без возможности автоматизированной проверки",
+   "quote": "Приложение → AlertsController → хранилище настроек → AlertsController → приложение.",
    "loc": {
-    "line_start": 147,
-    "line_end": 147,
+    "line_start": 130,
+    "line_end": 130,
     "page": null,
-    "section": "Request body"
+    "section": "Схема"
    },
-   "problem": "Объявлен JSON-формат тела, но тело не используется.",
-   "risk": "Неоднозначность для клиентов и шлюзов; признак незавершённого контракта.",
-   "fix": "Либо перенести параметры в тело JSON, либо убрать Content-Type.",
+   "problem": "Текстовая схема не содержит метрик или проверяемых артефактов для тестирования.",
+   "risk": "Сложность проверки соблюдения архитектурного потока в автоматических тестах.",
+   "fix": "Оформить взаимодействие в виде Sequence Diagram или спецификации вызовов.",
    "rewrite": "",
-   "source": "rule",
-   "rule_id": "API-CT-NOBODY",
+   "source": "llm",
+   "rule_id": "LLM-req",
    "status": "confirmed",
    "basis": "normative",
-   "standard_ref": "ISO 29148 §5.2.6 Consistent; IEEE 830 §4.3.4",
-   "confidence": 1.0
+   "standard_ref": "ISO 29148 §5.2.5 Verifiable; IEEE 830 §4.3.6",
+   "confidence": 0.8
   },
   {
-   "id": "F-030",
+   "id": "F-068",
    "scope": "set",
    "req_ids": [],
    "criterion": "integration_contract",
@@ -2494,6 +3504,33 @@
    "basis": "expert",
    "standard_ref": "LÜMEN practice",
    "confidence": 1.0
+  },
+  {
+   "id": "F-069",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-027"
+   ],
+   "criterion": "acceptance",
+   "severity": "LOW",
+   "title": "Отсутствует критерий приёмки для параметра cardId",
+   "quote": "Parameter: cardId; Format: string; Size: 1–64; Mandatory: Да; Logic: Карта клиента; Description: Идентификатор карты; DB field: card_id",
+   "loc": {
+    "line_start": 142,
+    "line_end": 142,
+    "page": null,
+    "section": "Query-параметры"
+   },
+   "problem": "Нет конкретного тест-кейса для проверки граничных условий длины cardId. [Цитата модели не найдена в документе дословно — показан текст требования.]",
+   "risk": "Упущение проверки крайних значений длины идентификатора.",
+   "fix": "Добавить тестовый сценарий для валидации длины 1 и 64 символа.",
+   "rewrite": "",
+   "source": "llm",
+   "rule_id": "LLM-req",
+   "status": "needs_review",
+   "basis": "expert",
+   "standard_ref": "LÜMEN practice",
+   "confidence": 0.8
   }
  ],
  "relations": [
@@ -2514,11 +3551,59 @@
    "origin": "rule"
   },
   {
+   "source": "REQ-012",
+   "target": "REQ-016",
+   "type": "refines",
+   "status": "confirmed",
+   "note": "Интеграционное требование ссылается на дочерний документ REST API",
+   "origin": "llm"
+  },
+  {
+   "source": "REQ-021",
+   "target": "REQ-024",
+   "type": "depends_on",
+   "status": "confirmed",
+   "note": "Логика замены настройки опирается на правило повторного сохранения",
+   "origin": "llm"
+  },
+  {
+   "source": "REQ-007",
+   "target": "REQ-010",
+   "type": "depends_on",
+   "status": "confirmed",
+   "note": "Достижение порога инициирует отправку push-уведомления",
+   "origin": "llm"
+  },
+  {
+   "source": "REQ-001",
+   "target": "REQ-004",
+   "type": "implements",
+   "status": "confirmed",
+   "note": "Бизнес-цель реализуется через процесс в BPMN",
+   "origin": "llm"
+  },
+  {
+   "source": "REQ-004",
+   "target": "REQ-007",
+   "type": "traces_to",
+   "status": "confirmed",
+   "note": "Шаг проверки порога детализирован в функциональном требовании Ф-3",
+   "origin": "llm"
+  },
+  {
+   "source": "REQ-012",
+   "target": "REQ-017",
+   "type": "conflicts_with",
+   "status": "confirmed",
+   "note": "F-002: Противоречие метода HTTP и изменения состояния системы",
+   "origin": "finding"
+  },
+  {
    "source": "REQ-028",
    "target": "REQ-034",
    "type": "conflicts_with",
    "status": "confirmed",
-   "note": "F-018: Параметр «amount» имеет разные типы: integer, string",
+   "note": "F-013: Параметр «amount» имеет разные типы: integer, string",
    "origin": "finding"
   },
   {
@@ -2526,7 +3611,15 @@
    "target": "REQ-031",
    "type": "conflicts_with",
    "status": "confirmed",
-   "note": "F-029: Content-Type: application/json при отсутствии тела запроса",
+   "note": "F-014: Content-Type: application/json при отсутствии тела запроса",
+   "origin": "finding"
+  },
+  {
+   "source": "REQ-040",
+   "target": "REQ-042",
+   "type": "conflicts_with",
+   "status": "confirmed",
+   "note": "F-018: Противоречие кодов статусов HTTP при возврате ошибки 404",
    "origin": "finding"
   }
  ],
@@ -2548,11 +3641,12 @@
    "answer": "",
    "source": "rule:R-TZ",
    "finding_ids": [
-    "F-001",
-    "F-005",
-    "F-009",
-    "F-025",
-    "F-026"
+    "F-003",
+    "F-004",
+    "F-024",
+    "F-029",
+    "F-063",
+    "F-064"
    ]
   },
   {
@@ -2572,7 +3666,9 @@
    "answer": "",
    "source": "rule:R-UNITS",
    "finding_ids": [
-    "F-011"
+    "F-001",
+    "F-035",
+    "F-036"
    ]
   },
   {
@@ -2592,9 +3688,12 @@
    "answer": "",
    "source": "rule:API-GET-MUTATION",
    "finding_ids": [
-    "F-003",
-    "F-016",
-    "F-017"
+    "F-002",
+    "F-010",
+    "F-042",
+    "F-043",
+    "F-044",
+    "F-045"
    ]
   },
   {
@@ -2631,12 +3730,12 @@
    "answer": "",
    "source": "rule:R-TERM-posted",
    "finding_ids": [
-    "F-001",
+    "F-003",
+    "F-004",
     "F-005",
-    "F-009",
-    "F-025",
-    "F-026",
-    "F-027"
+    "F-024",
+    "F-029",
+    "F-032"
    ]
   },
   {
@@ -2656,11 +3755,12 @@
    "answer": "",
    "source": "rule:R-TERM-refund",
    "finding_ids": [
-    "F-001",
-    "F-005",
-    "F-009",
-    "F-025",
-    "F-026"
+    "F-003",
+    "F-004",
+    "F-024",
+    "F-029",
+    "F-063",
+    "F-064"
    ]
   },
   {
@@ -2680,9 +3780,9 @@
    "answer": "",
    "source": "rule:R-TERM-cardholder",
    "finding_ids": [
-    "F-006",
-    "F-007",
-    "F-008"
+    "F-026",
+    "F-027",
+    "F-028"
    ]
   },
   {
@@ -2702,9 +3802,9 @@
    "answer": "",
    "source": "rule:R-TERM-active_card",
    "finding_ids": [
-    "F-006",
-    "F-007",
-    "F-008"
+    "F-026",
+    "F-027",
+    "F-028"
    ]
   },
   {
@@ -2724,9 +3824,9 @@
    "answer": "",
    "source": "rule:R-TERM-currency",
    "finding_ids": [
-    "F-006",
-    "F-007",
-    "F-008"
+    "F-026",
+    "F-027",
+    "F-028"
    ]
   },
   {
@@ -2748,12 +3848,12 @@
    "answer": "",
    "source": "rule:R-TERM-month",
    "finding_ids": [
-    "F-001",
-    "F-005",
-    "F-009",
+    "F-003",
+    "F-004",
     "F-024",
-    "F-025",
-    "F-026"
+    "F-029",
+    "F-062",
+    "F-063"
    ]
   },
   {
@@ -2773,7 +3873,181 @@
    "answer": "",
    "source": "rule:R-TERM-idempotency",
    "finding_ids": [
-    "F-012"
+    "F-002",
+    "F-007",
+    "F-008",
+    "F-037",
+    "F-038"
+   ]
+  },
+  {
+   "id": "Q-012",
+   "req_ids": [
+    "REQ-012",
+    "REQ-017"
+   ],
+   "question": "Планируется ли изменить HTTP-метод для сохранения настроек с GET на PUT или POST согласно RFC 9110?",
+   "why": "Метод GET по стандарту является безопасным и не должен изменять состояние на сервере, однако в REQ-012 и REQ-017 указано сохранение через GET.",
+   "risk": "Нарушение стандартов REST API, проблемы с кэшированием сетевых запросов промежуточными прокси-серверами.",
+   "options": [
+    "Изменить HTTP-метод на PUT для операции сохранения",
+    "Изменить HTTP-метод на POST",
+    "Оставить GET, добавив исключение из спецификации HTTP",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "llm",
+   "finding_ids": [
+    "F-002",
+    "F-007",
+    "F-008",
+    "F-010",
+    "F-037",
+    "F-038"
+   ]
+  },
+  {
+   "id": "Q-013",
+   "req_ids": [
+    "REQ-028",
+    "REQ-034"
+   ],
+   "question": "Какой единый тип данных должен использоваться для поля amount в запросах и ответах API (integer или string)?",
+   "why": "В запросе (REQ-028) amount описан как integer, а в ответе (REQ-034) — как string, что создает несогласованность контракта.",
+   "risk": "Ошибки десериализации на стороне клиента мобильного банка при обработке ответа сервера.",
+   "options": [
+    "Использовать integer везде",
+    "Использовать string везде",
+    "Integer в запросе, string в ответе",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "llm",
+   "finding_ids": [
+    "F-013",
+    "F-021"
+   ]
+  },
+  {
+   "id": "Q-014",
+   "req_ids": [
+    "REQ-030",
+    "REQ-031"
+   ],
+   "question": "Требуется ли передавать тело запроса (Request body) в методе сохранения настроек или следует удалить заголовок Content-Type: application/json?",
+   "why": "В спецификации объявлен Content-Type: application/json и пустой Request body, так как все параметры передаются через Query.",
+   "risk": "Избыточные заголовки и потенциальные ошибки валидации у клиентов, ожидающих JSON-тело.",
+   "options": [
+    "Удалить секцию Request body и Content-Type, так как параметры передаются в Query",
+    "Перенести параметры из Query-параметров в тело JSON-запроса",
+    "Оставить текущий гибридный вариант",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "llm",
+   "finding_ids": [
+    "F-014"
+   ]
+  },
+  {
+   "id": "Q-015",
+   "req_ids": [
+    "REQ-040",
+    "REQ-042"
+   ],
+   "question": "Какой HTTP-код ответа должен возвращаться при попытке доступа к чужой или несуществующей карте (403 или 404)?",
+   "why": "В тексте раздела 403 упоминается возврат статуса 404 для чужой или отсутствующей карты, что противоречит семантике HTTP.",
+   "risk": "Некорректная обработка ошибок безопасности и путаница при диагностике инцидентов.",
+   "options": [
+    "Возвращать 403 Forbidden в обоих случаях для сокрытия существования карт",
+    "Возвращать 404 Not Found для несуществующих и 403 для чужих карт",
+    "Возвращать 404 для обоих случаев",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "llm",
+   "finding_ids": [
+    "F-018",
+    "F-019",
+    "F-055"
+   ]
+  },
+  {
+   "id": "Q-016",
+   "req_ids": [
+    "REQ-010"
+   ],
+   "question": "Каковы целевые нефункциональные требования (НФТ) по перцентилю времени ответа и профилю нагрузки (TPS) для отправки push-уведомлений?",
+   "why": "В требованиях указано ограничение «в течение минуты», но не заданы перцентиль (например, 95% или 99%) и пиковая нагрузка.",
+   "risk": "Невозможность объективного тестирования производительности и SLA сервиса уведомлений.",
+   "options": [
+    "95% запросов обрабатываются ≤ 60 секунд при нагрузке до 100 TPS",
+    "99% запросов обрабатываются ≤ 30 секунд при нагрузке до 500 TPS",
+    "Уточнить параметры у владельца продукта",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "llm",
+   "finding_ids": [
+    "F-006",
+    "F-033",
+    "F-034"
+   ]
+  },
+  {
+   "id": "Q-017",
+   "req_ids": [
+    "REQ-012",
+    "REQ-016"
+   ],
+   "question": "Как мобильное приложение должно читать текущие настройки порога и статуса уведомлений?",
+   "why": "В документации описан только метод сохранения /alerts/saveLimit, но отсутствует отдельный метод для чтения настроек.",
+   "risk": "Клиентское приложение не сможет отобразить текущие значения переключателя и порога при открытии экрана.",
+   "options": [
+    "Добавить метод GET /alerts/getLimit или аналогичный для чтения",
+    "Возвращать настройки в ответе на другие существующие эндпоинты",
+    "Использовать локальное кэширование в приложении",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "llm",
+   "finding_ids": [
+    "F-002",
+    "F-007",
+    "F-008",
+    "F-037",
+    "F-038"
+   ]
+  },
+  {
+   "id": "Q-018",
+   "req_ids": [
+    "REQ-032",
+    "REQ-037"
+   ],
+   "question": "Какие корректные коды HTTP-статусов и описания должны применяться для успешных ответов и возврата ошибок бизнес-логики?",
+   "why": "В тексте успешный ответ ошибочно назван «Created» (код 201 для GET-запроса), а ошибки возвращаются со статусом 200 и телом ERROR.",
+   "risk": "Нарушение принципов REST API, неверная интерпретация статусов HTTP клиентом.",
+   "options": [
+    "Использовать код 200 OK для успеха и 400/422 для бизнес-ошибок",
+    "Использовать стандартные коды 2xx/4xx с разделением транспортных и бизнес-ошибок",
+    "Оставить текущую реализацию по учебному кейсу",
+    "Другое"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "llm",
+   "finding_ids": [
+    "F-015",
+    "F-016",
+    "F-052",
+    "F-053"
    ]
   }
  ],
@@ -2782,321 +4056,303 @@
    "key": "payments",
    "aspect": "Платёжные операции",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Описан учёт проведённых покупок и возвратов для расчёта расходов месяца.",
    "req_ids": [
-    "REQ-001",
     "REQ-004",
-    "REQ-006",
-    "REQ-009",
-    "REQ-011",
-    "REQ-013"
+    "REQ-038"
    ],
-   "quote": "",
+   "quote": "Ф-2. Месяц определяется по дате совершения покупки в Алматы. В расходы входят проведённые покупки. Возврат уменьшает расходы месяца исходной покупки. Переводы и снятие наличных исключаются.",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Уточнить механику обработки сторно и авторизационных отмена-транзакций (reversal).",
+   "source": "llm"
   },
   {
    "key": "money_currency",
    "aspect": "Денежные суммы и валюты",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Заданы операции в национальной валюте KZT и пороги в тенге.",
    "req_ids": [
-    "REQ-003",
-    "REQ-005",
-    "REQ-007",
-    "REQ-008",
-    "REQ-009",
-    "REQ-011"
+    "REQ-005"
    ],
-   "quote": "",
+   "quote": "Ф-1. Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно. По умолчанию уведомление выключено.",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Убедиться, что мультивалютные операции конвертируются в KZT до процессинга расходов.",
+   "source": "llm"
   },
   {
    "key": "precision",
    "aspect": "Точность денежных вычислений и минимальные единицы",
    "applicable": "yes",
    "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "note": "Суммы покупок предписано хранить в тиынах, а пороги в тенге, но нет явного правила конвертации.",
    "req_ids": [
     "REQ-011"
    ],
-   "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "quote": "Хранить идентификатор карты, месяц, идентификатор операции, сумму покупки в тиынах, признак отправки и порог в тенге.",
+   "severity": "HIGH",
+   "recommendation": "Добавить правило перевода тенге в тиыны (×100) при сравнении расходов с порогом во избежание ошибок округления.",
+   "source": "llm"
   },
   {
    "key": "rounding",
    "aspect": "Округление",
-   "applicable": "unknown",
-   "status": "unknown",
-   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "applicable": "no",
+   "status": "na",
+   "note": "Операции оперируют целыми тенге и копейками/тиынами без сложных схем округления процентов.",
    "req_ids": [],
    "quote": "",
    "severity": "INFO",
    "recommendation": "",
-   "source": "rule"
+   "source": "llm"
   },
   {
    "key": "redelivery",
    "aspect": "Повторная доставка событий",
    "applicable": "yes",
    "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
-   "req_ids": [
-    "REQ-012"
-   ],
-   "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "note": "Упомянуто сохранение исходного итога при повторной доставке, но не раскрыт механизм дедупликации.",
+   "req_ids": [],
+   "quote": "Приложение читает и сохраняет настройки через дочерний документ «Уведомление о расходах по карте — REST API». Повторная доставка одного события процессинга сохраняет исходный итог.",
+   "severity": "MEDIUM",
+   "recommendation": "Описать использование идентификатора операции (operation ID) в качестве ключа идемпотентности шины событий.",
+   "source": "llm"
   },
   {
    "key": "idempotency",
    "aspect": "Идемпотентность операций",
    "applicable": "yes",
    "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
-   "req_ids": [
-    "REQ-012",
-    "REQ-024"
-   ],
-   "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "note": "Указано сохранение результата при повторной доставке событий, однако метод сохранения настроек сделан через GET.",
+   "req_ids": [],
+   "quote": "REST type | GET",
+   "severity": "HIGH",
+   "recommendation": "Изменить метод сохранения настроек с GET на POST/PUT в соответствии с RFC 9110, так как метод изменяет состояние системы.",
+   "source": "llm"
   },
   {
    "key": "duplicates",
    "aspect": "Дублирование платежей/уведомлений",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Предусмотрено ограничение на отправку пуша не более одного раза за календарный месяц.",
    "req_ids": [
-    "REQ-007"
+    "REQ-039"
    ],
-   "quote": "",
+   "quote": "Ф-3. Когда расходы переходят от суммы ниже порога к сумме, равной порогу или выше, клиент получает push. На карту приходится максимум один такой push за календарный месяц.",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Проверить атомарность проверки признака отправки и записи флага для исключения race condition при параллельных транзакциях.",
+   "source": "llm"
   },
   {
    "key": "timeouts",
    "aspect": "Тайм-ауты",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
-   "req_ids": [
-    "REQ-010"
-   ],
+   "status": "missing",
+   "note": "Тайм-ауты при взаимодействии между мобильным приложением, процессингом и сервисом уведомлений не описаны.",
+   "req_ids": [],
    "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "severity": "MEDIUM",
+   "recommendation": "Указать требования к таймаутам сетевых вызовов (например, ≤ 3 сек) и поведение систем при их превышении.",
+   "source": "llm"
   },
   {
    "key": "retries",
    "aspect": "Повторные попытки",
-   "applicable": "unknown",
-   "status": "unknown",
-   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "applicable": "yes",
+   "status": "missing",
+   "note": "Политика повторных попыток отправки push-уведомлений или запросов к сервисам отсутствует.",
    "req_ids": [],
    "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "severity": "LOW",
+   "recommendation": "Описать параметры retry-политики (экспоненциальная задержка, лимит попыток) для отправки push.",
+   "source": "llm"
   },
   {
    "key": "provider_errors",
    "aspect": "Ошибки внешних провайдеров",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Описаны стандартные коды ошибок API (400, 401, 403, 500) и ответы сервиса.",
    "req_ids": [
-    "REQ-013",
-    "REQ-015",
+    "REQ-038",
+    "REQ-039",
+    "REQ-040",
     "REQ-041"
    ],
-   "quote": "",
+   "quote": "Ответ в случае, если параметры запроса заполнены неверно.",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Зафиксировать формат тела ошибки для всех нестандартных сценариев интеграции.",
+   "source": "llm"
   },
   {
    "key": "refunds",
    "aspect": "Отмены и возвраты",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Учтено уменьшение расходов месяца при возврате по исходной покупке.",
    "req_ids": [
-    "REQ-006"
+    "REQ-038"
    ],
-   "quote": "",
+   "quote": "Ф-2. Месяц определяется по дате совершения покупки в Алматы. В расходы входят проведённые покупки. Возврат уменьшает расходы месяца исходной покупки. Переводы и снятие наличных исключаются.",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Уточнить логику, если возврат превышает текущие накопленные расходы месяца (может ли счётчик уходить в минус).",
+   "source": "llm"
   },
   {
    "key": "statuses",
    "aspect": "Статусы операций",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Описаны статусы ответа API (OK/ERROR) и HTTP-коды возврата.",
    "req_ids": [
-    "REQ-004",
-    "REQ-006",
-    "REQ-009"
+    "REQ-033",
+    "REQ-037"
    ],
    "quote": "",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Добавить детальные статусы доставки push-уведомлений (доставлен, ошибка сети, выключены пуши).",
+   "source": "llm"
   },
   {
    "key": "concurrency",
    "aspect": "Конкурентные транзакции",
-   "applicable": "unknown",
-   "status": "unknown",
-   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "applicable": "yes",
+   "status": "missing",
+   "note": "Не описана обработка одновременного поступления нескольких покупок по одной карте.",
    "req_ids": [],
    "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "severity": "HIGH",
+   "recommendation": "Внедрить механизмы блокировки (распределенные локи или optimistic locking) при обновлении счётчика расходов во избежание race condition.",
+   "source": "llm"
   },
   {
    "key": "authn",
    "aspect": "Аутентификация и авторизация",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Предусмотрена проверка сессии пользователя и токена Bearer.",
    "req_ids": [
-    "REQ-017",
-    "REQ-018",
-    "REQ-039"
+    "REQ-018"
    ],
-   "quote": "",
+   "quote": "Authorization | Bearer, сессия владельца карты",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Убедиться в валидации срока действия JWT-токена на стороне шлюза.",
+   "source": "llm"
   },
   {
    "key": "access_control",
    "aspect": "Разграничение доступа",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "status": "covered",
+   "note": "Описана проверка принадлежности карты клиенту с возвратом 404 для чужих карт.",
    "req_ids": [
     "REQ-019",
-    "REQ-040",
     "REQ-042"
    ],
-   "quote": "",
+   "quote": "Для чужой карты возвращается 404, как и для отсутствующей карты.",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Убедиться, что возвращение 404 вместо 403 является осознанным решением безопасности (security through obscurity) для предотвращенияenumeration атак.",
+   "source": "llm"
   },
   {
    "key": "logging",
    "aspect": "Журналирование и аудит",
-   "applicable": "unknown",
-   "status": "unknown",
-   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "applicable": "yes",
+   "status": "missing",
+   "note": "Требования к аудиту и системному логированию операций изменения настроек и отправки уведомлений отсутствуют.",
    "req_ids": [],
    "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "severity": "LOW",
+   "recommendation": "Зафиксировать требования по логированию критических событий с маскированием чувствительных данных.",
+   "source": "llm"
   },
   {
    "key": "pii",
    "aspect": "Защита персональных и платёжных данных",
    "applicable": "yes",
-   "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
-   "req_ids": [
-    "REQ-009"
-   ],
-   "quote": "",
+   "status": "covered",
+   "note": "Указано хранение и передача маскированных данных (последние четыре цифры карты) без полного PAN.",
+   "req_ids": [],
+   "quote": "Процессинг → сервис расходов: проведена покупка. Сервис расходов → настройки: получить порог карты. Сервис расходов → push: передать последние четыре цифры карты и сумму при достижении порога.",
    "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "recommendation": "Соблюдать требования PCI DSS в отношении неизбыточного хранения реквизитов карт.",
+   "source": "llm"
   },
   {
    "key": "unavailability",
    "aspect": "Недоступность внешних сервисов",
-   "applicable": "unknown",
-   "status": "unknown",
-   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "applicable": "yes",
+   "status": "missing",
+   "note": "Поведение при недоступности сервиса push-уведомлений или хранилища настроек не описано.",
    "req_ids": [],
    "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "severity": "MEDIUM",
+   "recommendation": "Описать стратегию graceful degradation при сбое внешних сервисов доставки уведомлений.",
+   "source": "llm"
   },
   {
    "key": "consistency",
    "aspect": "Согласованность данных",
    "applicable": "yes",
    "status": "partial",
-   "note": "Аспект упомянут; полноту описания оценивает семантический анализ (LLM).",
+   "note": "Упомянуто сохранение накопленных расходов при изменении порога, но нет гарантий атомарности транзакций.",
    "req_ids": [
-    "REQ-012",
-    "REQ-013"
+    "REQ-008"
    ],
-   "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "quote": "Ф-4. При изменении порога накопленная сумма сохраняется. Если она ниже нового порога, следующее достижение вызывает push независимо от истории предыдущей настройки.",
+   "severity": "MEDIUM",
+   "recommendation": "Обеспечить атомарность обновления настроек в БД с использованием ACID-транзакций.",
+   "source": "llm"
   },
   {
    "key": "recovery",
    "aspect": "Восстановление после сбоев и откат",
-   "applicable": "unknown",
-   "status": "unknown",
-   "note": "В документе не упоминается. Применимость требует экспертной оценки — не считается дефектом автоматически.",
+   "applicable": "yes",
+   "status": "partial",
+   "note": "В чек-листе ревью упомянута схема отката, но в тексте требований механизмы восстановления не детализированы.",
    "req_ids": [],
-   "quote": "",
-   "severity": "INFO",
-   "recommendation": "",
-   "source": "rule"
+   "quote": "Реализация задачи/проекта предусматривает схему отката решений | Да / Нет / Не требуется | Да / Нет / Не требуется | При невозможности отката — варианты скрытия функционала",
+   "severity": "LOW",
+   "recommendation": "Документировать процедуру отката миграций данных и восстановления состояния счетчиков при сбоях.",
+   "source": "llm"
   }
  ],
  "scores": {
-  "quality_index": 72.3,
-  "requirements_index": 95.9,
-  "set_index": 36.8,
+  "quality_index": 57.0,
+  "requirements_index": 84.6,
+  "set_index": 15.6,
   "checked_requirements": 42,
   "total_requirements": 42,
-  "findings_total": 30,
+  "findings_total": 66,
   "by_severity": {
-   "CRITICAL": 0,
-   "HIGH": 4,
-   "MEDIUM": 19,
-   "LOW": 7,
+   "CRITICAL": 2,
+   "HIGH": 18,
+   "MEDIUM": 38,
+   "LOW": 8,
    "INFO": 0
   },
-  "contradictions": 2,
-  "incomplete": 2,
-  "unverifiable": 3,
-  "ambiguous": 8,
-  "open_questions": 11,
-  "needs_review": 0,
-  "criteria_coverage": 0.095,
+  "contradictions": 5,
+  "incomplete": 10,
+  "unverifiable": 9,
+  "ambiguous": 11,
+  "open_questions": 18,
+  "needs_review": 3,
+  "criteria_coverage": 1.0,
   "method": "Штраф дефекта: CRITICAL 40, HIGH 20, MEDIUM 8, LOW 3, INFO 0; замечания «требует проверки» — ×0.5. Балл требования = max(0, 100 − Σ штрафов его дефектов − ½ Σ штрафов межтребовательных дефектов с его участием). Индекс требований = среднее баллов. Индекс набора = 100 / (1 + P/50), P — Σ штрафов дефектов уровня набора (индекс вдвое ниже при P = 50). Общий индекс качества = 0.6 × индекс требований + 0.4 × индекс набора. Покрытие критериев = доля пар «требование × критерий», получивших вердикт ok/issue/na. Готовность: NOT READY — есть CRITICAL или ≥ 5 HIGH; READY WITH CONDITIONS — есть HIGH/MEDIUM; READY — только LOW/INFO; INSUFFICIENT DATA — < 3 требований, покрытие критериев < 50% или семантическая проверка (LLM) не выполнялась при отсутствии CRITICAL."
  },
- "readiness": "INSUFFICIENT DATA",
- "readiness_reason": "Семантическая проверка моделью не выполнялась (офлайн-режим): правила нашли 30 дефектов, но противоречия и полнота смысла не оценены. Запустите с LLM-ключом.",
+ "readiness": "NOT READY",
+ "readiness_reason": "Обнаружено 2 критических дефекта и 18 дефектов высокой критичности — разработку и тестирование начинать рано.",
  "priorities": [
+  "[CRITICAL] Смешение единиц измерения (тиыны и тенге) (REQ-011; строка 49, раздел «Требования к данным») — Привести все денежные поля к единой единице измерения (тиыны).",
+  "[CRITICAL] Противоречие метода HTTP и изменения состояния системы (REQ-012, REQ-017; строка 52, раздел «Требования к интеграции») — Изменить тип запроса с GET на POST или PUT.",
   "[HIGH] Термин «Проведённая операция» не определён в документе (REQ-006, REQ-009; строка 38, раздел «Функциональные требования») — Добавить определение «Проведённая операция» в раздел терминов и использовать его единообразно.",
-  "[HIGH] Раздел «Тестирование требований» не заполнен (набор; строка 57, раздел «Тестирование требований») — Заполнить раздел «Тестирование требований» до передачи в разработку.",
-  "[HIGH] Изменяющая операция объявлена через GET (REQ-017; строка 104, раздел «Общие параметры») — Использовать PUT (замена настройки) или POST, параметры передавать в теле JSON.",
-  "[HIGH] Ошибка бизнес-валидации возвращается со статусом 200 (набор; строки 170–172, раздел «200. Successful — Created») — Возвращать ошибку валидации с 400/422 и телом {\"message\": …}; 200 — только при успехе."
+  "[HIGH] Не определена обработка возвратов, пришедших в другом месяце (REQ-006; строка 38, раздел «Функциональные требования») — Уточнить правила учёта возвратов за прошлые периоды.",
+  "[HIGH] Отсутствует контракт события процессинга (REQ-004, REQ-009; строка 43, раздел «Sequence Diagram») — Описать контракт события о покупке от процессинга с указанием формата (например, JSON/Kafka), полей и ключа идемпотентности.",
+  "[HIGH] Отсутствуют перцентиль и профиль нагрузки для НФТ (REQ-010; строка 46, раздел «Нефункциональные требования») — Добавить перцентиль и целевые показатели TPS.",
+  "[HIGH] Не определен механизм обеспечения идемпотентности (REQ-012; строка 52, раздел «Требования к интеграции») — Описать использование уникального идентификатора операции (operationId) для проверки дубликатов.",
+  "[HIGH] Отсутствует метод API для чтения настроек (REQ-012, REQ-016; строка 52, раздел «Требования к интеграции») — Добавить спецификацию метода GET /alerts/getLimit для чтения текущих настроек карты."
  ],
  "stages": [
   {
@@ -3106,7 +4362,7 @@
    "title": "Загрузка документа",
    "status": "done",
    "message": "13 507 байт",
-   "elapsed_ms": 0
+   "elapsed_ms": 6
   },
   {
    "index": 2,
@@ -3115,7 +4371,7 @@
    "title": "Проверка формата и целостности",
    "status": "done",
    "message": "Формат: MARKDOWN, SHA-256 e7dae55e5453…",
-   "elapsed_ms": 2
+   "elapsed_ms": 25
   },
   {
    "index": 3,
@@ -3142,7 +4398,7 @@
    "title": "Выделение и идентификация требований",
    "status": "done",
    "message": "42 требований, с исходным ID: 11",
-   "elapsed_ms": 2
+   "elapsed_ms": 7
   },
   {
    "index": 6,
@@ -3151,7 +4407,7 @@
    "title": "Классификация требований",
    "status": "done",
    "message": "API-контракт: 27, Функциональное: 4, Архитектура/процесс: 3, Критерий приёмки: 3, Бизнес-цель: 1, UI/UX: 1, Нефункциональное: 1, Данные: 1, Интеграция: 1",
-   "elapsed_ms": 1
+   "elapsed_ms": 2
   },
   {
    "index": 7,
@@ -3159,8 +4415,8 @@
    "key": "individual",
    "title": "Индивидуальная проверка требований",
    "status": "done",
-   "message": "Правила: 32 замечаний",
-   "elapsed_ms": 25
+   "message": "Правила: 32 замечаний; LLM: пакетов 6/6",
+   "elapsed_ms": 25178
   },
   {
    "index": 8,
@@ -3168,17 +4424,17 @@
    "key": "consistency",
    "title": "Межтребовательная проверка (противоречия, дубли)",
    "status": "done",
-   "message": "Правила: 9 замечаний набора, 2 связей",
-   "elapsed_ms": 0
+   "message": "LLM: 5 замечаний, 3 связей",
+   "elapsed_ms": 26892
   },
   {
    "index": 9,
    "total": 15,
    "key": "completeness",
    "title": "Анализ полноты документа",
-   "status": "skipped",
-   "message": "Требуется LLM — смысловая полнота не оценивалась",
-   "elapsed_ms": 0
+   "status": "done",
+   "message": "LLM: 3 замечаний, 3 связей",
+   "elapsed_ms": 27929
   },
   {
    "index": 10,
@@ -3186,8 +4442,8 @@
    "key": "fintech",
    "title": "FinTech-аудит (LÜMEN Risk Engine)",
    "status": "done",
-   "message": "Документ относится к финансовой предметной области (без LLM — только упоминания)",
-   "elapsed_ms": 0
+   "message": "Применимо: 19, пробелов: 5",
+   "elapsed_ms": 33044
   },
   {
    "index": 11,
@@ -3195,8 +4451,8 @@
    "key": "clarify",
    "title": "Уточняющие вопросы (Clarification Engine)",
    "status": "done",
-   "message": "11 вопросов к владельцу требований",
-   "elapsed_ms": 0
+   "message": "18 вопросов к владельцу требований",
+   "elapsed_ms": 10231
   },
   {
    "index": 12,
@@ -3204,8 +4460,8 @@
    "key": "verify",
    "title": "Перепроверка результатов и защита от галлюцинаций",
    "status": "done",
-   "message": "Цитаты сверены с документом; «требует проверки»: 0; отклонено перепроверкой: 0; отброшено несуществующих ID: 0",
-   "elapsed_ms": 0
+   "message": "Цитаты сверены с документом; «требует проверки»: 3; отклонено перепроверкой: 0; отброшено несуществующих ID: 5",
+   "elapsed_ms": 2474
   },
   {
    "index": 13,
@@ -3213,8 +4469,8 @@
    "key": "stats",
    "title": "Подсчёт статистики и готовности",
    "status": "done",
-   "message": "Индекс качества 72.3, готовность: INSUFFICIENT DATA",
-   "elapsed_ms": 0
+   "message": "Индекс качества 57.0, готовность: NOT READY",
+   "elapsed_ms": 5
   },
   {
    "index": 14,
@@ -3222,8 +4478,8 @@
    "key": "report",
    "title": "Генерация отчёта",
    "status": "done",
-   "message": "Markdown 62 КБ, HTML 74 КБ",
-   "elapsed_ms": 5
+   "message": "Markdown, HTML и JSON доступны для скачивания",
+   "elapsed_ms": 0
   },
   {
    "index": 15,
@@ -3231,12 +4487,13 @@
    "key": "save",
    "title": "Сохранение отчёта",
    "status": "done",
-   "message": "reports/audit_report_offline.md, reports/audit_report_offline.html, reports/audit_report_offline.json",
-   "elapsed_ms": 3
+   "message": "Хранилище: supabase",
+   "elapsed_ms": 0
   }
  ],
  "warnings": [
-  "Семантическая проверка моделью не выполнялась (офлайн-режим): отчёт построен только детерминированными правилами LÜMEN Core. Для полного анализа задайте ключ LLM в .env."
+  "1 шаг(ов) LLM не прошли с первого раза (лимиты бесплатного тарифа) и были успешно выполнены повторно — результат полный.",
+  "Основная модель gemini/gemini-flash-latest была недоступна; анализ выполнен резервной моделью gemini/gemini-flash-lite-latest."
  ],
  "demo": false,
  "source": [
