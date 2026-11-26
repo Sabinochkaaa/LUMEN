@@ -149,9 +149,7 @@ export const api = {
 
 export const SEV_ORDER: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
 export const SEV_RU: Record<Severity, string> = { CRITICAL: "Критический", HIGH: "Высокий", MEDIUM: "Средний", LOW: "Низкий", INFO: "Инфо" };
-export const SEV_COLOR: Record<Severity, string> = { CRITICAL: "#E5484D", HIGH: "#F2711C", MEDIUM: "#D4A106", LOW: "#2F86E8", INFO: "#8B95A7" };
-/** Highlighter tones for marking document lines. */
-export const SEV_MARK: Record<Severity, string> = { CRITICAL: "#FF8A8A", HIGH: "#FFB061", MEDIUM: "#FFD43B", LOW: "#8EC9FF", INFO: "#CED4DA" };
+export const SEV_COLOR: Record<Severity, string> = { CRITICAL: "#E5484D", HIGH: "#F76B15", MEDIUM: "#E2A30F", LOW: "#3E8BFF", INFO: "#8B95A7" };
 export const READY_RU: Record<Readiness, { label: string; tone: string; hint: string }> = {
   "READY": { label: "Готов к разработке", tone: "ready", hint: "Блокирующих проблем нет" },
   "READY WITH CONDITIONS": { label: "Готов с условиями", tone: "cond", hint: "Нужны исправления и согласования" },
