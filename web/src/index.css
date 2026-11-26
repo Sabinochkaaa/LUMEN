@@ -86,3 +86,16 @@ body { @apply bg-canvas text-ink font-sans antialiased; font-feature-settings: "
 .react-flow__node { color: rgb(var(--ink)); }
 .react-flow, .react-flow__pane, .react-flow__renderer { background: transparent !important; }
 .react-flow { --xy-background-color: transparent; --xy-background-color-default: transparent; }
+
+/* tiny robot portraits in the menu */
+.robot-ico { overflow: visible; flex-shrink: 0; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+.robot-ico-eyes { transform-origin: 16px 17.5px; animation: robot-blink 4.2s infinite; animation-delay: var(--d); }
+a:hover .robot-ico { transform: rotate(-8deg) scale(1.12); }
+.robot-ico-on .robot-ico-body { animation: robot-bob 1.6s ease-in-out infinite; }
+.robot-ico-on .robot-ico-tip { animation: robot-glow 1.6s ease-in-out infinite; }
+@keyframes robot-blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.15); } }
+@keyframes robot-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.6px); } }
+@keyframes robot-glow { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) {
+  .robot-ico-eyes, .robot-ico-on .robot-ico-body, .robot-ico-on .robot-ico-tip { animation: none; }
+}

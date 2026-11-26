@@ -3,7 +3,9 @@ import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useOutlet, 
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FilePlus2, FileText, GitFork, HelpCircle, Landmark, LayoutDashboard, Languages, ListChecks, Lock, Menu, Settings as Cog, ShieldAlert, ShieldCheck, X,
+  Sparkles,
 } from "lucide-react";
+import RobotIcon from "./components/RobotIcon";
 import { api, Audit, Health } from "./api";
 import { LangProvider, useT } from "./i18n";
 import { ThemeProvider } from "./theme";
@@ -20,6 +22,7 @@ const Clarifications = lazy(() => import("./pages/Clarifications"));
 const Fintech = lazy(() => import("./pages/Fintech"));
 const Compare = lazy(() => import("./pages/Compare"));
 const Translate = lazy(() => import("./pages/Translate"));
+const Generate = lazy(() => import("./pages/Generate"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
 import { Empty, ErrorBox, LangSwitch, Loading, Logo, ThemeSwitch } from "./components/ui";
@@ -51,16 +54,17 @@ export function AuditGate({ children }: { children: (a: Audit, set: (a: Audit) =
 
 // ---------------------------------------------------------------- layout
 const NAV = [
-  { to: "/dashboard", key: "nav.overview", icon: LayoutDashboard },
-  { to: "/new", key: "nav.new", icon: FilePlus2 },
-  { to: "requirements", key: "nav.requirements", icon: ListChecks, audit: true },
-  { to: "issues", key: "nav.issues", icon: ShieldAlert, audit: true },
-  { to: "graph", key: "nav.graph", icon: GitFork, audit: true },
-  { to: "clarifications", key: "nav.clarifications", icon: HelpCircle, audit: true },
-  { to: "fintech", key: "nav.fintech", icon: Landmark, audit: true },
-  { to: "/translate", key: "nav.translate", icon: Languages },
-  { to: "/reports", key: "nav.reports", icon: FileText },
-  { to: "/settings", key: "nav.settings", icon: Cog },
+  { to: "/dashboard", key: "nav.overview", icon: LayoutDashboard, agent: 0 },
+  { to: "/generate", key: "nav.generate", icon: Sparkles, agent: 0 },
+  { to: "/new", key: "nav.new", icon: FilePlus2, agent: 0 },
+  { to: "requirements", key: "nav.requirements", icon: ListChecks, audit: true, agent: 0 },
+  { to: "issues", key: "nav.issues", icon: ShieldAlert, audit: true, agent: 1 },
+  { to: "graph", key: "nav.graph", icon: GitFork, audit: true, agent: 0 },
+  { to: "clarifications", key: "nav.clarifications", icon: HelpCircle, audit: true, agent: 4 },
+  { to: "fintech", key: "nav.fintech", icon: Landmark, audit: true, agent: 2 },
+  { to: "/translate", key: "nav.translate", icon: Languages, agent: 3 },
+  { to: "/reports", key: "nav.reports", icon: FileText, agent: 4 },
+  { to: "/settings", key: "nav.settings", icon: Cog, agent: 4 },
 ];
 
 function Sidebar({ onNav }: { onNav?: () => void }) {
@@ -83,8 +87,9 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
               className={({ isActive }) => `relative flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] transition-colors ${isActive ? "font-medium text-signal" : "text-ink-soft hover:bg-ink/5 hover:text-ink"}`}>
               {({ isActive }) => (<>
                 {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-xl bg-signal/10" transition={{ type: "spring", stiffness: 450, damping: 35 }} />}
-                <n.icon size={17} strokeWidth={1.8} className="relative" />
-                <span className="relative">{t(n.key)}</span>
+                <RobotIcon agent={n.agent} active={isActive} className="relative" />
+                <span className="relative flex-1">{t(n.key)}</span>
+                <n.icon size={14} strokeWidth={1.8} className={`relative ${isActive ? "opacity-70" : "opacity-35"}`} />
               </>)}
             </NavLink>
           );
@@ -184,6 +189,7 @@ function Root() {
           <Route path="dashboard" element={<Overview />} />
           <Route path="new" element={<NewAudit />} />
           <Route path="translate" element={<Translate />} />
+          <Route path="generate" element={<Generate />} />
           <Route path="audits/:id" element={<AuditHome />} />
           <Route path="audits/:id/requirements" element={<Requirements />} />
           <Route path="audits/:id/issues" element={<Issues />} />

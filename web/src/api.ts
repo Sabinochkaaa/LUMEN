@@ -124,6 +124,9 @@ export const api = {
     fd.append("target", target);
     return req<TranslationResult>("/api/translate", { method: "POST", body: fd });
   },
+  generate: (idea: string, lang: string) =>
+    req<{ title: string; markdown: string }>("/api/generate", { method: "POST", body: JSON.stringify({ idea, lang }),
+      headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(180000) }),
   translationDocx: async (markdown: string, name: string) => {
     const r = await fetch(`${BASE}/api/translate/docx`, { method: "POST", headers: { ...headers(), "content-type": "application/json" }, body: JSON.stringify({ markdown, title: name }) });
     if (!r.ok) throw new Error(`Ошибка ${r.status}`);

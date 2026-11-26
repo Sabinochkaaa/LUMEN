@@ -165,6 +165,8 @@ class TelegramBot:
         if not chat:
             return
         text = (m.get("text") or m.get("caption") or "").strip()
+        if ("voice" in m or "audio" in m) and not text:
+            return self.voice(chat, m, u)
         if text.startswith(("/start", "/help")):
             self.send(chat, HELP)
         elif text.startswith("/format"):
@@ -198,6 +200,32 @@ class TelegramBot:
             self.chat(chat, text)
         else:
             self.send(chat, "Пришлите документ требований (файл, фото или текст) или /demo 📎")
+
+    def voice(self, chat: int, m: dict, u: dict) -> None:
+        """A voice note becomes a text message: the bot shows what it heard and answers as if it were typed."""
+        from ..voice import VoiceError, transcribe
+
+        v = m.get("voice") or m.get("audio") or {}
+        ok, retry = limiter.allow(f"bot-voice:{chat}", 30, 3600)
+        if not ok:
+            self.send(chat, f"⏳ Лимит голосовых на этот час исчерпан. Попробуйте через {retry // 60 + 1} мин.")
+            return
+        if v.get("duration", 0) > 180:
+            self.send(chat, "🎙 Запись длиннее 3 минут — задайте вопрос короче или напишите текстом.")
+            return
+        self.typing(chat)
+        try:
+            info = self.call("getFile", file_id=v["file_id"])
+            data = self.http.get(f"{self.file_api}/{info['file_path']}").content
+            text = transcribe(data, v.get("file_name") or info.get("file_path", "voice.ogg"), cfg=self.svc.cfg)
+        except VoiceError as e:
+            self.send(chat, f"🎙 {html.escape(str(e))}")
+            return
+        except Exception:
+            self.send(chat, "🎙 Не получилось распознать голосовое — попробуйте ещё раз или напишите текстом.")
+            return
+        self.send(chat, f"🎙 <i>{html.escape(text)}</i>")
+        self.handle({**u, "message": {**m, "text": text, "voice": None, "audio": None}})
 
     @staticmethod
     def _looks_like_requirements(text: str) -> bool:

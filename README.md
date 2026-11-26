@@ -13,6 +13,7 @@ LÜMEN — ИИ-агент, который проводит **статическ
 | **LÜMEN Core** (CLI) | агент: документ → отчёт, одной командой | `python -m lumen -i docs/requirements.md -o reports/audit_report.md` |
 | **LÜMEN Intelligence** | веб-панель: загрузка, живой прогресс, линза документа, граф, вопросы | `uvicorn lumen.api.app:app` → http://localhost:8000 |
 | **REST API** | загрузка, SSE-прогресс, результаты, отчёты, статусы вопросов | http://localhost:8000/docs |
+| **Генератор ТЗ** | идея текстом или голосом → черновик ТЗ по банковскому шаблону → сразу на проверку | раздел «Генератор ТЗ» в панели, `POST /api/generate` |
 | **Telegram-бот** | файл, фото или текст → вердикт, ИИ-чат по отчёту, отчёт в PDF/Word/Excel/HTML/MD/JSON | внутри API или `python -m lumen.bot` |
 
 ---

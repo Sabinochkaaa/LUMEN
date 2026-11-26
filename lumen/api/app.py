@@ -202,6 +202,20 @@ def support_chat(body: SupportBody, request: Request):
     return answer(body.message, body.history[-8:], body.lang, audit, client).as_dict()
 
 
+@app.post("/api/voice")
+async def voice_to_text(request: Request, file: UploadFile = File(...), lang: str = Form("ru")):
+    """A spoken question → text (Whisper). The audio is not stored."""
+    from ..voice import MAX_BYTES, VoiceError, transcribe
+
+    _support_limit(request, "voice", 30)
+    data = await file.read(MAX_BYTES + 1)
+    try:
+        text = await run_in_threadpool(transcribe, data, file.filename or "voice.webm", lang)
+    except VoiceError as e:
+        raise HTTPException(422, str(e)) from None
+    return {"text": text}
+
+
 class TicketBody(BaseModel):
     message: str
     contact: str = ""
@@ -238,6 +252,7 @@ def health():
         "storage_degraded": getattr(svc.store, "degraded", False),
         "storage_error": getattr(svc.store, "last_error", None),
         "storage_key": getattr(getattr(svc.store, "primary", svc.store), "key_kind", None),
+        "voice": bool(settings.groq_api_key or settings.openai_api_key),
         "auth_required": not settings.public_audits and bool(settings.admin_password),
         "public_audits": settings.public_audits, "login_enabled": bool(settings.admin_password),
         "private_mode": settings.private_mode, "public_demo": settings.public_demo,
@@ -457,6 +472,31 @@ async def translate(file: UploadFile = File(...), target: str = Form(...)):
 class DocxBody(BaseModel):
     markdown: str
     title: str = ""
+
+
+class GenerateBody(BaseModel):
+    idea: str
+    lang: str = "ru"
+
+
+@app.post("/api/generate", dependencies=[Depends(require_run)])
+async def generate(body: GenerateBody, request: Request):
+    """LÜMEN Author: a spec draft from a short idea, in the bank template, with gaps marked «[уточнить]»."""
+    from fastapi.concurrency import run_in_threadpool
+
+    from ..generate import generate_spec
+    from ..llm.client import LLMError
+
+    if not 10 <= len(body.idea.strip()) <= 4000:
+        raise HTTPException(422, "Опишите идею: от 10 до 4000 символов")
+    _support_limit(request, "generate", 20)
+    try:
+        res = await run_in_threadpool(generate_spec, body.idea, body.lang)
+    except LLMError as e:
+        raise HTTPException(503, f"Модель ИИ сейчас недоступна, попробуйте через минуту ({str(e)[:120]})") from None
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from None
+    return {"title": res.title, "markdown": res.markdown}
 
 
 @app.post("/api/translate/docx", dependencies=[Depends(require_run)])
