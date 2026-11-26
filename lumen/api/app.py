@@ -25,7 +25,8 @@ from ..config import PROVIDER_LABELS, agent_version, settings
 from ..parsing.loader import FORMATS, SUPPORTED
 from ..report.render import render_html, render_markdown
 from ..service import get_service
-from ..security import UploadRejected, client_ip, limiter, security_headers, token_ok, validate_upload
+from ..security import (SESSION_COOKIE, SESSION_TTL, UploadRejected, check_session, client_ip, limiter, make_session,
+                        security_headers, token_ok, validate_upload)
 from ..storage.store import summary
 
 log = logging.getLogger("lumen.api")
@@ -68,22 +69,89 @@ async def guard(request: Request, call_next):
     return response
 
 
-def require_token(x_api_token: Optional[str] = Header(default=None)) -> None:
-    if not token_ok(x_api_token, settings.api_token):
-        raise HTTPException(401, "Требуется токен доступа: введите его в разделе «Настройки» (LUMEN_API_TOKEN на сервере)")
+def is_admin(request: Request) -> bool:
+    """Admin = valid signed session cookie (browser) or X-API-Token header (scripts, CI, bots)."""
+    secret = settings.admin_password
+    if not secret:
+        return not settings.production  # local development without a password: everything is allowed
+    header = request.headers.get("x-api-token")
+    if header and token_ok(header, secret):
+        return True
+    if check_session(secret, request.cookies.get(SESSION_COOKIE)):
+        # CSRF guard: cookie-authenticated writes must come from our own frontend (custom header, SameSite=Strict)
+        return request.method in ("GET", "HEAD") or request.headers.get("x-requested-with") == "lumen"
+    return False
 
 
-def require_read(x_api_token: Optional[str] = Header(default=None)) -> None:
+def require_admin(request: Request) -> None:
+    if not is_admin(request):
+        if not settings.admin_password:
+            raise HTTPException(403, "Действие доступно администратору: задайте LUMEN_ADMIN_PASSWORD на сервере")
+        raise HTTPException(401, "Требуется вход администратора (Настройки → Вход администратора)")
+
+
+def require_run(request: Request) -> None:
+    """Running an audit/translation: open to everyone in public mode (rate-limited), otherwise admin only."""
+    if not settings.public_audits:
+        require_admin(request)
+
+
+# backward-compatible name used by older dependencies
+require_token = require_run
+
+
+def require_read(request: Request) -> None:
     if settings.private_mode:
-        require_token(x_api_token)
+        require_admin(request)
 
 
 def limit_audits(request: Request) -> None:
+    if is_admin(request) and settings.admin_password:
+        return  # administrators are not rate-limited
     ip = client_ip(request.headers, request.client.host if request.client else "unknown")
     ok, retry = limiter.allow(f"audit:{ip}", settings.rate_audits_per_hour, 3600)
     if not ok:
         raise HTTPException(429, f"Лимит запусков анализа исчерпан. Повторите через {retry // 60 + 1} мин.",
                             headers={"Retry-After": str(retry)})
+
+
+class LoginBody(BaseModel):
+    password: str
+
+
+@app.post("/api/auth/login")
+def login(body: LoginBody, request: Request):
+    from fastapi.responses import JSONResponse as J
+
+    ip = client_ip(request.headers, request.client.host if request.client else "unknown")
+    ok, retry = limiter.allow(f"login:{ip}", 5, 900)
+    if not ok:
+        raise HTTPException(429, f"Слишком много попыток входа. Повторите через {retry // 60 + 1} мин.")
+    secret = settings.admin_password
+    if not secret:
+        raise HTTPException(403, "Вход администратора не настроен: задайте LUMEN_ADMIN_PASSWORD на сервере")
+    if not token_ok(body.password[:256], secret):
+        raise HTTPException(401, "Неверный пароль")
+    https = request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+    resp = J({"admin": True, "expires_in": SESSION_TTL})
+    resp.set_cookie(SESSION_COOKIE, make_session(secret), max_age=SESSION_TTL, httponly=True, secure=https,
+                    samesite="strict", path="/")
+    return resp
+
+
+@app.post("/api/auth/logout")
+def logout():
+    from fastapi.responses import JSONResponse as J
+
+    resp = J({"admin": False})
+    resp.delete_cookie(SESSION_COOKIE, path="/")
+    return resp
+
+
+@app.get("/api/auth/me")
+def me(request: Request):
+    return {"admin": is_admin(request) and bool(settings.admin_password), "login_enabled": bool(settings.admin_password),
+            "public_audits": settings.public_audits}
 
 
 @app.get("/api/health")
@@ -94,14 +162,16 @@ def health():
         "status": "ok", "product": PRODUCT_NAME, **agent_version(), "provider": prov,
         "provider_label": PROVIDER_LABELS.get(prov, prov), "model": settings.resolve_model(prov),
         "providers": settings.available_providers(), "storage": svc.store.kind,
-        "storage_degraded": getattr(svc.store, "degraded", False), "auth_required": bool(settings.api_token),
-        "private_mode": settings.private_mode, "public_demo": settings.public_demo or not settings.api_token,
+        "storage_degraded": getattr(svc.store, "degraded", False),
+        "auth_required": not settings.public_audits and bool(settings.admin_password),
+        "public_audits": settings.public_audits, "login_enabled": bool(settings.admin_password),
+        "private_mode": settings.private_mode, "public_demo": settings.public_demo,
         "encryption": bool(settings.encryption_key),
         "telegram": bool(settings.telegram_token), "formats": FORMATS,
     }
 
 
-@app.post("/api/audits", dependencies=[Depends(require_token), Depends(limit_audits)])
+@app.post("/api/audits", dependencies=[Depends(require_run), Depends(limit_audits)])
 async def create_audit(file: UploadFile = File(...), provider: Optional[str] = Form(None), model: Optional[str] = Form(None)):
     name = Path(file.filename or "document").name
     ext = Path(name).suffix.lower()
@@ -128,9 +198,9 @@ async def create_audit(file: UploadFile = File(...), provider: Optional[str] = F
     return {"job_id": job.id, "audit_id": job.id, "events": f"/api/audits/{job.id}/events"}
 
 
-def demo_access(x_api_token: Optional[str] = Header(default=None)) -> None:
+def demo_access(request: Request) -> None:
     if not settings.public_demo:  # demo uses scripted answers, no model cost — public by default
-        require_token(x_api_token)
+        require_admin(request)
 
 
 @app.post("/api/demo", dependencies=[Depends(demo_access), Depends(limit_audits)])
@@ -235,7 +305,7 @@ class QuestionPatch(BaseModel):
     answer: Optional[str] = None
 
 
-@app.patch("/api/audits/{audit_id}/questions/{qid}", dependencies=[Depends(require_token)])
+@app.patch("/api/audits/{audit_id}/questions/{qid}", dependencies=[Depends(require_run)])
 def patch_question(audit_id: str, qid: str, body: QuestionPatch):
     try:
         r = get_service().update_question(audit_id, qid, body.status, body.answer)
@@ -246,10 +316,8 @@ def patch_question(audit_id: str, qid: str, body: QuestionPatch):
             "readiness_reason": r.readiness_reason}
 
 
-@app.delete("/api/audits/{audit_id}", dependencies=[Depends(require_token)])
+@app.delete("/api/audits/{audit_id}", dependencies=[Depends(require_admin)])
 def delete_audit(audit_id: str):
-    if settings.production and not settings.api_token:
-        raise HTTPException(403, "Удаление на публичном сервере доступно только с токеном (задайте LUMEN_API_TOKEN)")
     get_service().jobs.pop(audit_id, None)
     return {"deleted": get_service().store.delete(audit_id)}
 
@@ -262,7 +330,7 @@ def compare_audits(base: str, new: str):
     return compare(a, b)
 
 
-@app.post("/api/translate", dependencies=[Depends(require_token), Depends(limit_audits)])
+@app.post("/api/translate", dependencies=[Depends(require_run), Depends(limit_audits)])
 async def translate(file: UploadFile = File(...), target: str = Form(...)):
     from fastapi.concurrency import run_in_threadpool
 
@@ -300,7 +368,7 @@ class DocxBody(BaseModel):
     title: str = ""
 
 
-@app.post("/api/translate/docx")
+@app.post("/api/translate/docx", dependencies=[Depends(require_run)])
 def translate_docx(body: DocxBody):
     from fastapi.responses import Response
 

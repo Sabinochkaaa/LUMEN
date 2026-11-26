@@ -66,6 +66,13 @@ class Settings:
     api_token: str = field(default_factory=lambda: _env("LUMEN_API_TOKEN"))
     public_url: str = field(default_factory=lambda: _env("LUMEN_PUBLIC_URL"))
     env: str = field(default_factory=lambda: _env("APP_ENV", "development").lower())
+    admin_password_raw: str = field(default_factory=lambda: _env("LUMEN_ADMIN_PASSWORD"))
+    public_audits: bool = field(default_factory=lambda: _env("LUMEN_PUBLIC_AUDITS", "1") != "0")
+
+    @property
+    def admin_password(self) -> str:
+        """Admin password; falls back to LUMEN_API_TOKEN so existing deployments keep working."""
+        return self.admin_password_raw or self.api_token
     encryption_key: str = field(default_factory=lambda: _env("LUMEN_ENCRYPTION_KEY"))
     private_mode: bool = field(default_factory=lambda: _env("LUMEN_PRIVATE", "0") == "1")
     public_demo: bool = field(default_factory=lambda: _env("LUMEN_PUBLIC_DEMO", "1") != "0")
@@ -131,7 +138,7 @@ class Settings:
     def secrets(self) -> list[str]:
         return [x for x in (self.anthropic_api_key, self.gemini_api_key, self.openai_api_key,
                             self.supabase_key, self.telegram_token, self.api_token,
-                            self.openrouter_api_key, self.groq_api_key,
+                            self.openrouter_api_key, self.groq_api_key, self.admin_password_raw,
                             self.encryption_key) if x]
 
     def available_providers(self) -> dict[str, bool]:

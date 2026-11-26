@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, Criterion } from "../api";
 import { useApp } from "../App";
 import { CRIT_I18N, pick, useT } from "../i18n";
+import { Lock, ShieldCheck } from "lucide-react";
 import { LangSwitch, PageHead, ThemeSwitch } from "../components/ui";
 
 const LABEL: Record<string, string> = {
@@ -10,13 +11,19 @@ const LABEL: Record<string, string> = {
 };
 
 export default function Settings() {
-  const { health } = useApp();
+  const { health, admin, refreshAuth } = useApp();
   const { t, lang } = useT();
-  const [token, setToken] = useState(() => localStorage.getItem("lumen.token") || "");
-  const [saved, setSaved] = useState(false);
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [authErr, setAuthErr] = useState("");
   const [crit, setCrit] = useState<{ requirement: Criterion[]; set: Criterion[] } | null>(null);
   useEffect(() => { api.criteria().then(setCrit).catch(() => {}); }, []);
-  const saveToken = () => { token ? localStorage.setItem("lumen.token", token) : localStorage.removeItem("lumen.token"); setSaved(true); setTimeout(() => setSaved(false), 1800); };
+  localStorage.removeItem("lumen.token"); // legacy: tokens are no longer kept in the browser
+  const signIn = async () => {
+    setBusy(true); setAuthErr("");
+    try { await api.login(password); setPassword(""); refreshAuth(); } catch (e: any) { setAuthErr(e.message); } finally { setBusy(false); }
+  };
+  const signOut = async () => { await api.logout(); refreshAuth(); };
   const row = (k: string, v: string) => (<><dt className="text-ink-faint">{k}</dt><dd>{v}</dd></>);
   return (
     <div>
@@ -52,13 +59,23 @@ export default function Settings() {
               </dl>
             )}
           </div>
-          <div className="card p-6">
-            <div className="h2">{t("set.access")}</div>
-            <p className="meta mt-1">{health?.auth_required ? t("set.accessOn") : t("set.accessOff")}</p>
-            <div className="mt-3 flex gap-2">
-              <input className="input" type="password" placeholder="X-API-Token" value={token} onChange={(e) => setToken(e.target.value)} aria-label="Token" />
-              <button className="btn-primary" onClick={saveToken}>{saved ? t("ui.saved") : t("ui.save")}</button>
-            </div>
+          <div id="admin" className="card p-6">
+            <div className="flex items-center gap-2 h2">{admin ? <ShieldCheck size={18} className="text-ok" /> : <Lock size={18} />}{t("set.admin")}</div>
+            <p className="meta mt-1">{t("set.adminD")}</p>
+            {health && <p className="mt-2 text-[13px]"><span className="text-ink-faint">{t("set.mode")}: </span>{health.public_audits ? t("set.modePublic") : t("set.modeClosed")}</p>}
+            {!health?.login_enabled ? <p className="mt-3 rounded-xl bg-warn/15 px-3 py-2 text-[13px] text-warn">{t("set.noLogin")}</p>
+              : admin ? (
+                <div className="mt-4 flex items-center justify-between rounded-xl bg-ok/15 px-4 py-3 text-sm">
+                  <span className="font-medium text-ok">{t("set.signedIn")}</span>
+                  <button className="btn-line py-1.5" onClick={signOut}>{t("set.signOut")}</button>
+                </div>
+              ) : (
+                <form className="mt-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); signIn(); }}>
+                  <input className="input" type="password" autoComplete="current-password" placeholder={t("set.password")} value={password} onChange={(e) => setPassword(e.target.value)} aria-label={t("set.password")} />
+                  <button className="btn-primary" disabled={!password || busy}>{t("set.signIn")}</button>
+                </form>
+              )}
+            {authErr && <p className="mt-2 text-[13px] text-bad">{authErr}</p>}
           </div>
         </section>
       </div>
