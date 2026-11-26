@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, RotateCcw, X } from "lucide-react";
-import { AuditGate } from "../App";
-import { api, Audit, Question } from "../api";
+import { AuditGate, useApp } from "../App";
+import { api, Audit, canEdit, Question } from "../api";
 import { useT } from "../i18n";
 import AuditHeader from "../components/AuditHeader";
 import { ErrorBox } from "../components/ui";
@@ -17,6 +17,8 @@ function View({ a, set }: { a: Audit; set: (a: Audit) => void }) {
   const { t } = useT();
   const [filter, setFilter] = useState<"" | Question["status"]>("open");
   const [error, setError] = useState("");
+  const { admin } = useApp();
+  const readOnly = !admin && !canEdit(a.id);
   const list = a.questions.filter((q) => !filter || q.status === filter);
   const counts = { open: 0, clarified: 0, rejected: 0 } as Record<Question["status"], number>;
   a.questions.forEach((q) => counts[q.status]++);
@@ -46,6 +48,7 @@ function View({ a, set }: { a: Audit; set: (a: Audit) => void }) {
           </button>
         ))}
       </div>
+      {readOnly && <p className="meta mb-3 rounded-lg border border-line px-3 py-2">{t("q.readOnly")}</p>}
       {error && <div className="mb-3"><ErrorBox error={error} /></div>}
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">{list.map((q) => <QuestionCard key={q.id} q={q} onSave={(b) => save(q, b)} />)}</AnimatePresence>

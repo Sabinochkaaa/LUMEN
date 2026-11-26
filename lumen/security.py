@@ -13,6 +13,7 @@ import hmac
 import io
 import json
 import os
+import re
 import threading
 import time
 import zipfile
@@ -98,6 +99,11 @@ def validate_upload(name: str, data: bytes) -> None:
             raise UploadRejected("Текстовый файл содержит двоичные данные.")
 
 
+def safe_filename(name: str, limit: int = 80) -> str:
+    """Filesystem-safe tail of a user-supplied file name (no path separators, no exotic characters)."""
+    return re.sub(r"[^\w.\-]+", "_", name)[-limit:] or "file"
+
+
 # ------------------------------------------------------------------ rate limiting
 class RateLimiter:
     def __init__(self):
@@ -126,11 +132,20 @@ class RateLimiter:
 limiter = RateLimiter()
 
 
-def client_ip(headers, fallback: str = "unknown") -> str:
-    fwd = headers.get("x-forwarded-for", "")
-    if fwd:
-        return fwd.split(",")[0].strip()
-    return headers.get("x-real-ip") or fallback
+def client_ip(headers, fallback: str = "unknown", hops: Optional[int] = None) -> str:
+    """Real client IP behind a reverse proxy.
+
+    X-Forwarded-For is "client, proxy1, proxy2…" and every proxy APPENDS the address it saw. The left part is written
+    by the client and can be forged (a new fake IP per request would bypass every rate limit, including the login
+    brute-force guard). Only the entry added by our own proxy is trustworthy: the N-th from the right, where N is the
+    number of trusted proxy hops (Railway: 1).
+    """
+    if hops is None:
+        hops = int(os.environ.get("LUMEN_TRUSTED_PROXY_HOPS", "1") or 1)
+    parts = [x.strip() for x in headers.get("x-forwarded-for", "").split(",") if x.strip()]
+    if hops > 0 and parts:
+        return parts[-min(hops, len(parts))]
+    return fallback
 
 
 # ------------------------------------------------------------------ security headers
@@ -236,8 +251,38 @@ SESSION_COOKIE = "lumen_session"
 SESSION_TTL = 12 * 3600
 
 
+_SERVER_SECRET: Optional[bytes] = None
+
+
+def server_secret() -> bytes:
+    """Signing key for sessions and edit keys. Never derived from the admin password alone (a leaked cookie must not
+    allow an offline guess of the password). LUMEN_SESSION_SECRET, else derived from LUMEN_ENCRYPTION_KEY,
+    else random per process (sessions then end on restart)."""
+    global _SERVER_SECRET
+    if _SERVER_SECRET is None:
+        env = os.environ.get("LUMEN_SESSION_SECRET") or ""
+        enc = os.environ.get("LUMEN_ENCRYPTION_KEY") or ""
+        if env:
+            _SERVER_SECRET = hashlib.sha256(b"lumen-server-v2|" + env.encode()).digest()
+        elif enc:
+            _SERVER_SECRET = hashlib.sha256(b"lumen-server-from-enc-v2|" + enc.encode()).digest()
+        else:
+            _SERVER_SECRET = os.urandom(32)
+    return _SERVER_SECRET
+
+
 def _session_key(secret: str) -> bytes:
-    return hashlib.sha256(b"lumen-session-v1|" + secret.encode()).digest()
+    # changing the admin password invalidates every session
+    return hmac.new(server_secret(), b"session|" + hashlib.sha256(secret.encode()).digest(), hashlib.sha256).digest()
+
+
+def edit_key(audit_id: str) -> str:
+    """Capability given to whoever started an audit: lets them answer its clarification questions."""
+    return hmac.new(server_secret(), b"edit|" + audit_id.encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def edit_key_ok(audit_id: str, given: Optional[str]) -> bool:
+    return bool(given) and hmac.compare_digest(given.encode(), edit_key(audit_id).encode())
 
 
 def make_session(secret: str, ttl: int = SESSION_TTL) -> str:

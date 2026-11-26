@@ -14,9 +14,8 @@ from .. import PRODUCT_NAME, __version__
 from ..config import PROVIDER_LABELS
 from ..engine.criteria import REQUIREMENT_CRITERIA, SET_CRITERIA, criterion_name
 from ..engine.extractor import TYPE_RU
-from ..engine.fintech import ASPECTS
 from ..engine.scoring import METHOD
-from ..models import SEVERITY_ORDER, SEVERITY_RU, AuditResult, Finding
+from ..models import SEVERITY_ORDER, AuditResult, Finding
 
 SEV_ICON = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🔵", "INFO": "⚪"}
 ST_ICON = {"ok": "✅", "issue": "❌", "na": "N/A", "unknown": "·"}
@@ -99,7 +98,6 @@ def _finding_md(f: Finding, n_level: str = "####") -> list[str]:
 
 def render_markdown(r: AuditResult) -> str:
     p, s = r.passport, r.scores
-    req_by_id = {x.id: x for x in r.requirements}
     conf = [f for f in r.findings if f.status == "confirmed"]
     L: list[str] = []
     a = L.append
@@ -116,9 +114,27 @@ def render_markdown(r: AuditResult) -> str:
       f"🔵 {s.by_severity['LOW']}), «требует проверки»: {s.needs_review}, вопросов владельцу: {len(r.questions)}. "
       f"Индекс качества LÜMEN: **{s.quality_index}/100**.")
     a("")
-    a(f"Отчёт сформирован автоматически агентом **{PRODUCT_NAME}** (LÜMEN Core {p.agent_version}). Каждое замечание "
-      "привязано к месту документа; цитаты программно сверены с исходным текстом, номера строк и страниц вычислены "
-      "по файлу, а не взяты из ответа модели.")
+    from .digest import build, short, where
+
+    dg = build(r)
+    if dg.fixes:
+        a("## Коротко: что исправить в первую очередь")
+        a("")
+        a("| # | Проблема | Где | Как исправить |")
+        a("| :---: | :--- | :--- | :--- |")
+        for i, f in enumerate(dg.fixes, 1):
+            how = f.rewrite or f.fix
+            a(f"| {i} | {SEV_ICON[f.severity]} **{_c(f.title)}** — {_c(short(f.problem, 160))} | {where(f)}"
+              f"{'; ' + ', '.join(f.req_ids[:3]) if f.req_ids else ''} | {_c(short(how, 200))} |")
+        a("")
+    if dg.questions:
+        a("**Спросите у владельца требований:**")
+        a("")
+        for q in dg.questions:
+            a(f"* ❓ {q.question} _({', '.join(q.req_ids[:3]) or 'весь документ'})_")
+        a("")
+    a(f"_Без замечаний {dg.clean} из {len(dg.heat)} требований. Цитаты сверены с исходным текстом, строки и страницы "
+      f"вычислены по файлу. Ниже — полная доказательная часть._")
     a("")
     a("**Содержание:** [1. Паспорт прогона](#1-паспорт-прогона) · [2. Методика](#2-методика-проверки) · "
       "[3. Нарезка требований](#3-как-агент-нарезал-требования) · [4. Проверка каждого требования](#4-проверка-каждого-требования) · "
@@ -420,32 +436,61 @@ def render_markdown(r: AuditResult) -> str:
 
 # =========================================================================== HTML
 _CSS = """
-:root{--bg:#f4f6fb;--card:#fff;--ink:#0f172a;--mute:#64748b;--line:#e2e8f0;--blue:#2563eb;--sky:#0ea5e9;--vio:#7c3aed;
---crit:#dc2626;--high:#ea580c;--med:#ca8a04;--low:#2563eb;--info:#94a3b8}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,-apple-system,Segoe UI,Roboto,sans-serif}
-header{background:linear-gradient(120deg,#0b1b4d,#1e3a8a 55%,#4c1d95);color:#fff;padding:40px 48px}
-header .brand{letter-spacing:.3em;font-size:12px;opacity:.8}header h1{margin:8px 0 6px;font-size:28px}
-header .sub{opacity:.85}.wrap{max-width:1180px;margin:0 auto;padding:24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:-48px 0 20px}
-.kpi{background:var(--card);border-radius:14px;padding:16px 18px;box-shadow:0 8px 30px rgba(15,23,42,.08)}
-.kpi b{display:block;font-size:26px}.kpi span{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
-section{background:var(--card);border-radius:16px;padding:22px 26px;margin:18px 0;box-shadow:0 2px 10px rgba(15,23,42,.05)}
-h2{margin-top:0;font-size:20px}h3{font-size:16px;margin:22px 0 8px}table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}th{background:#f8fafc;font-weight:600}
-blockquote{margin:8px 0;padding:8px 14px;border-left:3px solid var(--sky);background:#f0f9ff;border-radius:0 8px 8px 0;white-space:pre-wrap}
-.f{border:1px solid var(--line);border-left:5px solid var(--info);border-radius:10px;padding:12px 16px;margin:12px 0}
-.f.CRITICAL{border-left-color:var(--crit)}.f.HIGH{border-left-color:var(--high)}.f.MEDIUM{border-left-color:var(--med)}.f.LOW{border-left-color:var(--low)}
-.f h4{margin:0 0 6px;font-size:15px}.f dl{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;margin:6px 0 0}.f dt{color:var(--mute)}.f dd{margin:0}
-.b{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:700;color:#fff;background:var(--info)}
-.b.CRITICAL{background:var(--crit)}.b.HIGH{background:var(--high)}.b.MEDIUM{background:var(--med)}.b.LOW{background:var(--low)}
-.rev{background:#fef3c7;color:#92400e}.ready{font-size:20px;font-weight:700;padding:14px 18px;border-radius:12px;background:#eef2ff}
-.ready.NOT{background:#fee2e2;color:#991b1b}.ready.COND{background:#fef9c3;color:#854d0e}.ready.OK{background:#dcfce7;color:#166534}
-nav{position:sticky;top:0;background:rgba(244,246,251,.92);backdrop-filter:blur(8px);padding:10px 24px;z-index:5;font-size:13px;border-bottom:1px solid var(--line)}
-nav a{color:var(--blue);margin-right:14px;text-decoration:none}.filters button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 12px;margin:2px;cursor:pointer}
-.filters button.on{background:var(--blue);color:#fff}.mute{color:var(--mute)}.mx td{text-align:center}.mx td:first-child{text-align:left}
-.demo{background:#fef3c7;border:1px solid #f59e0b;padding:10px 14px;border-radius:10px;margin:12px 0}
-@media print{nav,.filters{display:none}header{padding:20px}.grid{margin-top:10px}section{box-shadow:none;break-inside:avoid-page}}
+:root{--ink:#0E1A33;--soft:#344054;--mute:#667085;--line:#E4E8F0;--bg:#F5F7FB;--card:#fff;--blue:#1F4FD8;--violet:#6E3FF3;
+--crit:#D92D20;--high:#E8620C;--med:#C99A06;--low:#3B82F6;--info:#98A2B3;--ok:#12B76A}
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px 60px}
+header{background:var(--ink);color:#fff;padding:28px 0 76px}header .wrap{padding-bottom:0}
+.brand{font-size:12px;letter-spacing:.06em;color:#9FB3D9}h1{margin:6px 0 4px;font-size:28px;line-height:1.2}
+.sub{color:#C7D2E8;font-size:13px}
+.hero{display:grid;grid-template-columns:1fr 200px;gap:14px;margin-top:-56px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.verdict{border-left:5px solid var(--v)}.verdict b.lbl{display:block;font-size:26px;color:var(--v);line-height:1.1}
+.verdict p{margin:6px 0 0}.verdict .why{color:var(--mute);font-size:14px}
+.ring{display:grid;place-items:center;text-align:center}
+.ring .g{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;
+background:conic-gradient(var(--v) calc(var(--p)*1%),var(--line) 0)}
+.ring .g div{width:94px;height:94px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:30px;font-weight:700}
+.ring small{color:var(--mute);font-size:12px;margin-top:6px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.kpi b{display:block;font-size:26px;line-height:1.1}.kpi span{color:var(--mute);font-size:13px}
+.bar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--line)}.bar i{display:block}
+.legend{font-size:12px;color:var(--mute);margin-top:6px}.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px}
+h2{font-size:21px;margin:34px 0 12px}
+.fix{display:grid;grid-template-columns:34px 1fr;gap:8px;border-left:4px solid var(--c);margin-bottom:10px}
+.fix .n{font-size:22px;font-weight:700;color:var(--c)}.fix h3{margin:0;font-size:16px}
+.meta{color:var(--mute);font-size:12.5px}.fix p{margin:6px 0}
+.how{background:#EEF3FF;border-radius:8px;padding:8px 12px;font-size:14px}.how b{color:var(--blue)}
+.qs{list-style:none;padding:0;margin:0}.qs li{display:grid;grid-template-columns:24px 1fr;padding:10px 0;border-bottom:1px solid var(--line)}
+.qs li:before{content:"?";font-weight:700;color:var(--violet)}
+.heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:4px}
+.heat a{display:block;text-decoration:none;border-radius:6px;padding:6px 4px;text-align:center;font-size:11.5px;line-height:1.3;color:var(--ink);background:#E7F6EE}
+.heat a b{display:block}.heat a.CRITICAL,.heat a.HIGH,.heat a.LOW{color:#fff}
+.CRITICAL{--c:var(--crit)}.HIGH{--c:var(--high)}.MEDIUM{--c:var(--med)}.LOW{--c:var(--low)}.INFO{--c:var(--info)}
+.heat a.CRITICAL,.heat a.HIGH,.heat a.MEDIUM,.heat a.LOW{background:var(--c)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--mute);font-weight:600;font-size:12.5px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.tools button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
+.tools button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tools input{flex:1;min-width:180px;border:1px solid var(--line);border-radius:99px;padding:6px 14px;font:inherit;font-size:13px}
+details.f{background:#fff;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;margin-bottom:8px}
+details.f summary{cursor:pointer;padding:10px 14px;list-style:none}details.f summary::-webkit-details-marker{display:none}
+details.f summary b{font-weight:600}details.f .body{padding:0 14px 12px}
+.sev{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--c);border-radius:5px;padding:1px 6px;margin-right:6px}
+blockquote{margin:8px 0;padding:8px 12px;background:var(--bg);border-radius:8px;color:var(--soft);font-size:13.5px;white-space:pre-wrap}
+dl{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;margin:8px 0 0;font-size:14px}dt{color:var(--mute)}dd{margin:0}
+.rev{font-size:11px;background:#FEF3C7;color:#92400E;border-radius:5px;padding:1px 6px;margin-left:6px}
+details.ap{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+details.ap>summary{cursor:pointer;padding:12px 16px;font-weight:600}details.ap>div{padding:0 16px 14px;overflow:auto}
+.demo{background:#FEF3C7;border:1px solid #F59E0B;padding:10px 14px;border-radius:10px;margin:14px 0}
+.warn{color:#B54708;font-size:13px}.mx td{text-align:center}.mx td:first-child{text-align:left}
+footer{color:var(--mute);font-size:12px;text-align:center;margin-top:30px}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}dl{grid-template-columns:1fr}h1{font-size:22px}}
+@media print{.tools{display:none}details{break-inside:avoid}details.f .body,details.ap>div{display:block}header{padding-bottom:70px}}
 """
+
+_VHEX = {"READY": "#12B76A", "READY WITH CONDITIONS": "#DC9A06", "NOT READY": "#D92D20", "INSUFFICIENT DATA": "#667085"}
 
 
 def _e(x) -> str:
@@ -453,115 +498,157 @@ def _e(x) -> str:
 
 
 def _finding_html(f: Finding) -> str:
+    from .digest import SEV_SHORT, short, where
+
     rows = [("Критерий", f"{criterion_name(f.criterion)} — {f.standard_ref or '—'} "
                          f"({'нормативное' if f.basis == 'normative' else 'экспертное'})"),
-            ("Где", _where(f) + (f"; требования: {', '.join(f.req_ids)}" if f.req_ids else "")),
+            ("Где", where(f) + (f"; требования: {', '.join(f.req_ids)}" if f.req_ids else "")),
             ("Что не так", f.problem), ("Риск", f.risk), ("Как исправить", f.fix),
             ("Улучшенная формулировка", f.rewrite)]
     dl = "".join(f"<dt>{_e(k)}</dt><dd>{_e(v)}</dd>" for k, v in rows if v)
-    rev = ' <span class="b rev">требует проверки</span>' if f.status != "confirmed" else ""
+    rev = '<span class="rev">требует проверки</span>' if f.status != "confirmed" else ""
     q = f"<blockquote>{_e(_q(f.quote, 900))}</blockquote>" if f.quote else ""
-    return (f'<div class="f {f.severity}" data-sev="{f.severity}"><h4><span class="b {f.severity}">{f.severity}</span> '
-            f'{_e(f.id)} · {_e(f.title)}{rev}</h4>{q}<dl>{dl}</dl></div>')
+    text = _e(" ".join([f.id, f.title, f.problem, *f.req_ids]).lower())
+    return (f'<details class="f {f.severity}" data-sev="{f.severity}" data-text="{text}" id="{_e(f.id)}"><summary>'
+            f'<span class="sev">{SEV_SHORT[f.severity]}</span><b>{_e(f.title)}</b>{rev}'
+            f'<div class="meta">{_e(f.id)} · {_e(where(f))}{" · " + _e(", ".join(f.req_ids[:4])) if f.req_ids else ""} · '
+            f'{_e(short(f.problem, 140))}</div></summary><div class="body">{q}<dl>{dl}</dl></div></details>')
 
 
 def render_html(r: AuditResult) -> str:
+    """Decision first (verdict, top fixes, questions, map), then filterable evidence; methodology is collapsed."""
+    from .digest import SEV_SHORT, VERDICT, build, short, where
+
     p, s = r.passport, r.scores
-    cls = {"NOT READY": "NOT", "READY WITH CONDITIONS": "COND", "READY": "OK"}.get(r.readiness, "")
+    d = build(r)
+    vlabel, vtext = VERDICT[r.readiness]
+    vhex = _VHEX[r.readiness]
     amap = {x.req_id: x for x in r.assessments}
+    by_req: dict[str, str] = {}
+    for f in r.findings:
+        for rid in f.req_ids:
+            by_req.setdefault(rid, f.id)
     H: list[str] = []
     h = H.append
+    title = p.document_title or p.document_name
     h(f"<!DOCTYPE html><html lang='ru'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
-      f"<title>LÜMEN — отчёт: {_e(p.document_title or p.document_name)}</title><style>{_CSS}</style></head><body>")
-    h(f"<header><div class='brand'>LÜMEN REQUIREMENTS INTELLIGENCE</div><h1>Отчёт о проверке требований</h1>"
-      f"<div class='sub'>«{_e(p.document_title or p.document_name)}» · {_e(_dt(p.analysed_at))} · {_e(p.model)}</div></header>")
-    h("<nav><a href='#passport'>Паспорт</a><a href='#segm'>Нарезка</a><a href='#req'>Требования</a><a href='#set'>Набор</a>"
-      "<a href='#fin'>FinTech</a><a href='#q'>Вопросы</a><a href='#sum'>Сводка</a><a href='#verdict'>Итог</a></nav><div class='wrap'>")
-    h("<div class='grid'>" + "".join(
-        f"<div class='kpi'><span>{k}</span><b>{v}</b></div>" for k, v in [
-            ("Индекс качества", f"{s.quality_index}"), ("Требований", s.total_requirements),
-            ("Замечаний", s.findings_total), ("Critical", s.by_severity["CRITICAL"]), ("High", s.by_severity["HIGH"]),
-            ("Вопросов", len(r.questions))]) + "</div>")
+      f"<title>LÜMEN — {_e(title)}</title><style>{_CSS}</style></head><body style='--v:{vhex}'>")
+    h(f"<header><div class='wrap'><div class='brand'>LÜMEN · ПРОВЕРКА ТРЕБОВАНИЙ</div><h1>{_e(title)}</h1>"
+      f"<div class='sub'>{_e(_dt(p.analysed_at))} · {_e(p.model)} · {_e(MODE_RU[p.mode])}</div></div></header><div class='wrap'>")
+    h(f"<div class='hero'><div class='card verdict'><b class='lbl'>{vlabel}</b><p><b>{_e(vtext)}</b></p>"
+      f"<p class='why'>{_e(r.readiness_reason)}</p></div>"
+      f"<div class='card ring'><div class='g' style='--p:{max(0, min(100, s.quality_index)):.0f}'><div>{s.quality_index:.0f}</div></div>"
+      f"<small>индекс качества из 100</small></div></div>")
     if r.demo:
-        h("<div class='demo'>⚠️ <b>Демонстрационный прогон</b> — не результат проверки документа организаторов.</div>")
-    h(f"<section id='verdict0'><div class='ready {cls}'>{_e(READY_RU[r.readiness])}</div><p>{_e(r.readiness_reason)}</p></section>")
-    # passport
-    h("<section id='passport'><h2>1. Паспорт прогона</h2><table>")
-    for k, v in [("Документ", p.document_title or p.document_name), ("Файл", f"{p.document_name} ({p.document_format})"),
-                 ("SHA-256", p.document_sha256), ("Дата анализа", _dt(p.analysed_at)),
-                 ("Модель", f"{p.model} — {PROVIDER_LABELS.get(p.provider, p.provider)}"), ("Режим", MODE_RU[p.mode]),
-                 ("Версия агента", f"LÜMEN {p.agent_version}, коммит {p.agent_commit}"),
-                 ("Длительность", f"{p.duration_s:.1f} с"), ("Обращений к модели", p.llm_calls)]:
+        h("<div class='demo'>Демонстрационный прогон — не результат проверки документа организаторов.</div>")
+    sev = s.by_severity
+    h("<div class='kpis'>" + "".join(
+        f"<div class='card kpi'><b style='color:{c}'>{n}</b><span>{lbl}</span></div>" for n, lbl, c in [
+            (s.total_requirements, "требований", "var(--ink)"), (sev["CRITICAL"], "критичных", "var(--crit)"),
+            (sev["HIGH"], "высоких", "var(--high)"), (s.open_questions, "открытых вопросов", "var(--violet)")]) + "</div>")
+    tot = sum(sev[k] for k in ("CRITICAL", "HIGH", "MEDIUM", "LOW")) or 1
+    h("<div class='bar'>" + "".join(f"<i class='{k}' style='width:{sev[k] / tot * 100:.2f}%;background:var(--c)'></i>"
+                                    for k in ("CRITICAL", "HIGH", "MEDIUM", "LOW") if sev[k]) + "</div>")
+    h(f"<div class='legend'>Замечаний {s.findings_total}:" + "".join(
+        f"<span class='dot {k}' style='background:var(--c)'></span>{sev[k]} {SEV_SHORT[k].lower()}"
+        for k in ("CRITICAL", "HIGH", "MEDIUM", "LOW") if sev[k]) + "</div>")
+    for w in r.warnings:
+        h(f"<p class='warn'>⚠ {_e(w)}</p>")
+
+    if d.fixes:
+        h("<h2>Исправьте в первую очередь</h2>")
+        for i, f in enumerate(d.fixes, 1):
+            how = f.rewrite or f.fix
+            h(f"<div class='card fix {f.severity}'><div class='n'>{i}</div><div><h3>{_e(f.title)}</h3>"
+              f"<div class='meta'>{SEV_SHORT[f.severity]} · {_e(where(f))}"
+              f"{' · ' + _e(', '.join(f.req_ids[:3])) if f.req_ids else ''} · <a href='#{_e(f.id)}'>подробнее</a></div>"
+              f"<p>{_e(short(f.problem, 220))}</p>"
+              + (f"<div class='how'><b>{'Как написать' if f.rewrite else 'Как исправить'}:</b> {_e(short(how, 300))}</div>" if how else "")
+              + "</div></div>")
+    if d.questions:
+        h("<h2>Спросите у владельца требований</h2><div class='card'><ul class='qs'>")
+        for q in d.questions:
+            h(f"<li><div>{_e(q.question)}<div class='meta'>{_e(', '.join(q.req_ids[:3]) or 'весь документ')}</div></div></li>")
+        h("</ul></div>")
+    h(f"<h2>Карта требований</h2><p class='meta'>Цвет — самое серьёзное замечание, число — балл требования. "
+      f"Без замечаний: {d.clean} из {len(d.heat)}. Нажмите на клетку, чтобы открыть замечание.</p><div class='heat'>")
+    for rid, sv, sc in d.heat:
+        h(f"<a class='{sv}' href='#{_e(by_req.get(rid, ''))}' title='{_e(rid)}'><b>{_e(rid)}</b>{sc:.0f}</a>")
+    h("</div>")
+    if d.fintech_gaps:
+        h("<h2>FinTech: чего не хватает</h2><div class='card'><table><tr><th>Аспект</th><th>Статус</th><th>Что добавить</th></tr>")
+        for a, st, rec in d.fintech_gaps:
+            h(f"<tr><td>{_e(a)}</td><td>{'не описано' if st == 'missing' else 'частично'}</td><td>{_e(rec)}</td></tr>")
+        h("</table></div>")
+
+    h(f"<h2>Все замечания ({len(r.findings)})</h2><div class='tools'>"
+      + "".join(f"<button data-f='{k}' class='on'>{SEV_SHORT[k]} {sum(1 for f in r.findings if f.severity == k)}</button>"
+                for k in SEVERITY_ORDER if any(f.severity == k for f in r.findings))
+      + "<input type='search' placeholder='Поиск: термин, REQ-012, GET…' aria-label='Поиск по замечаниям'></div>")
+    for f in sorted(r.findings, key=lambda f: SEVERITY_ORDER[f.severity]):
+        h(_finding_html(f))
+    if r.questions:
+        st_ru = {"open": "открыт", "clarified": "уточнён", "rejected": "отклонён"}
+        h(f"<h2>Все вопросы владельцу ({len(r.questions)})</h2><div class='card'><table><tr><th>№</th><th>Вопрос</th><th>Статус</th></tr>")
+        for q in r.questions:
+            opts = (" <span class='meta'>Варианты: " + _e(" / ".join(q.options)) + "</span>") if q.options else ""
+            ans = f"<div><b>Ответ:</b> {_e(q.answer)}</div>" if q.answer else ""
+            h(f"<tr><td>{_e(q.id)}</td><td>{_e(q.question)}<div class='meta'>{_e(q.why)}</div>{opts}{ans}</td>"
+              f"<td>{st_ru[q.status]}</td></tr>")
+        h("</table></div>")
+
+    # appendix (organizers' structure: passport, method, segmentation, per-requirement matrix, set, relations, fintech)
+    h("<h2>Приложение</h2>")
+    h("<details class='ap'><summary>Паспорт прогона</summary><div><table>")
+    for k, v in [("Документ", title), ("Файл", f"{p.document_name} ({p.document_format})"), ("SHA-256", p.document_sha256),
+                 ("Дата анализа", _dt(p.analysed_at)), ("Модель", f"{p.model} — {PROVIDER_LABELS.get(p.provider, p.provider)}"),
+                 ("Режим", MODE_RU[p.mode]), ("Версия агента", f"LÜMEN {p.agent_version}, коммит {p.agent_commit}"),
+                 ("Длительность", f"{p.duration_s:.1f} с"), ("Обращений к модели", p.llm_calls), ("ID прогона", r.id)]:
         h(f"<tr><th>{_e(k)}</th><td>{_e(v)}</td></tr>")
-    h("</table>" + "".join(f"<p class='mute'>⚠️ {_e(w)}</p>" for w in r.warnings) + "</section>")
-    # segmentation
-    h(f"<section id='segm'><h2>3. Нарезка требований ({len(r.requirements)})</h2><table><tr><th>ID</th><th>ID в документе</th>"
-      "<th>Тип</th><th>Место</th><th>Краткая формулировка</th></tr>")
+    h("</table></div></details>")
+    h("<details class='ap'><summary>Методика</summary><div><ol>"
+      + "".join(f"<li>{_e(e.title)} — {_e(e.message or e.status)}</li>" for e in sorted(r.stages, key=lambda e: e.index))
+      + f"</ol><p class='meta'>{_e(METHOD)}</p></div></details>")
+    h(f"<details class='ap'><summary>Нарезка требований ({len(r.requirements)})</summary><div><table>"
+      "<tr><th>ID</th><th>В документе</th><th>Тип</th><th>Место</th><th>Формулировка</th></tr>")
     for x in r.requirements:
         sid = x.source_id if x.source_id_kind == "explicit" else "—"
-        h(f"<tr><td><a href='#{x.id}'>{x.id}</a></td><td>{_e(sid)}</td><td>{_e(TYPE_RU.get(x.type, x.type))}</td>"
-          f"<td>{_e(x.loc.label())}</td><td>{_e(x.summary)}</td></tr>")
-    h("</table></section>")
-    # matrix + per req
+        h(f"<tr><td>{_e(x.id)}</td><td>{_e(sid)}</td><td>{_e(TYPE_RU.get(x.type, x.type))}</td><td>{_e(x.loc.label())}</td>"
+          f"<td>{_e(x.summary)}</td></tr>")
+    h("</table></div></details>")
     keys = list(REQUIREMENT_CRITERIA)
-    h("<section id='req'><h2>4. Проверка каждого требования</h2><div class='filters'>Фильтр: "
-      + "".join(f"<button data-f='{k}' class='on'>{k}</button>" for k in SEVERITY_ORDER) + "</div>")
-    h("<div style='overflow:auto'><table class='mx'><tr><th>ID</th><th>Балл</th>" +
-      "".join(f"<th title='{_e(REQUIREMENT_CRITERIA[k][0])}'>{CRIT_ABBR[k]}</th>" for k in keys) + "</tr>")
+    h("<details class='ap'><summary>Матрица критериев по требованиям</summary><div><table class='mx'><tr><th>ID</th><th>Балл</th>"
+      + "".join(f"<th title='{_e(REQUIREMENT_CRITERIA[k][0])}'>{CRIT_ABBR[k]}</th>" for k in keys) + "</tr>")
     for x in r.requirements:
-        a = amap[x.id]
-        h(f"<tr><td>{x.id}</td><td>{a.score:.0f}</td>" + "".join(f"<td>{ST_ICON[a.criteria.get(k, 'unknown')]}</td>" for k in keys) + "</tr>")
-    h("</table></div>")
-    by_req: dict[str, list[Finding]] = {}
-    for f in r.findings:
-        if f.scope == "requirement" and f.req_ids:
-            by_req.setdefault(f.req_ids[0], []).append(f)
-    for x in r.requirements:
-        fs = by_req.get(x.id, [])
-        sid = f" ({_e(x.source_id)})" if x.source_id_kind == "explicit" else ""
-        h(f"<h3 id='{x.id}'>{x.id}{sid} — {_e(x.summary)} <span class='mute'>· {_e(x.loc.label())} · балл {amap[x.id].score:.0f}</span></h3>"
-          f"<blockquote>{_e(_q(x.quote, 700))}</blockquote>")
-        h("".join(_finding_html(f) for f in fs) or "<p class='mute'>Замечаний нет.</p>")
-    h("</section>")
-    # set
+        a = amap.get(x.id)
+        if a:
+            h(f"<tr><td>{_e(x.id)}</td><td>{a.score:.0f}</td>" + "".join(f"<td>{ST_ICON[a.criteria.get(k, 'unknown')]}</td>" for k in keys) + "</tr>")
+    h("</table></div></details>")
     sst = set_criteria_status(r)
-    h("<section id='set'><h2>5. Проверка всего набора</h2><table><tr><th>Свойство</th><th>Основание</th><th>Статус</th></tr>")
+    h("<details class='ap'><summary>Свойства набора (ISO/IEC/IEEE 29148 п. 5.2.6, IEEE 830 п. 4.3)</summary><div><table>"
+      "<tr><th>Свойство</th><th>Основание</th><th>Статус</th></tr>")
     for k, (name, ref, _d, _b) in SET_CRITERIA.items():
         h(f"<tr><td>{_e(name)}</td><td>{_e(ref)}</td><td>{ST_ICON[sst[k]]}</td></tr>")
-    h("</table>")
-    h("".join(_finding_html(f) for f in r.findings if f.scope == "set" and f.criterion != "fintech"))
-    type_ru = {"depends_on": "зависит от", "conflicts_with": "противоречит", "duplicates": "дублирует",
-               "refines": "уточняет", "implements": "реализует", "traces_to": "прослеживается к"}
+    h("</table></div></details>")
     if r.relations:
-        h("<h3>Граф связей</h3><table><tr><th>Откуда</th><th>Связь</th><th>Куда</th><th>Статус</th><th>Основание</th></tr>")
+        type_ru = {"depends_on": "зависит от", "conflicts_with": "противоречит", "duplicates": "дублирует",
+                   "refines": "уточняет", "implements": "реализует", "traces_to": "прослеживается к"}
+        h(f"<details class='ap'><summary>Связи требований ({len(r.relations)})</summary><div><table>"
+          "<tr><th>Откуда</th><th>Связь</th><th>Куда</th><th>Основание</th></tr>")
         for rel in r.relations:
-            h(f"<tr><td>{rel.source}</td><td>{type_ru[rel.type]}</td><td>{rel.target}</td>"
-              f"<td>{'подтверждена' if rel.status == 'confirmed' else 'требует подтверждения'}</td><td>{_e(rel.note)}</td></tr>")
-        h("</table>")
-    h("</section>")
-    h("<section id='fin'><h2>FinTech-анализ (LÜMEN Risk Engine)</h2><table><tr><th>Аспект</th><th>Применимость</th><th>Статус</th><th>Комментарий</th></tr>")
+            h(f"<tr><td>{_e(rel.source)}</td><td>{_e(type_ru.get(rel.type, rel.type))}</td><td>{_e(rel.target)}</td><td>{_e(rel.note)}</td></tr>")
+        h("</table></div></details>")
+    h("<details class='ap'><summary>FinTech: все аспекты</summary><div><table><tr><th>Аспект</th><th>Применимость</th>"
+      "<th>Статус</th><th>Комментарий</th></tr>")
     for c in r.fintech:
         h(f"<tr><td>{_e(c.aspect)}</td><td>{_e(c.applicable)}</td><td>{_e(FIN_ST[c.status])}</td><td>{_e(c.note)} {_e(c.recommendation)}</td></tr>")
-    h("</table>" + "".join(_finding_html(f) for f in r.findings if f.criterion == "fintech") + "</section>")
-    h("<section id='q'><h2>6. Вопросы к владельцу требований</h2>")
-    for q in r.questions:
-        opts = "".join(f"<li>{_e(o)}</li>" for o in q.options)
-        h(f"<div class='f'><h4>{q.id} · {_e(', '.join(q.req_ids) or 'набор')} · {_e(q.status)}</h4><b>{_e(q.question)}</b>"
-          f"<dl><dt>Зачем</dt><dd>{_e(q.why)}</dd><dt>Риск</dt><dd>{_e(q.risk)}</dd>"
-          f"{'<dt>Ответ</dt><dd>' + _e(q.answer) + '</dd>' if q.answer else ''}</dl><ul>{opts}</ul></div>")
-    h("</section>")
-    h("<section id='sum'><h2>7. Сводка</h2><table>")
-    for k, v in [("Требований", s.total_requirements), ("Замечаний", s.findings_total),
-                 *[(sev, s.by_severity[sev]) for sev in SEVERITY_ORDER], ("Требует проверки", s.needs_review),
-                 ("Противоречий", s.contradictions), ("Непроверяемых", s.unverifiable), ("Неполных", s.incomplete),
-                 ("Индекс требований", s.requirements_index), ("Индекс набора", s.set_index),
-                 ("Общий индекс", s.quality_index)]:
-        h(f"<tr><th>{_e(k)}</th><td>{_e(v)}</td></tr>")
-    h(f"</table><p class='mute'>{_e(METHOD)}</p></section>")
-    h(f"<section id='verdict'><h2>8. Итог</h2><div class='ready {cls}'>{_e(READY_RU[r.readiness])}</div><p>{_e(r.readiness_reason)}</p><ol>"
-      + "".join(f"<li>{_e(x)}</li>" for x in r.priorities) + "</ol></section>")
-    h(f"<p class='mute' style='text-align:center'>{PRODUCT_NAME} · LÜMEN Core {__version__}</p></div>")
-    h("""<script>document.querySelectorAll('.filters button').forEach(b=>b.onclick=()=>{b.classList.toggle('on');
-const on=[...document.querySelectorAll('.filters button.on')].map(x=>x.dataset.f);
-document.querySelectorAll('.f[data-sev]').forEach(f=>f.style.display=on.includes(f.dataset.sev)?'':'none')});</script></body></html>""")
+    h("</table></div></details>")
+    h(f"<footer>{PRODUCT_NAME} · LÜMEN Core {__version__} · коммит {_e(p.agent_commit)}</footer></div>")
+    h("""<script>(()=>{const bs=[...document.querySelectorAll('.tools button')],inp=document.querySelector('.tools input');
+const apply=()=>{const on=bs.filter(b=>b.classList.contains('on')).map(b=>b.dataset.f),q=(inp&&inp.value||'').toLowerCase().trim();
+document.querySelectorAll('details.f').forEach(f=>{f.style.display=on.includes(f.dataset.sev)&&(!q||f.dataset.text.includes(q))?'':'none'})};
+bs.forEach(b=>b.onclick=()=>{b.classList.toggle('on');apply()});if(inp)inp.oninput=apply;
+const open=()=>{const t=location.hash&&document.getElementById(decodeURIComponent(location.hash.slice(1)));if(t&&t.tagName==='DETAILS')t.open=true};
+addEventListener('hashchange',open);open();
+addEventListener('beforeprint',()=>document.querySelectorAll('details').forEach(d=>d.open=true));})();</script></body></html>""")
     return "".join(H)

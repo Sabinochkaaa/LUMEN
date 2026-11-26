@@ -61,3 +61,37 @@ def test_api_compare_and_docx(tmp_path, monkeypatch):
     assert r.status_code == 200 and r.content[:2] == b"PK"
     files = {"file": ("r.md", "# S\n\n## Ф\n* **F-1.** Клиент задаёт порог.".encode())}
     assert c.post("/api/translate", files=files, data={"target": "en"}).status_code == 422  # no model offline → clear error
+
+
+def test_photo_translation_overlays_lines(tmp_path, cfg):
+    import pytest
+
+    pytest.importorskip("pytesseract")
+    from PIL import Image, ImageDraw, ImageFont
+
+    from lumen.report.export import _FONT_CANDIDATES
+
+    font = next((r for r, _ in _FONT_CANDIDATES if __import__("os").path.exists(r)), None)
+    if not font:
+        pytest.skip("no Cyrillic font")
+    im = Image.new("RGB", (800, 300), "white")
+    d = ImageDraw.Draw(im)
+    f = ImageFont.truetype(font, 40)
+    d.text((40, 40), "Самая богатая наследница", fill="black", font=f)
+    d.text((40, 150), "Клиент задаёт порог", fill="black", font=f)
+    p = tmp_path / "photo.png"
+    im.save(p)
+
+    def responder(step, user):
+        src = re.search(r"<source>\n(.*)\n</source>", user, re.S).group(1)
+        if step == "translate photo lines":
+            return {"lines": [f"EN:{x}" for x in src.split("\n")]}
+        return {"text": src}
+
+    try:
+        tr = translate_document(p, "en", cfg=cfg, responder=responder)
+    except Exception as e:  # tesseract binary or rus data missing on this machine
+        pytest.skip(str(e))
+    assert tr.source_text and tr.overlay and tr.overlay["width"] == 800
+    assert [b["text"].startswith("EN:") for b in tr.overlay["boxes"]] == [True] * len(tr.overlay["boxes"])
+    assert tr.overlay["boxes"][0]["y"] < tr.overlay["boxes"][-1]["y"]

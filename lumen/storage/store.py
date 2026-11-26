@@ -5,7 +5,6 @@ created by `supabase/migrations/001_audits.sql`. Reports are rendered from the s
 """
 from __future__ import annotations
 
-import json
 import logging
 import threading
 from pathlib import Path
@@ -134,6 +133,30 @@ class SupabaseStore:
         return True
 
 
+def describe_storage_error(e: Exception) -> str:
+    """Short, secret-free diagnosis of a Supabase failure (safe to show in /api/health)."""
+    if isinstance(e, httpx.HTTPStatusError):
+        code = e.response.status_code
+        detail = ""
+        try:
+            body = e.response.json()
+            detail = f"{body.get('code', '')} {body.get('message', '')}".strip()
+        except Exception:
+            pass
+        hint = {
+            401: "неверный ключ: укажите service_role key в SUPABASE_KEY",
+            403: "нет прав: нужен service_role key или политика RLS",
+            404: "таблица не найдена: выполните supabase/migrations/001_audits.sql",
+        }.get(code, "")
+        if "PGRST205" in detail or "does not exist" in detail:
+            hint = "таблица audits не создана: выполните supabase/migrations/001_audits.sql"
+        msg = f"HTTP {code}" + (f" — {hint}" if hint else "") + (f" ({detail[:120]})" if detail else "")
+        return msg
+    if isinstance(e, httpx.RequestError):
+        return "нет соединения с Supabase: проверьте SUPABASE_URL (https://<project>.supabase.co)"
+    return type(e).__name__
+
+
 class FallbackStore:
     """Supabase first; on any network/DB error fall back to local files so the product keeps working."""
 
@@ -141,15 +164,18 @@ class FallbackStore:
         self.primary, self.local = primary, local
         self.kind = "supabase"
         self.degraded = False
+        self.last_error: Optional[str] = None
 
     def _try(self, fn, *a, default=None):
         try:
             out = getattr(self.primary, fn)(*a)
             self.degraded = False
+            self.last_error = None
             return out
         except Exception as e:
+            self.last_error = describe_storage_error(e)
             if not self.degraded:
-                log.warning("Supabase недоступен (%s) — используется локальное хранилище", str(e)[:160])
+                log.warning("Supabase недоступен (%s) — используется локальное хранилище", self.last_error)
             self.degraded = True
             return default if fn != "save" else None
 

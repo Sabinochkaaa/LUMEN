@@ -28,7 +28,7 @@ from ..llm.schemas import ChatAnswer
 from ..models import AuditResult
 from ..parsing.loader import IMAGE_EXT, SUPPORTED
 from ..report.export import render, safe_name
-from ..security import UploadRejected, limiter, validate_upload
+from ..security import UploadRejected, limiter, safe_filename, validate_upload
 from ..service import AuditService
 from ..translate import LANG_NAMES, detect_target, markdown_to_docx, translate_document, wants_translation
 
@@ -279,7 +279,7 @@ class TelegramBot:
         except UploadRejected as e:
             self.send(chat, f"⚠️ {html.escape(str(e))}")
             return None
-        path = self.svc.uploads / f"tg_{uuid.uuid4().hex}_{re.sub(r'[^\w.\-]+', '_', name)[-80:]}"
+        path = self.svc.uploads / f"tg_{uuid.uuid4().hex}_{safe_filename(name)}"
         path.write_bytes(content)
         return path
 
@@ -330,7 +330,9 @@ class TelegramBot:
             self.send(chat, "Отчёт не найден")
             return
         s = r.scores
-        crit = [f for f in r.findings if f.status == "confirmed" and f.severity in ("CRITICAL", "HIGH")][:5]
+        from ..report.digest import build
+
+        crit = build(r).fixes  # the same top list as page 1 of the PDF and the site
         lines = [
             f"<b>{READY[r.readiness]}</b>" + (" · <i>демо</i>" if r.demo else ""),
             html.escape(r.readiness_reason), "",
@@ -342,7 +344,7 @@ class TelegramBot:
         if crit:
             lines += ["", "<b>Главное исправить:</b>"]
             for f in crit:
-                where = f"стр. {f.loc.line_start}" if f.loc else "набор"
+                where = ((f"стр. {f.loc.page}, " if f.loc.page else "") + f"строка {f.loc.line_start}") if f.loc else "набор"
                 lines.append(f"{SEV[f.severity]} {html.escape(f.title)} <i>({', '.join(f.req_ids[:3]) or 'набор'}; {where})</i>")
         lines += ["", "💬 Спросите меня об отчёте или выберите формат файла ниже."]
         if settings.public_url:

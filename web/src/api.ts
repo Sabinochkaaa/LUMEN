@@ -55,11 +55,30 @@ export interface CompareSide { id: string; document: string; analysed_at: string
 export interface CompareResult { base: CompareSide; new: CompareSide; delta_quality: number; fixed: CmpItem[]; added: CmpItem[]; remaining: CmpItem[]; critical_fixed: number; critical_added: number }
 export interface Criterion { key: string; name: string; ref: string; definition: string; basis: string }
 
+export interface OverlayBox { x: number; y: number; w: number; h: number; text: string; orig: string }
+export interface TranslationResult {
+  source_name: string; target: string; markdown: string; chunks: number; model: string; provider: string;
+  source_text?: string; overlay?: { width: number; height: number; boxes: OverlayBox[] } | null; warnings?: string[];
+}
+
 const BASE = (import.meta as any).env?.VITE_API_URL ?? "";
 
 /** Admin auth is an HttpOnly session cookie (never readable by JS); this header proves the request comes from our UI. */
 function headers(): Record<string, string> {
   return { "X-Requested-With": "lumen" };
+}
+
+/** Edit key from the upload response: lets this browser answer the audit's questions (others only read). */
+const EDIT = "lumen.edit.";
+function keep(r: { audit_id: string; edit_key?: string }) {
+  try { if (r.edit_key) localStorage.setItem(EDIT + r.audit_id, r.edit_key); } catch { /* storage disabled */ }
+  return r;
+}
+export function canEdit(id: string): boolean {
+  try { return !!localStorage.getItem(EDIT + id); } catch { return false; }
+}
+function editHeader(id: string): Record<string, string> {
+  try { const k = localStorage.getItem(EDIT + id); return k ? { "X-Edit-Key": k } : {}; } catch { return {}; }
 }
 
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -86,16 +105,15 @@ export const api = {
     fd.append("file", file);
     if (provider) fd.append("provider", provider);
     if (model) fd.append("model", model);
-    return req<{ audit_id: string }>("/api/audits", { method: "POST", body: fd });
+    return req<{ audit_id: string; edit_key?: string }>("/api/audits", { method: "POST", body: fd }).then(keep);
   },
-  demo: () => req<{ audit_id: string }>("/api/demo", { method: "POST" }),
+  demo: () => req<{ audit_id: string; edit_key?: string }>("/api/demo", { method: "POST" }).then(keep),
   compare: (base: string, next: string) => req<CompareResult>(`/api/compare?base=${base}&new=${next}`),
   translate: (file: File, target: string) => {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("target", target);
-    return req<{ source_name: string; target: string; markdown: string; chunks: number; model: string; provider: string }>(
-      "/api/translate", { method: "POST", body: fd });
+    return req<TranslationResult>("/api/translate", { method: "POST", body: fd });
   },
   translationDocx: async (markdown: string, name: string) => {
     const r = await fetch(`${BASE}/api/translate/docx`, { method: "POST", headers: { ...headers(), "content-type": "application/json" }, body: JSON.stringify({ markdown, title: name }) });
@@ -107,7 +125,7 @@ export const api = {
   patchQuestion: (id: string, qid: string, body: { status?: string; answer?: string }) =>
     req<{ question: Question; scores: Scores; readiness: Readiness; readiness_reason: string }>(
       `/api/audits/${id}/questions/${qid}`,
-      { method: "PATCH", body: JSON.stringify(body), headers: { "content-type": "application/json" } }),
+      { method: "PATCH", body: JSON.stringify(body), headers: { "content-type": "application/json", ...editHeader(id) } }),
   reportUrl: (id: string, fmt: "md" | "html" | "json" | "pdf" | "docx" | "xlsx", download = false) =>
     `${BASE}/api/audits/${id}/report.${fmt}${download ? "?download=true" : ""}`,
   /** SSE over fetch: the token travels in a header, never in the URL (and so never in server logs). */

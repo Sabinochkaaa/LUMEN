@@ -1,15 +1,15 @@
 {
- "id": "8c2f01c81425",
+ "id": "58d22baaf523",
  "passport": {
   "document_name": "requirements.md",
   "document_title": "Уведомление о расходах по карте",
   "document_format": "markdown",
   "document_sha256": "e7dae55e5453a250d93e335f5ff9c7f775f4457ccddd333f4a67e47b20d74381",
-  "analysed_at": "2026-11-26T14:12:42+05:00",
+  "analysed_at": "2026-11-26T19:37:40+05:00",
   "provider": "offline",
   "model": "rules-only",
   "agent_version": "1.0.0",
-  "agent_commit": "223a733",
+  "agent_commit": "7824eed-dirty",
   "mode": "offline",
   "duration_s": 0.0,
   "llm_calls": 0,
@@ -786,7 +786,7 @@
   {
    "req_id": "REQ-003",
    "criteria": {
-    "unambiguous": "unknown",
+    "unambiguous": "issue",
     "complete": "unknown",
     "verifiable": "unknown",
     "consistent": "unknown",
@@ -802,8 +802,8 @@
     "acceptance": "unknown",
     "boundaries": "unknown"
    },
-   "score": 97.0,
-   "verdict": "pass",
+   "score": 93.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
@@ -832,7 +832,7 @@
   {
    "req_id": "REQ-005",
    "criteria": {
-    "unambiguous": "unknown",
+    "unambiguous": "issue",
     "complete": "unknown",
     "verifiable": "unknown",
     "consistent": "unknown",
@@ -848,8 +848,8 @@
     "acceptance": "unknown",
     "boundaries": "unknown"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 76.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
@@ -871,14 +871,14 @@
     "acceptance": "unknown",
     "boundaries": "unknown"
    },
-   "score": 94.0,
-   "verdict": "pass",
+   "score": 72.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
    "req_id": "REQ-007",
    "criteria": {
-    "unambiguous": "unknown",
+    "unambiguous": "issue",
     "complete": "unknown",
     "verifiable": "unknown",
     "consistent": "unknown",
@@ -894,8 +894,8 @@
     "acceptance": "unknown",
     "boundaries": "unknown"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 96.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
@@ -924,7 +924,7 @@
   {
    "req_id": "REQ-009",
    "criteria": {
-    "unambiguous": "unknown",
+    "unambiguous": "issue",
     "complete": "unknown",
     "verifiable": "unknown",
     "consistent": "unknown",
@@ -940,8 +940,8 @@
     "acceptance": "unknown",
     "boundaries": "unknown"
    },
-   "score": 97.0,
-   "verdict": "pass",
+   "score": 87.0,
+   "verdict": "fail",
    "summary_llm": ""
   },
   {
@@ -993,7 +993,7 @@
   {
    "req_id": "REQ-012",
    "criteria": {
-    "unambiguous": "unknown",
+    "unambiguous": "issue",
     "complete": "unknown",
     "verifiable": "unknown",
     "consistent": "unknown",
@@ -1009,8 +1009,8 @@
     "acceptance": "unknown",
     "boundaries": "unknown"
    },
-   "score": 100.0,
-   "verdict": "pass",
+   "score": 92.0,
+   "verdict": "warn",
    "summary_llm": ""
   },
   {
@@ -1707,6 +1707,34 @@
  "findings": [
   {
    "id": "F-001",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-006",
+    "REQ-009"
+   ],
+   "criterion": "unambiguous",
+   "severity": "HIGH",
+   "title": "Термин «Проведённая операция» не определён в документе",
+   "quote": "В расходы входят проведённые покупки.",
+   "loc": {
+    "line_start": 38,
+    "line_end": 38,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Неоднозначно: авторизация (банк одобрил и заблокировал сумму) ≠ клиринг/проводка (операция пришла от платёжной системы и списана, обычно через 1–3 дня). Дата и сумма могут отличаться; авторизация может быть отменена. В документе термин используется (REQ-006, REQ-009), но не определён.",
+   "risk": "Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+   "fix": "Добавить определение «Проведённая операция» в раздел терминов и использовать его единообразно.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TERM-posted",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-002",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_validatable",
@@ -1731,7 +1759,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-002",
+   "id": "F-003",
    "scope": "requirement",
    "req_ids": [
     "REQ-017"
@@ -1758,7 +1786,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-003",
+   "id": "F-004",
    "scope": "set",
    "req_ids": [],
    "criterion": "consistent",
@@ -1783,7 +1811,144 @@
    "confidence": 1.0
   },
   {
-   "id": "F-004",
+   "id": "F-005",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-003",
+    "REQ-006",
+    "REQ-007"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Термин «Месяц учёта» не определён в документе",
+   "quote": "На экране видны переключатель, поле «Порог, ₸», сумма за месяц и кнопка «Сохранить».",
+   "loc": {
+    "line_start": 29,
+    "line_end": 29,
+    "page": null,
+    "section": "Дизайн процесса UI"
+   },
+   "problem": "Неоднозначно: календарный месяц ≠ расчётный период (billing cycle) карты; нужна граница по часовому поясу и по какой дате (покупки, авторизации, клиринга) относить операцию. В документе термин используется (REQ-003, REQ-006, REQ-007), но не определён.",
+   "risk": "Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+   "fix": "Добавить определение «Месяц учёта» в раздел терминов и использовать его единообразно.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TERM-month",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-006",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-005"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Термин «Держатель карты» не определён в документе",
+   "quote": "Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.",
+   "loc": {
+    "line_start": 37,
+    "line_end": 37,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Неоднозначно для доп. карт: основной держатель счёта ≠ держатель дополнительной карты; у одного клиента может быть несколько карт на одном счёте. В документе термин используется (REQ-005), но не определён.",
+   "risk": "Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+   "fix": "Добавить определение «Держатель карты» в раздел терминов и использовать его единообразно.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TERM-cardholder",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-007",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-005"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Термин «Активная карта» не определён в документе",
+   "quote": "Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.",
+   "loc": {
+    "line_start": 37,
+    "line_end": 37,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Требует перечня статусов: активна, заблокирована временно, заблокирована навсегда, истёк срок, перевыпущена. В документе термин используется (REQ-005), но не определён.",
+   "risk": "Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+   "fix": "Добавить определение «Активная карта» в раздел терминов и использовать его единообразно.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TERM-active_card",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-008",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-005"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Термин «Валюта операции» не определён в документе",
+   "quote": "Держатель активной карты KZT задаёт целый порог от 1 000 до 1 000 000 ₸ включительно.",
+   "loc": {
+    "line_start": 37,
+    "line_end": 37,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Валюта операции ≠ валюта счёта/карты; при покупке за рубежом сумма в KZT известна точно только после клиринга (курс конвертации). В документе термин используется (REQ-005), но не определён.",
+   "risk": "Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+   "fix": "Добавить определение «Валюта операции» в раздел терминов и использовать его единообразно.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TERM-currency",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-009",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-006"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Термин «Возврат» не определён в документе",
+   "quote": "Возврат уменьшает расходы месяца исходной покупки.",
+   "loc": {
+    "line_start": 38,
+    "line_end": 38,
+    "page": null,
+    "section": "Функциональные требования"
+   },
+   "problem": "Неоднозначно: refund (возврат средств продавцом, отдельная операция, может быть частичным и прийти в другом месяце) ≠ reversal (отмена авторизации до клиринга) ≠ chargeback (опротестование через банк). В документе термин используется (REQ-006), но не определён.",
+   "risk": "Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+   "fix": "Добавить определение «Возврат» в раздел терминов и использовать его единообразно.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TERM-refund",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-010",
    "scope": "requirement",
    "req_ids": [
     "REQ-010"
@@ -1810,7 +1975,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-005",
+   "id": "F-011",
    "scope": "requirement",
    "req_ids": [
     "REQ-011"
@@ -1837,7 +2002,34 @@
    "confidence": 1.0
   },
   {
-   "id": "F-006",
+   "id": "F-012",
+   "scope": "requirement",
+   "req_ids": [
+    "REQ-012"
+   ],
+   "criterion": "unambiguous",
+   "severity": "MEDIUM",
+   "title": "Термин «Идемпотентность» не определён в документе",
+   "quote": "Повторная доставка одного события процессинга сохраняет исходный итог.",
+   "loc": {
+    "line_start": 52,
+    "line_end": 52,
+    "page": null,
+    "section": "Требования к интеграции"
+   },
+   "problem": "Повторная обработка того же события/запроса не меняет результат. Требует ключа идемпотентности (ID операции/события) и срока хранения обработанных ключей. В документе термин используется (REQ-012), но не определён.",
+   "risk": "Разработка, тестирование и бизнес поймут термин по-разному; расхождение всплывёт только на приёмке.",
+   "fix": "Добавить определение «Идемпотентность» в раздел терминов и использовать его единообразно.",
+   "rewrite": "",
+   "source": "rule",
+   "rule_id": "R-TERM-idempotency",
+   "status": "confirmed",
+   "basis": "expert",
+   "standard_ref": "ISO 29148 §5.2.5 Unambiguous; IEEE 830 §4.3.2",
+   "confidence": 1.0
+  },
+  {
+   "id": "F-013",
    "scope": "set",
    "req_ids": [],
    "criterion": "modifiable",
@@ -1862,7 +2054,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-007",
+   "id": "F-014",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_validatable",
@@ -1887,7 +2079,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-008",
+   "id": "F-015",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_traceable",
@@ -1912,7 +2104,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-009",
+   "id": "F-016",
    "scope": "requirement",
    "req_ids": [
     "REQ-017"
@@ -1939,7 +2131,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-010",
+   "id": "F-017",
    "scope": "requirement",
    "req_ids": [
     "REQ-017"
@@ -1966,7 +2158,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-011",
+   "id": "F-018",
    "scope": "requirement",
    "req_ids": [
     "REQ-028",
@@ -1994,7 +2186,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-012",
+   "id": "F-019",
    "scope": "requirement",
    "req_ids": [
     "REQ-032"
@@ -2021,7 +2213,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-013",
+   "id": "F-020",
    "scope": "requirement",
    "req_ids": [
     "REQ-042"
@@ -2048,7 +2240,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-014",
+   "id": "F-021",
    "scope": "requirement",
    "req_ids": [
     "REQ-042"
@@ -2075,7 +2267,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-015",
+   "id": "F-022",
    "scope": "set",
    "req_ids": [],
    "criterion": "ranked",
@@ -2095,7 +2287,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-016",
+   "id": "F-023",
    "scope": "set",
    "req_ids": [],
    "criterion": "set_traceable",
@@ -2115,7 +2307,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-017",
+   "id": "F-024",
    "scope": "requirement",
    "req_ids": [
     "REQ-003"
@@ -2142,7 +2334,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-018",
+   "id": "F-025",
    "scope": "requirement",
    "req_ids": [
     "REQ-006"
@@ -2169,7 +2361,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-019",
+   "id": "F-026",
    "scope": "requirement",
    "req_ids": [
     "REQ-006"
@@ -2196,7 +2388,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-020",
+   "id": "F-027",
    "scope": "requirement",
    "req_ids": [
     "REQ-009"
@@ -2223,7 +2415,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-021",
+   "id": "F-028",
    "scope": "set",
    "req_ids": [
     "REQ-008",
@@ -2251,7 +2443,7 @@
    "confidence": 0.67
   },
   {
-   "id": "F-022",
+   "id": "F-029",
    "scope": "requirement",
    "req_ids": [
     "REQ-030",
@@ -2279,7 +2471,7 @@
    "confidence": 1.0
   },
   {
-   "id": "F-023",
+   "id": "F-030",
    "scope": "set",
    "req_ids": [],
    "criterion": "integration_contract",
@@ -2326,7 +2518,7 @@
    "target": "REQ-034",
    "type": "conflicts_with",
    "status": "confirmed",
-   "note": "F-011: Параметр «amount» имеет разные типы: integer, string",
+   "note": "F-018: Параметр «amount» имеет разные типы: integer, string",
    "origin": "finding"
   },
   {
@@ -2334,7 +2526,7 @@
    "target": "REQ-031",
    "type": "conflicts_with",
    "status": "confirmed",
-   "note": "F-022: Content-Type: application/json при отсутствии тела запроса",
+   "note": "F-029: Content-Type: application/json при отсутствии тела запроса",
    "origin": "finding"
   }
  ],
@@ -2356,8 +2548,11 @@
    "answer": "",
    "source": "rule:R-TZ",
    "finding_ids": [
-    "F-018",
-    "F-019"
+    "F-001",
+    "F-005",
+    "F-009",
+    "F-025",
+    "F-026"
    ]
   },
   {
@@ -2377,7 +2572,7 @@
    "answer": "",
    "source": "rule:R-UNITS",
    "finding_ids": [
-    "F-005"
+    "F-011"
    ]
   },
   {
@@ -2397,9 +2592,9 @@
    "answer": "",
    "source": "rule:API-GET-MUTATION",
    "finding_ids": [
-    "F-002",
-    "F-009",
-    "F-010"
+    "F-003",
+    "F-016",
+    "F-017"
    ]
   },
   {
@@ -2417,6 +2612,169 @@
    "answer": "",
    "source": "rule:API-SUCCESS-WITH-ERROR",
    "finding_ids": []
+  },
+  {
+   "id": "Q-005",
+   "req_ids": [
+    "REQ-006",
+    "REQ-009"
+   ],
+   "question": "Что считается «проведённой» покупкой: авторизация или клиринг (финальная проводка)? От этого зависят момент уведомления, сумма и месяц учёта.",
+   "why": "Термин «Проведённая операция» допускает несколько толкований (справочник LÜMEN).",
+   "risk": "Неверное толкование приведёт к переделке логики и критериев приёмки.",
+   "options": [
+    "Авторизация (уведомление сразу)",
+    "Клиринг/проводка (финальная сумма)",
+    "Авторизация, с корректировкой по клирингу"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TERM-posted",
+   "finding_ids": [
+    "F-001",
+    "F-005",
+    "F-009",
+    "F-025",
+    "F-026",
+    "F-027"
+   ]
+  },
+  {
+   "id": "Q-006",
+   "req_ids": [
+    "REQ-006"
+   ],
+   "question": "Какие операции считаются «возвратом»: refund продавца, отмена авторизации (reversal), chargeback? Учитываются ли частичные возвраты и возвраты по покупкам прошлых месяцев?",
+   "why": "Термин «Возврат» допускает несколько толкований (справочник LÜMEN).",
+   "risk": "Неверное толкование приведёт к переделке логики и критериев приёмки.",
+   "options": [
+    "Только refund, включая частичные",
+    "Refund и reversal",
+    "Все три вида, по месяцу исходной покупки"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TERM-refund",
+   "finding_ids": [
+    "F-001",
+    "F-005",
+    "F-009",
+    "F-025",
+    "F-026"
+   ]
+  },
+  {
+   "id": "Q-007",
+   "req_ids": [
+    "REQ-005"
+   ],
+   "question": "Порог и уведомления настраиваются на карту, на счёт или на клиента? Как учитываются дополнительные карты к тому же счёту?",
+   "why": "Термин «Держатель карты» допускает несколько толкований (справочник LÜMEN).",
+   "risk": "Неверное толкование приведёт к переделке логики и критериев приёмки.",
+   "options": [
+    "На каждую карту отдельно",
+    "На счёт (все карты счёта вместе)",
+    "На клиента (все его карты)"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TERM-cardholder",
+   "finding_ids": [
+    "F-006",
+    "F-007",
+    "F-008"
+   ]
+  },
+  {
+   "id": "Q-008",
+   "req_ids": [
+    "REQ-005"
+   ],
+   "question": "Что происходит с настройкой и счётчиком, если карта заблокирована, перевыпущена или истёк срок действия?",
+   "why": "Термин «Активная карта» допускает несколько толкований (справочник LÜMEN).",
+   "risk": "Неверное толкование приведёт к переделке логики и критериев приёмки.",
+   "options": [
+    "Настройка сохраняется, уведомления приостановлены",
+    "Настройка переносится на перевыпущенную карту",
+    "Настройка удаляется"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TERM-active_card",
+   "finding_ids": [
+    "F-006",
+    "F-007",
+    "F-008"
+   ]
+  },
+  {
+   "id": "Q-009",
+   "req_ids": [
+    "REQ-005"
+   ],
+   "question": "Как учитываются покупки в иностранной валюте: по курсу на момент авторизации или по сумме клиринга в KZT?",
+   "why": "Термин «Валюта операции» допускает несколько толкований (справочник LÜMEN).",
+   "risk": "Неверное толкование приведёт к переделке логики и критериев приёмки.",
+   "options": [
+    "По сумме авторизации в KZT",
+    "По финальной сумме клиринга в KZT",
+    "Покупки в валюте не учитываются"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TERM-currency",
+   "finding_ids": [
+    "F-006",
+    "F-007",
+    "F-008"
+   ]
+  },
+  {
+   "id": "Q-010",
+   "req_ids": [
+    "REQ-003",
+    "REQ-006",
+    "REQ-007"
+   ],
+   "question": "Месяц — календарный или расчётный период карты? И по какой дате относить операцию: дате покупки, авторизации или клиринга?",
+   "why": "Термин «Месяц учёта» допускает несколько толкований (справочник LÜMEN).",
+   "risk": "Неверное толкование приведёт к переделке логики и критериев приёмки.",
+   "options": [
+    "Календарный, по дате покупки",
+    "Календарный, по дате клиринга",
+    "Расчётный период карты"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TERM-month",
+   "finding_ids": [
+    "F-001",
+    "F-005",
+    "F-009",
+    "F-024",
+    "F-025",
+    "F-026"
+   ]
+  },
+  {
+   "id": "Q-011",
+   "req_ids": [
+    "REQ-012"
+   ],
+   "question": "По какому ключу распознаётся повтор одного события (ID операции, ID события, хеш)? Как долго хранятся обработанные ключи?",
+   "why": "Термин «Идемпотентность» допускает несколько толкований (справочник LÜMEN).",
+   "risk": "Неверное толкование приведёт к переделке логики и критериев приёмки.",
+   "options": [
+    "По ID операции процессинга, хранение 30 дней",
+    "По ID события шины",
+    "По паре (карта, ID операции)"
+   ],
+   "status": "open",
+   "answer": "",
+   "source": "rule:R-TERM-idempotency",
+   "finding_ids": [
+    "F-012"
+   ]
   }
  ],
  "fintech": [
@@ -2710,31 +3068,32 @@
   }
  ],
  "scores": {
-  "quality_index": 73.3,
-  "requirements_index": 97.6,
+  "quality_index": 72.3,
+  "requirements_index": 95.9,
   "set_index": 36.8,
   "checked_requirements": 42,
   "total_requirements": 42,
-  "findings_total": 23,
+  "findings_total": 30,
   "by_severity": {
    "CRITICAL": 0,
-   "HIGH": 3,
-   "MEDIUM": 13,
+   "HIGH": 4,
+   "MEDIUM": 19,
    "LOW": 7,
    "INFO": 0
   },
   "contradictions": 2,
   "incomplete": 2,
   "unverifiable": 3,
-  "ambiguous": 1,
-  "open_questions": 4,
+  "ambiguous": 8,
+  "open_questions": 11,
   "needs_review": 0,
-  "criteria_coverage": 0.087,
+  "criteria_coverage": 0.095,
   "method": "Штраф дефекта: CRITICAL 40, HIGH 20, MEDIUM 8, LOW 3, INFO 0; замечания «требует проверки» — ×0.5. Балл требования = max(0, 100 − Σ штрафов его дефектов − ½ Σ штрафов межтребовательных дефектов с его участием). Индекс требований = среднее баллов. Индекс набора = 100 / (1 + P/50), P — Σ штрафов дефектов уровня набора (индекс вдвое ниже при P = 50). Общий индекс качества = 0.6 × индекс требований + 0.4 × индекс набора. Покрытие критериев = доля пар «требование × критерий», получивших вердикт ok/issue/na. Готовность: NOT READY — есть CRITICAL или ≥ 5 HIGH; READY WITH CONDITIONS — есть HIGH/MEDIUM; READY — только LOW/INFO; INSUFFICIENT DATA — < 3 требований, покрытие критериев < 50% или семантическая проверка (LLM) не выполнялась при отсутствии CRITICAL."
  },
  "readiness": "INSUFFICIENT DATA",
- "readiness_reason": "Семантическая проверка моделью не выполнялась (офлайн-режим): правила нашли 23 дефекта, но противоречия и полнота смысла не оценены. Запустите с LLM-ключом.",
+ "readiness_reason": "Семантическая проверка моделью не выполнялась (офлайн-режим): правила нашли 30 дефектов, но противоречия и полнота смысла не оценены. Запустите с LLM-ключом.",
  "priorities": [
+  "[HIGH] Термин «Проведённая операция» не определён в документе (REQ-006, REQ-009; строка 38, раздел «Функциональные требования») — Добавить определение «Проведённая операция» в раздел терминов и использовать его единообразно.",
   "[HIGH] Раздел «Тестирование требований» не заполнен (набор; строка 57, раздел «Тестирование требований») — Заполнить раздел «Тестирование требований» до передачи в разработку.",
   "[HIGH] Изменяющая операция объявлена через GET (REQ-017; строка 104, раздел «Общие параметры») — Использовать PUT (замена настройки) или POST, параметры передавать в теле JSON.",
   "[HIGH] Ошибка бизнес-валидации возвращается со статусом 200 (набор; строки 170–172, раздел «200. Successful — Created») — Возвращать ошибку валидации с 400/422 и телом {\"message\": …}; 200 — только при успехе."
@@ -2756,7 +3115,7 @@
    "title": "Проверка формата и целостности",
    "status": "done",
    "message": "Формат: MARKDOWN, SHA-256 e7dae55e5453…",
-   "elapsed_ms": 3
+   "elapsed_ms": 2
   },
   {
    "index": 3,
@@ -2800,8 +3159,8 @@
    "key": "individual",
    "title": "Индивидуальная проверка требований",
    "status": "done",
-   "message": "Правила: 25 замечаний",
-   "elapsed_ms": 17
+   "message": "Правила: 32 замечаний",
+   "elapsed_ms": 25
   },
   {
    "index": 8,
@@ -2836,7 +3195,7 @@
    "key": "clarify",
    "title": "Уточняющие вопросы (Clarification Engine)",
    "status": "done",
-   "message": "4 вопросов к владельцу требований",
+   "message": "11 вопросов к владельцу требований",
    "elapsed_ms": 0
   },
   {
@@ -2854,7 +3213,7 @@
    "key": "stats",
    "title": "Подсчёт статистики и готовности",
    "status": "done",
-   "message": "Индекс качества 73.3, готовность: INSUFFICIENT DATA",
+   "message": "Индекс качества 72.3, готовность: INSUFFICIENT DATA",
    "elapsed_ms": 0
   },
   {
@@ -2863,8 +3222,8 @@
    "key": "report",
    "title": "Генерация отчёта",
    "status": "done",
-   "message": "Markdown 49 КБ, HTML 62 КБ",
-   "elapsed_ms": 3
+   "message": "Markdown 62 КБ, HTML 74 КБ",
+   "elapsed_ms": 5
   },
   {
    "index": 15,
@@ -2873,7 +3232,7 @@
    "title": "Сохранение отчёта",
    "status": "done",
    "message": "reports/audit_report_offline.md, reports/audit_report_offline.html, reports/audit_report_offline.json",
-   "elapsed_ms": 1
+   "elapsed_ms": 3
   }
  ],
  "warnings": [
@@ -4075,5 +4434,6 @@
    "page": null,
    "origin": ""
   }
- ]
+ ],
+ "private": false
 }

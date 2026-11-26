@@ -82,3 +82,13 @@ def test_session_signing():
     assert check_session("pw", tok) and not check_session("other", tok)
     assert not check_session("pw", tok[:-2] + "00") and not check_session("pw", "garbage")
     assert not check_session("pw", make_session("pw", ttl=-1))
+
+
+def test_storage_error_is_secret_free():
+    import httpx
+    from lumen.storage.store import describe_storage_error
+    req = httpx.Request("GET", "https://x.supabase.co/rest/v1/audits?apikey=SECRET")
+    resp = httpx.Response(401, json={"message": "Invalid API key"}, request=req)
+    msg = describe_storage_error(httpx.HTTPStatusError("boom SECRET", request=req, response=resp))
+    assert "401" in msg and "service_role" in msg and "SECRET" not in msg
+    assert "SUPABASE_URL" in describe_storage_error(httpx.ConnectError("SECRET", request=req))

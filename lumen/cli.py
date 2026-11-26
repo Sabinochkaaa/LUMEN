@@ -14,7 +14,7 @@ from pathlib import Path
 
 from . import PRODUCT_NAME, __version__
 from .config import PROVIDER_LABELS, settings
-from .engine.pipeline import STAGES, AuditError, finalize, run_audit
+from .engine.pipeline import AuditError, finalize, run_audit
 from .models import StageEvent
 
 USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None

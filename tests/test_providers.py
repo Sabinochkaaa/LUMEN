@@ -100,7 +100,7 @@ def test_gemini_quota_falls_back_to_next_model(monkeypatch):
 
 
 def test_quota_error_is_readable(monkeypatch):
-    monkeypatch.setenv("LLM_FALLBACK_MODELS", "only-one")
+    monkeypatch.setenv("LLM_FALLBACK_MODELS_GEMINI", "only-one")
     stub(monkeypatch, lambda req: httpx.Response(429, json={"error": {"message": "You exceeded your current quota, please check your plan and billing details"}}))
     c = GeminiClient("only-one", settings(gemini_api_key="g-key-123456"))
     with pytest.raises(LLMError) as e:
@@ -166,3 +166,22 @@ def test_glossary_terms_and_clarifications(tmp_path, cfg):
     # a term the document defines itself is not flagged
     p.write_text(text + "\n## Глоссарий\nВозврат — это refund продавца, включая частичный.\n", encoding="utf-8")
     assert not [f for f in run_audit(p, cfg=cfg).findings if f.rule_id == "R-TERM-refund"]
+
+
+def test_chain_reports_every_provider_error(monkeypatch):
+    from lumen.llm.client import make_chain
+
+    stub(monkeypatch, lambda req: httpx.Response(400, json={"error": {"message": "bad request"}}))
+    s = settings(gemini_api_key="g-key-123456", groq_api_key="gq-key-123456", openrouter_api_key="", anthropic_api_key="",
+                 openai_api_key="")
+    with pytest.raises(LLMError) as e:
+        make_chain("gemini", "gemini-flash-latest", s).structured("s", "u", ReqAuditResponse, "t")
+    assert "gemini:" in str(e.value) and "groq:" in str(e.value)
+
+
+def test_generic_fallbacks_only_for_primary(monkeypatch):
+    monkeypatch.setenv("LLM_FALLBACK_MODELS", "gemini-x")
+    s = settings(gemini_api_key="g-key-123456")
+    s.provider = "gemini"
+    assert s.fallback_models("gemini") == ["gemini-x"]
+    assert "gemini-x" not in s.fallback_models("groq") and "openai/gpt-oss-20b" in s.fallback_models("groq")

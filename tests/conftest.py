@@ -26,6 +26,7 @@ def cfg(tmp_path):
     s.data_dir = tmp_path
     s.provider = "offline"
     s.max_retries = 2
+    s.retry_pause = 0
     return s
 
 

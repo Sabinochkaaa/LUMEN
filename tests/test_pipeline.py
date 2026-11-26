@@ -269,3 +269,49 @@ def test_secrets_are_masked():
     from lumen.llm.client import _mask
 
     assert "sk-ant-SECRET123456" not in _mask("key sk-ant-SECRET123456 leaked", ["sk-ant-SECRET123456"])
+
+
+def test_failed_parallel_step_is_retried(tmp_path, cfg):
+    calls = {"set:consistency": 0}
+
+    def responder(step, user):
+        if step == "set:consistency":
+            calls[step] += 1
+            if calls[step] == 1:
+                return LLMError("HTTP 429 burst")
+            return {"issues": [{"kind": "conflict", "severity": "HIGH", "title": "Повтор сработал",
+                                "quotes": ["Клиент задаёт лимит от 1 000 до 100 000 ₸ включительно."], "problem": "x"}]}
+        return {}
+
+    res = run_audit(write(tmp_path, GOOD_MD), provider="mock", cfg=cfg, responder=responder)
+    assert calls["set:consistency"] == 2
+    assert any(f.title == "Повтор сработал" for f in res.findings)
+    assert any("повторно" in w for w in res.warnings) and not any("ошибкой" in w for w in res.warnings)
+
+
+def test_same_document_reuses_result(tmp_path, monkeypatch):
+    from lumen.config import Settings
+    from lumen.service import AuditService
+    cfg = Settings(); cfg.data_dir = str(tmp_path); cfg.cache_hours = 24
+    svc = AuditService(cfg)
+    doc = tmp_path / "a.md"; doc.write_text("# ТЗ\n\n1. Система должна быстро работать.\n", encoding="utf-8")
+    calls = []
+    import lumen.service as s
+    real = s.run_audit
+    def fake(*a, **k):
+        calls.append(1); r = real(*a, **k)
+        r.passport.mode = "llm"; return r
+    monkeypatch.setattr(s, "run_audit", fake)
+    r1 = svc.run_sync(doc, "a.md", provider="offline")
+    r2 = svc.run_sync(doc, "a.md", provider="offline")
+    assert len(calls) == 1 and r1.id != r2.id and r1.scores.quality_index == r2.scores.quality_index
+
+
+def test_bench_rules_catch_every_planted_defect_without_noise():
+    """Quality gate: every seeded defect the rules own is found, the clean spec gets no findings."""
+    from lumen.bench import run
+
+    res = run("offline", verbose=False)
+    missed = [c["title"] for c in res["cases"] if not c["caught"]]
+    assert not missed, missed
+    assert res["false_positives"] == 0, res["noise"]
