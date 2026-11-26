@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+html, body, #root { height: 100%; }
+body { @apply bg-canvas text-ink font-sans antialiased; font-feature-settings: "ss01", "cv11"; }
+::selection { background: #cfe0ff; }
+:focus-visible { outline: 2px solid #1F4FD8; outline-offset: 2px; border-radius: 6px; }
+
+@layer components {
+  .card { @apply bg-white rounded-2xl border border-line; }
+  .btn { @apply inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-signal text-white hover:bg-signal-dark; }
+  .btn-ghost { @apply btn text-ink-soft hover:bg-canvas hover:text-ink; }
+  .btn-line { @apply btn border border-line bg-white hover:border-signal/40 hover:text-signal; }
+  .h1 { @apply text-[28px] leading-[1.15] font-semibold tracking-[-0.02em]; }
+  .h2 { @apply text-lg font-semibold tracking-[-0.01em]; }
+  .meta { @apply text-[13px] text-ink-soft; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium; }
+  .input { @apply w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-signal focus:ring-2 focus:ring-signal/15; }
+}
+
+/* The LÜMEN beam: a band of light that scans the document while the pipeline runs. */
+.lens-beam {
+  position: absolute; left: 0; right: 0; height: 120px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(59,167,232,0) 0%, rgba(59,167,232,.16) 45%, rgba(31,79,216,.28) 50%, rgba(59,167,232,.16) 55%, rgba(59,167,232,0) 100%);
+  animation: beam 2.6s cubic-bezier(.45,0,.55,1) infinite alternate;
+}
+@keyframes beam { from { top: -60px } to { top: calc(100% - 60px) } }
+.lens-line-hit { transition: background-color .5s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .lens-beam { display: none; }
+}
