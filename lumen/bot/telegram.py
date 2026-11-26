@@ -30,6 +30,7 @@ from ..parsing.loader import IMAGE_EXT, SUPPORTED
 from ..report.export import render, safe_name
 from ..security import UploadRejected, limiter, validate_upload
 from ..service import AuditService
+from ..translate import LANG_NAMES, detect_target, markdown_to_docx, translate_document, wants_translation
 
 log = logging.getLogger("lumen.bot")
 logging.getLogger("httpx").setLevel(logging.WARNING)  # never log URLs that contain the bot token
@@ -48,7 +49,8 @@ HELP = (
     "📎 <b>Пришлите документ требований</b>: PDF, Word, Markdown, TXT, HTML, RTF или фото/скан страницы — "
     "или просто вставьте текст требований сообщением.\n"
     "Я выделю требования, найду противоречия, пробелы и FinTech-риски, задам вопросы владельцу и пришлю отчёт.\n\n"
-    "💬 Потом спрашивайте: «что не так с Ф-3?», «перепиши REQ-010», «почему NOT READY?», «пришли в Excel».\n\n"
+    "💬 Потом спрашивайте: «что не так с Ф-3?», «перепиши REQ-010», «почему NOT READY?», «пришли в Excel».\n"
+    "🌐 Перевод: пришлите файл с подписью «переведи на английский» (или казахский/русский), либо напишите это после анализа.\n\n"
     "/format — формат отчёта по умолчанию\n/demo — демонстрационный прогон\n/last — последний отчёт\n/help — помощь"
 )
 
@@ -176,6 +178,8 @@ class TelegramBot:
             else:
                 self.last[chat] = aid
                 self.summary(chat, aid)
+        elif "document" in m and text and wants_translation(text):
+            self.translate(chat, m["document"], detect_target(text) or "en")
         elif "document" in m:
             f = wanted_format(text)
             if f:
@@ -188,6 +192,8 @@ class TelegramBot:
             path = self.svc.uploads / f"tg_{uuid.uuid4().hex}_text.md"
             path.write_text(text, encoding="utf-8")
             self.audit(chat, None, path=path, name="текст из сообщения")
+        elif text and wants_translation(text) and self.last.get(chat):
+            self.translate(chat, None, detect_target(text) or "en")
         elif text:
             self.chat(chat, text)
         else:
@@ -257,6 +263,60 @@ class TelegramBot:
         self.last[chat] = job.id
         self.history[chat] = []
         self.summary(chat, job.id, send_file=True)
+
+    def _download(self, chat: int, document: dict) -> Optional[Path]:
+        name = document.get("file_name") or "document"
+        if Path(name).suffix.lower() not in SUPPORTED:
+            self.send(chat, "⚠️ Этот формат я не читаю. Подойдут: PDF, Word, Markdown, TXT, HTML, RTF, фото или скан.")
+            return None
+        if document.get("file_size", 0) > 20 * 1024 * 1024:
+            self.send(chat, "⚠️ Файл больше 20 МБ.")
+            return None
+        info = self.call("getFile", file_id=document["file_id"])
+        content = self.http.get(f"{self.file_api}/{info['file_path']}").content
+        try:
+            validate_upload(name, content)
+        except UploadRejected as e:
+            self.send(chat, f"⚠️ {html.escape(str(e))}")
+            return None
+        path = self.svc.uploads / f"tg_{uuid.uuid4().hex}_{re.sub(r'[^\w.\-]+', '_', name)[-80:]}"
+        path.write_bytes(content)
+        return path
+
+    def translate(self, chat: int, document: Optional[dict], target: str) -> None:
+        ok, retry = limiter.allow(f"bot-audit:{chat}", self.svc.cfg.bot_audits_per_hour, 3600)
+        if not ok:
+            self.send(chat, f"⏳ Лимит на этот час исчерпан. Попробуйте через {retry // 60 + 1} мин.")
+            return
+        if document is not None:
+            path = self._download(chat, document)
+            if path is None:
+                return
+            name = document.get("file_name") or "document"
+        else:
+            r = self.svc.store.get(self.last[chat])
+            if r is None or not r.source:
+                self.send(chat, "Пришлите документ, который нужно перевести 📎")
+                return
+            name = r.passport.document_name
+            path = self.svc.uploads / f"tg_{uuid.uuid4().hex}_source.md"
+            path.write_text("\n".join(l.text for l in r.source), encoding="utf-8")
+        msg = self.send(chat, f"🌐 Перевожу «{html.escape(name)}» → {LANG_NAMES[target]}…")
+        self.typing(chat)
+        try:
+            tr = translate_document(path, target, display_name=name, cfg=self.svc.cfg,
+                                    progress=lambda i, n: self.edit(chat, msg["message_id"],
+                                                                    f"🌐 Перевожу «{html.escape(name)}» → {LANG_NAMES[target]}… {i}/{n}"))
+        except Exception as e:
+            log.warning("translate failed: %s", e)
+            self.edit(chat, msg["message_id"], f"⚠️ Перевод не выполнен: {html.escape(str(e)[:300])}")
+            return
+        finally:
+            path.unlink(missing_ok=True)
+        base = re.sub(r"[^\w\-]+", "_", Path(name).stem)[:40]
+        self.edit(chat, msg["message_id"], f"✅ Перевод готов → {LANG_NAMES[target]} · модель {html.escape(tr.model)}")
+        self.send_doc(chat, f"{base}_{target}.docx", markdown_to_docx(tr.markdown, name), "📘 Перевод (Word)")
+        self.send_doc(chat, f"{base}_{target}.md", tr.markdown.encode("utf-8"), "📝 Перевод (Markdown)")
 
     def format_kb(self, prefix: str, aid: str = "") -> dict:
         items = list(FORMATS.items())

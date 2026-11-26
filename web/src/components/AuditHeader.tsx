@@ -1,46 +1,45 @@
 import { NavLink } from "react-router-dom";
 import { Download } from "lucide-react";
-import { Audit, MODE_RU } from "../api";
+import { Audit } from "../api";
+import { useT } from "../i18n";
 import ReportLink from "./ReportLink";
-import { ReadinessBadge, fmtDate } from "./ui";
+import { CopyButton, ReadinessBadge, fmtDate } from "./ui";
 
-const TABS = [
-  ["", "Сводка"], ["requirements", "Требования"], ["issues", "Дефекты"], ["graph", "Граф"],
-  ["clarifications", "Вопросы"], ["fintech", "FinTech"],
-] as const;
+const TABS = [["", "tab.summary"], ["requirements", "tab.requirements"], ["issues", "tab.issues"], ["graph", "tab.graph"],
+  ["clarifications", "tab.questions"], ["fintech", "tab.fintech"], ["compare", "tab.compare"]] as const;
 
-export default function AuditHeader({ a, title }: { a: Audit; title?: string }) {
+export default function AuditHeader({ a }: { a: Audit }) {
+  const { t, lang } = useT();
   const p = a.passport;
   return (
-    <div className="mb-6">
-      {a.demo && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
-          Демонстрационный прогон: документ и ответы модели подготовлены для показа. Это не проверка документа организаторов.
-        </div>
-      )}
+    <div className="mb-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="h1 truncate">{title ?? (p.document_title || p.document_name)}</h1>
+          <h1 className="h1 truncate">{p.document_title || p.document_name}</h1>
           <div className="meta mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span>{p.document_name}</span><span>{fmtDate(p.analysed_at)}</span>
-            <span>{p.model}</span><span>{MODE_RU[p.mode]}</span>
+            <span>{p.document_name}</span><span className="text-ink-faint">/</span><span>{fmtDate(p.analysed_at, lang)}</span>
+            <span className="text-ink-faint">/</span><span>{p.model}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ReadinessBadge r={a.readiness} large />
-          <ReportLink className="btn-line" id={a.id} fmt="md"><Download size={15} />Отчёт .md</ReportLink>
-          <ReportLink className="btn-line hidden sm:inline-flex" id={a.id} fmt="pdf" open>PDF</ReportLink>
+          <ReportLink className="btn-primary" id={a.id} fmt="pdf" open><Download size={15} />PDF</ReportLink>
           <ReportLink className="btn-line hidden md:inline-flex" id={a.id} fmt="docx">Word</ReportLink>
           <ReportLink className="btn-line hidden md:inline-flex" id={a.id} fmt="xlsx">Excel</ReportLink>
+          <ReportLink className="btn-line hidden lg:inline-flex" id={a.id} fmt="md">MD</ReportLink>
+          <CopyButton text={window.location.origin + `/audits/${a.id}`} label={t("ui.share")} />
         </div>
       </div>
-      <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-line" aria-label="Разделы аудита">
-        {TABS.map(([to, label]) => (
+      <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-line" aria-label={t("tab.summary")}>
+        {TABS.map(([to, key]) => (
           <NavLink key={to} end to={`/audits/${a.id}${to ? "/" + to : ""}`}
-            className={({ isActive }) => `-mb-px whitespace-nowrap border-b-2 px-3.5 py-2.5 text-sm transition-colors ${isActive ? "border-signal font-medium text-signal" : "border-transparent text-ink-soft hover:text-ink"}`}>
-            {label}
-            {to === "issues" && <span className="ml-1.5 text-ink-faint">{a.scores.findings_total}</span>}
-            {to === "clarifications" && <span className="ml-1.5 text-ink-faint">{a.scores.open_questions}</span>}
+            className={({ isActive }) => `relative -mb-px whitespace-nowrap px-3.5 py-2.5 text-sm transition-colors ${isActive ? "font-medium text-signal" : "text-ink-soft hover:text-ink"}`}>
+            {({ isActive }) => (<>
+              {t(key)}
+              {to === "issues" && <span className="ml-1.5 text-ink-faint">{a.scores.findings_total}</span>}
+              {to === "clarifications" && <span className="ml-1.5 text-ink-faint">{a.scores.open_questions}</span>}
+              {isActive && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full grad-bg" />}
+            </>)}
           </NavLink>
         ))}
       </nav>

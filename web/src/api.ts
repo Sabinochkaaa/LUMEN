@@ -50,6 +50,9 @@ export interface Health {
   providers: Record<string, boolean>; storage: string; storage_degraded: boolean; auth_required: boolean; telegram: boolean; formats: string[];
   private_mode: boolean; public_demo: boolean; encryption: boolean;
 }
+export interface CmpItem { id: string; severity: Severity; title: string; criterion: string; where: string }
+export interface CompareSide { id: string; document: string; analysed_at: string; quality_index: number; readiness: Readiness; findings: number; requirements: number }
+export interface CompareResult { base: CompareSide; new: CompareSide; delta_quality: number; fixed: CmpItem[]; added: CmpItem[]; remaining: CmpItem[]; critical_fixed: number; critical_added: number }
 export interface Criterion { key: string; name: string; ref: string; definition: string; basis: string }
 
 const BASE = (import.meta as any).env?.VITE_API_URL ?? "";
@@ -83,6 +86,21 @@ export const api = {
     return req<{ audit_id: string }>("/api/audits", { method: "POST", body: fd });
   },
   demo: () => req<{ audit_id: string }>("/api/demo", { method: "POST" }),
+  compare: (base: string, next: string) => req<CompareResult>(`/api/compare?base=${base}&new=${next}`),
+  translate: (file: File, target: string) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("target", target);
+    return req<{ source_name: string; target: string; markdown: string; chunks: number; model: string; provider: string }>(
+      "/api/translate", { method: "POST", body: fd });
+  },
+  translationDocx: async (markdown: string, name: string) => {
+    const r = await fetch(`${BASE}/api/translate/docx`, { method: "POST", headers: { ...headers(), "content-type": "application/json" }, body: JSON.stringify({ markdown, title: name }) });
+    if (!r.ok) throw new Error(`Ошибка ${r.status}`);
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement("a"); a.href = url; a.download = `${name}.docx`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  },
   patchQuestion: (id: string, qid: string, body: { status?: string; answer?: string }) =>
     req<{ question: Question; scores: Scores; readiness: Readiness; readiness_reason: string }>(
       `/api/audits/${id}/questions/${qid}`,
@@ -131,7 +149,7 @@ export const api = {
 
 export const SEV_ORDER: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
 export const SEV_RU: Record<Severity, string> = { CRITICAL: "Критический", HIGH: "Высокий", MEDIUM: "Средний", LOW: "Низкий", INFO: "Инфо" };
-export const SEV_COLOR: Record<Severity, string> = { CRITICAL: "#D92D20", HIGH: "#E8620C", MEDIUM: "#C99A06", LOW: "#3B82F6", INFO: "#98A2B3" };
+export const SEV_COLOR: Record<Severity, string> = { CRITICAL: "#E5484D", HIGH: "#F76B15", MEDIUM: "#E2A30F", LOW: "#3E8BFF", INFO: "#8B95A7" };
 export const READY_RU: Record<Readiness, { label: string; tone: string; hint: string }> = {
   "READY": { label: "Готов к разработке", tone: "ready", hint: "Блокирующих проблем нет" },
   "READY WITH CONDITIONS": { label: "Готов с условиями", tone: "cond", hint: "Нужны исправления и согласования" },

@@ -1,22 +1,34 @@
-/** LÜMEN design tokens */
+/** LÜMEN design tokens — every colour is a CSS variable so the three themes switch instantly. */
+const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        canvas: "#F3F5F9",
-        ink: { DEFAULT: "#0E1A33", soft: "#475467", faint: "#98A2B3" },
-        line: "#E4E8F0",
-        signal: { DEFAULT: "#1F4FD8", dark: "#1639A6", wash: "#EAF0FF" },
-        sky: { DEFAULT: "#3BA7E8", wash: "#E6F5FD" },
-        violet: { DEFAULT: "#6D4AE0", wash: "#F0EBFF" },
-        sev: { critical: "#D92D20", high: "#E8620C", medium: "#C99A06", low: "#3B82F6", info: "#98A2B3" },
+        canvas: v("canvas"),
+        surface: { DEFAULT: v("surface"), 2: v("surface-2") },
+        ink: { DEFAULT: v("ink"), soft: v("ink-soft"), faint: v("ink-faint") },
+        line: v("line"),
+        signal: { DEFAULT: v("signal"), dark: v("signal-dark") },
+        sky: v("sky"),
+        violet: v("violet"),
+        pink: v("pink"),
+        ok: v("ok"), warn: v("warn"), bad: v("bad"),
+        sev: { critical: "#E5484D", high: "#F76B15", medium: "#E2A30F", low: "#3E8BFF", info: "#8B95A7" },
       },
       fontFamily: {
         sans: ['"Onest Variable"', "system-ui", "sans-serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
       },
-      boxShadow: { lift: "0 1px 2px rgba(14,26,51,.06), 0 8px 24px -12px rgba(14,26,51,.18)" },
+      boxShadow: {
+        lift: "0 1px 2px rgb(var(--shadow) / .06), 0 12px 32px -14px rgb(var(--shadow) / .28)",
+        glow: "0 0 0 1px rgb(var(--signal) / .25), 0 10px 40px -10px rgb(var(--signal) / .55)",
+      },
+      keyframes: {
+        floaty: { "0%,100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-8px)" } },
+        shimmer: { "0%": { backgroundPosition: "0% 50%" }, "100%": { backgroundPosition: "200% 50%" } },
+      },
+      animation: { floaty: "floaty 6s ease-in-out infinite", shimmer: "shimmer 6s linear infinite" },
     },
   },
   plugins: [],
