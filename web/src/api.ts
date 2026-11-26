@@ -55,6 +55,12 @@ export interface CompareSide { id: string; document: string; analysed_at: string
 export interface CompareResult { base: CompareSide; new: CompareSide; delta_quality: number; fixed: CmpItem[]; added: CmpItem[]; remaining: CmpItem[]; critical_fixed: number; critical_added: number }
 export interface Criterion { key: string; name: string; ref: string; definition: string; basis: string }
 
+export interface OverlayBox { x: number; y: number; w: number; h: number; text: string; orig: string }
+export interface TranslationResult {
+  source_name: string; target: string; markdown: string; chunks: number; model: string; provider: string;
+  source_text?: string; overlay?: { width: number; height: number; boxes: OverlayBox[] } | null; warnings?: string[];
+}
+
 const BASE = (import.meta as any).env?.VITE_API_URL ?? "";
 
 /** Admin auth is an HttpOnly session cookie (never readable by JS); this header proves the request comes from our UI. */
@@ -107,8 +113,7 @@ export const api = {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("target", target);
-    return req<{ source_name: string; target: string; markdown: string; chunks: number; model: string; provider: string }>(
-      "/api/translate", { method: "POST", body: fd });
+    return req<TranslationResult>("/api/translate", { method: "POST", body: fd });
   },
   translationDocx: async (markdown: string, name: string) => {
     const r = await fetch(`${BASE}/api/translate/docx`, { method: "POST", headers: { ...headers(), "content-type": "application/json" }, body: JSON.stringify({ markdown, title: name }) });

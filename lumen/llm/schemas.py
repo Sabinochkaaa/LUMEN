@@ -105,5 +105,9 @@ class ChatAnswer(BaseModel):
         "none", description="Если пользователь просит прислать отчёт/файл — нужный формат, иначе none")
 
 
+class TranslatedLines(BaseModel):
+    lines: list[str] = Field(description="Перевод каждой строки, в том же порядке и того же количества")
+
+
 class TranslatedChunk(BaseModel):
     text: str = Field(description="Перевод фрагмента с сохранением разметки Markdown, таблиц, ID и чисел")

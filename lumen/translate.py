@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import io
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
 
 from .config import Settings, settings as default_settings
 from .knowledge.glossary import knowledge_block
 from .llm.client import LLMError, make_chain
-from .llm.schemas import TranslatedChunk
+from .llm.schemas import TranslatedChunk, TranslatedLines
 from .parsing.loader import load_document
 
 LANGS = {"ru": "русский", "kk": "казахский (қазақ тілі, кириллица)", "en": "английский"}
@@ -42,6 +42,35 @@ class Translation:
     chunks: int
     model: str
     provider: str
+    source_text: str = ""  # what was translated (OCR text for photos) — shown next to the result
+    overlay: Optional[dict] = None  # photos: {"width", "height", "boxes": [{x, y, w, h, text, orig}]} in pixels
+    warnings: list[str] = field(default_factory=list)
+
+
+IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}
+
+
+def ocr_boxes(raw: bytes) -> tuple[int, int, list[dict]]:
+    """OCR with line boxes, so the translation can be laid over the photo where the text was."""
+    import pytesseract  # type: ignore
+    from PIL import Image  # type: ignore
+
+    im = Image.open(io.BytesIO(raw))
+    im.load()
+    d = pytesseract.image_to_data(im, lang="rus+eng", output_type=pytesseract.Output.DICT)
+    lines: dict[tuple, dict] = {}
+    for i, word in enumerate(d["text"]):
+        if not str(word).strip() or float(d["conf"][i]) < 30:
+            continue
+        key = (d["block_num"][i], d["par_num"][i], d["line_num"][i])
+        x, y, w, h = d["left"][i], d["top"][i], d["width"][i], d["height"][i]
+        b = lines.setdefault(key, {"x": x, "y": y, "r": x + w, "b": y + h, "words": []})
+        b["x"], b["y"] = min(b["x"], x), min(b["y"], y)
+        b["r"], b["b"] = max(b["r"], x + w), max(b["b"], y + h)
+        b["words"].append(str(word))
+    boxes = [{"x": b["x"], "y": b["y"], "w": b["r"] - b["x"], "h": b["b"] - b["y"], "orig": " ".join(b["words"])}
+             for _, b in sorted(lines.items(), key=lambda kv: (kv[1]["y"], kv[1]["x"]))]
+    return im.width, im.height, boxes
 
 
 def _chunks(lines: list[str], limit: int = 3500) -> list[str]:
@@ -83,8 +112,36 @@ def translate_document(path: str | Path, target: str, *, display_name: Optional[
         res: TranslatedChunk = client.structured(
             system, f"Переведи на {LANGS[target]} язык.\n<source>\n{part}\n</source>", TranslatedChunk, f"translate {i}/{len(parts)}")
         out.append(res.text.rstrip("\n"))
-    return Translation(source_name=doc.name, target=target, markdown="\n".join(out).strip() + "\n", chunks=len(parts),
-                       model=client.model, provider=client.provider)
+    tr = Translation(source_name=doc.name, target=target, markdown="\n".join(out).strip() + "\n", chunks=len(parts),
+                     model=client.model, provider=client.provider, source_text="\n".join(lines).strip(),
+                     warnings=list(doc.warnings))
+    if Path(path).suffix.lower() in IMAGE_EXT:
+        tr.overlay = _photo_overlay(Path(path), target, client, system)
+    return tr
+
+
+def _photo_overlay(path: Path, target: str, client, system: str) -> Optional[dict]:
+    """Translate each OCR line separately; if the model does not return one line per line, skip the overlay."""
+    try:
+        w, h, boxes = ocr_boxes(path.read_bytes())
+    except Exception:
+        return None
+    boxes = boxes[:120]
+    if not boxes:
+        return None
+    numbered = "\n".join(b["orig"] for b in boxes)
+    try:
+        res: TranslatedLines = client.structured(
+            system, f"Переведи на {LANGS[target]} язык КАЖДУЮ строку отдельно. Строк: {len(boxes)}; верни ровно "
+                    f"{len(boxes)} строк в том же порядке.\n<source>\n{numbered}\n</source>", TranslatedLines,
+            "translate photo lines")
+    except Exception:
+        return None
+    if len(res.lines) != len(boxes):
+        return None
+    for b, t in zip(boxes, res.lines):
+        b["text"] = t
+    return {"width": w, "height": h, "boxes": boxes}
 
 
 def markdown_to_docx(md: str, title: str = "") -> bytes:

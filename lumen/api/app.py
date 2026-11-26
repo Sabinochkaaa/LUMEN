@@ -385,7 +385,8 @@ async def translate(file: UploadFile = File(...), target: str = Form(...)):
     finally:
         path.unlink(missing_ok=True)
     return {"source_name": tr.source_name, "target": tr.target, "markdown": tr.markdown, "chunks": tr.chunks,
-            "model": tr.model, "provider": tr.provider}
+            "model": tr.model, "provider": tr.provider, "source_text": tr.source_text, "overlay": tr.overlay,
+            "warnings": tr.warnings}
 
 
 class DocxBody(BaseModel):
