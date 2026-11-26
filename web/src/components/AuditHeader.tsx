@@ -28,7 +28,9 @@ export default function AuditHeader({ a, title }: { a: Audit; title?: string }) 
         <div className="flex items-center gap-2">
           <ReadinessBadge r={a.readiness} large />
           <a className="btn-line" href={api.reportUrl(a.id, "md", true)}><Download size={15} />Отчёт .md</a>
-          <a className="btn-line hidden sm:inline-flex" href={api.reportUrl(a.id, "html")} target="_blank" rel="noreferrer">HTML</a>
+          <a className="btn-line hidden sm:inline-flex" href={api.reportUrl(a.id, "pdf")} target="_blank" rel="noreferrer">PDF</a>
+          <a className="btn-line hidden md:inline-flex" href={api.reportUrl(a.id, "docx", true)}>Word</a>
+          <a className="btn-line hidden md:inline-flex" href={api.reportUrl(a.id, "xlsx", true)}>Excel</a>
         </div>
       </div>
       <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-line" aria-label="Разделы аудита">

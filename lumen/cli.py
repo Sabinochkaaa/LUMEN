@@ -39,13 +39,13 @@ def main(argv: list[str] | None = None) -> int:
         prog="lumen",
         description=f"{PRODUCT_NAME} — статическая проверка документа требований (ISO/IEC/IEEE 29148, IEEE 830).",
     )
-    ap.add_argument("input_pos", nargs="?", help="путь к документу требований (PDF, DOCX, MD, TXT)")
+    ap.add_argument("input_pos", nargs="?", help="путь к документу требований (PDF, DOCX, MD, TXT, HTML, RTF, PNG/JPG)")
     ap.add_argument("output_pos", nargs="?", help="путь к файлу отчёта (.md/.html/.json)")
     ap.add_argument("-i", "--input", help="путь к документу требований")
     ap.add_argument("-o", "--output", help="путь к файлу отчёта (по умолчанию reports/audit_report.md)")
     ap.add_argument("-p", "--provider", help="anthropic | claude-cli | gemini | openai | offline | mock (по умолчанию auto)")
     ap.add_argument("-m", "--model", help="модель LLM (по умолчанию — из .env или рекомендуемая)")
-    ap.add_argument("--formats", default="md,html,json", help="какие форматы записать (md,html,json)")
+    ap.add_argument("--formats", default="md,html,json", help="какие форматы записать: md,html,json,pdf,docx,xlsx")
     ap.add_argument("--demo", action="store_true", help="демонстрационный прогон на examples/demo_requirements.md")
     ap.add_argument("-q", "--quiet", action="store_true", help="без прогресса")
     ap.add_argument("-v", "--version", action="version", version=f"LÜMEN {__version__}")

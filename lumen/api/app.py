@@ -71,7 +71,7 @@ async def create_audit(file: UploadFile = File(...), provider: Optional[str] = F
     name = Path(file.filename or "document").name
     ext = Path(name).suffix.lower()
     if ext not in SUPPORTED:
-        raise HTTPException(415, f"Формат «{ext or '?'}» не поддерживается. Допустимо: PDF, DOCX, MD, TXT.")
+        raise HTTPException(415, f"Формат «{ext or '?'}» не поддерживается. Допустимо: PDF, DOCX, MD, TXT, HTML, RTF, PNG, JPG.")
     data = await file.read(MAX_UPLOAD + 1)
     if len(data) > MAX_UPLOAD:
         raise HTTPException(413, "Файл больше 20 МБ")
@@ -163,11 +163,22 @@ def get_audit(audit_id: str):
 
 
 @app.get("/api/audits/{audit_id}/report.{fmt}")
-def report(audit_id: str, fmt: Literal["md", "html", "json"], download: bool = False):
+def report(audit_id: str, fmt: Literal["md", "html", "json", "pdf", "docx", "xlsx"], download: bool = False):
+    from fastapi.responses import Response
+
+    from ..report.export import MIME, render as export_render
+
     r = _get(audit_id)
     base = re.sub(r"[^\w\-]+", "_", Path(r.passport.document_name).stem)[:60] or "report"
     fname = f"lumen_audit_{base}_{r.id}.{fmt}"
     headers = {"content-disposition": f'attachment; filename="{fname}"'} if download else {}
+    if fmt in MIME:
+        if fmt != "pdf":
+            headers = {"content-disposition": f'attachment; filename="{fname}"'}
+        try:
+            return Response(export_render(r, fmt), media_type=MIME[fmt], headers=headers)
+        except Exception as e:
+            raise HTTPException(500, f"Не удалось сформировать {fmt.upper()}: {e}") from None
     if fmt == "md":
         return PlainTextResponse(render_markdown(r), media_type="text/markdown; charset=utf-8", headers=headers)
     if fmt == "html":

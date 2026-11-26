@@ -18,7 +18,7 @@ export default function Reports() {
     <div>
       <PageHead title="Отчёты" sub="История прогонов. Каждый отчёт сформирован агентом и содержит паспорт прогона: модель, дату, версию и коммит." />
       {error && <div className="mb-4"><ErrorBox error={error} /></div>}
-      {items && !items.length && <Empty title="Отчётов пока нет" text="Запустите аудит — отчёт в Markdown, HTML и JSON появится здесь." action={<Link to="/new" className="btn-primary">Новый аудит</Link>} />}
+      {items && !items.length && <Empty title="Отчётов пока нет" text="Запустите аудит — отчёт в PDF, Word, Excel, Markdown, HTML и JSON появится здесь." action={<Link to="/new" className="btn-primary">Новый аудит</Link>} />}
       <div className="space-y-3">
         {items?.map((x) => (
           <div key={x.id} className="card flex flex-wrap items-center gap-4 px-5 py-4">
@@ -32,6 +32,9 @@ export default function Reports() {
             <div className="flex items-center gap-1">
               <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "md", true)} title="Скачать Markdown"><Download size={15} />MD</a>
               <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "html")} target="_blank" rel="noreferrer" title="Открыть HTML"><ExternalLink size={15} />HTML</a>
+              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "pdf")} target="_blank" rel="noreferrer" title="Открыть PDF">PDF</a>
+              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "docx", true)} title="Скачать Word">Word</a>
+              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "xlsx", true)} title="Скачать Excel">Excel</a>
               <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "json", true)} title="Скачать JSON">JSON</a>
               {confirm === x.id ? (
                 <>
