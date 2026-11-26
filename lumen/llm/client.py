@@ -385,9 +385,12 @@ class ClaudeCLIClient(LLMClient):
         exe = shutil.which("claude")
         if not exe:
             raise LLMError("Claude Code CLI не найден (npm i -g @anthropic-ai/claude-code, затем `claude login`).")
-        prompt = (user + "\n\nВерни ТОЛЬКО один JSON-объект строго по этой JSON Schema, без пояснений и markdown:\n"
+        # The system prompt goes through stdin, not argv: on Windows `claude` is a .cmd shim, and cmd.exe breaks
+        # multi-line arguments and caps the whole command line at 8191 characters.
+        prompt = ("<instructions>\n" + system + "\n</instructions>\n\n" + user
+                  + "\n\nВерни ТОЛЬКО один JSON-объект строго по этой JSON Schema, без пояснений и markdown:\n"
                   + json.dumps(schema, ensure_ascii=False))
-        cmd = [exe, "-p", "--output-format", "json", "--model", self.model, "--append-system-prompt", system,
+        cmd = [exe, "-p", "--output-format", "json", "--model", self.model,
                "--disallowedTools", "Bash,Edit,Write,WebFetch,WebSearch,Read,Glob,Grep,Task"]
         try:
             proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",

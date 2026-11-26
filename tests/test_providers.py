@@ -185,3 +185,26 @@ def test_generic_fallbacks_only_for_primary(monkeypatch):
     s.provider = "gemini"
     assert s.fallback_models("gemini") == ["gemini-x"]
     assert "gemini-x" not in s.fallback_models("groq") and "openai/gpt-oss-20b" in s.fallback_models("groq")
+
+
+def test_claude_cli_keeps_argv_short_and_single_line(tmp_path, monkeypatch):
+    """Windows runs `claude` through a .cmd shim: no multi-line or huge arguments."""
+    import json
+    import os
+    import stat
+
+    from lumen.config import Settings
+    from lumen.llm.client import ClaudeCLIClient
+
+    log = tmp_path / "argv.json"
+    fake = tmp_path / "claude"
+    fake.write_text("#!/usr/bin/env python3\nimport json,sys\n"
+                    f"json.dump({{'argv':sys.argv[1:],'stdin':sys.stdin.read()}},open({str(log)!r},'w'))\n"
+                    "print(json.dumps({'result':'{\\\"ok\\\": true}','usage':{}}))\n")
+    fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+    monkeypatch.setenv("PATH", f"{tmp_path}{os.pathsep}{os.environ['PATH']}")
+    out, _, _ = ClaudeCLIClient("opus", Settings())._call("SYSTEM\nline two " + "x" * 9000, "USER", {"type": "object"}, "t")
+    seen = json.loads(log.read_text())
+    assert out == {"ok": True}
+    assert all("\n" not in a for a in seen["argv"]) and sum(map(len, seen["argv"])) < 1000
+    assert "SYSTEM" in seen["stdin"] and "USER" in seen["stdin"]
