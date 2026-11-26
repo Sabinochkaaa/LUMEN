@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Clock, Download, FileText, FileUp, Languages, Loader2, Trash2 } from "lucide-react";
 import { api, TranslationResult } from "../api";
-import { LANGS, useT } from "../i18n";
+import { useT } from "../i18n";
 import AgentBuddy from "../components/AgentBuddy";
 import { CopyButton, ErrorBox, PageHead } from "../components/ui";
 
@@ -78,7 +78,14 @@ function Overlay({ src, overlay, show }: { src: string; overlay: NonNullable<Tra
 type View = "overlay" | "text" | "original" | "side";
 
 /** the translator's tablet glows in the colour of the target language */
-const TINT: Record<string, string> = { ru: "#2F6BFF", kk: "#00AFCA", en: "#7C4DFF" };
+const TINT: Record<string, string> = { ru: "#2F6BFF", kk: "#00AFCA", en: "#7C4DFF", uz: "#1EB53A", ky: "#E8112D", tr: "#E30A17",
+  zh: "#DE2910", de: "#FFCE00", fr: "#0055A4", es: "#F1BF00" };
+/** languages the translator can write; the interface itself stays in RU / KZ / EN */
+const TR_LANGS = [
+  { code: "ru", label: "Русский" }, { code: "kk", label: "Қазақша" }, { code: "en", label: "English" },
+  { code: "uz", label: "O‘zbekcha" }, { code: "ky", label: "Кыргызча" }, { code: "tr", label: "Türkçe" },
+  { code: "zh", label: "中文" }, { code: "de", label: "Deutsch" }, { code: "fr", label: "Français" }, { code: "es", label: "Español" },
+];
 
 export default function Translate() {
   const { t, lang } = useT();
@@ -124,7 +131,7 @@ export default function Translate() {
   const views: [View, string][] = cur?.image
     ? [["overlay", t("tr.overlay")], ["text", t("tr.text")], ["original", t("tr.original")]]
     : [["text", t("tr.text")], ["side", t("tr.side")], ["original", t("tr.original")]];
-  const langLabel = (c: string) => LANGS.find((l) => l.code === c)?.label ?? c;
+  const langLabel = (c: string) => TR_LANGS.find((l) => l.code === c)?.label ?? c;
   const pre = "whitespace-pre-wrap font-mono text-[13px] leading-relaxed";
 
   return (
@@ -151,8 +158,8 @@ export default function Translate() {
             <div>
               <div className="mb-1.5 text-sm font-medium">{t("tr.target")}</div>
               <div className="grid grid-cols-3 gap-2">
-                {LANGS.map((l) => (
-                  <button key={l.code} onClick={() => setTarget(l.code)} className={`relative rounded-xl border px-3 py-2.5 text-sm transition-colors ${target === l.code ? "border-transparent text-white" : "border-line hover:border-signal/50"}`}>
+                {TR_LANGS.map((l) => (
+                  <button key={l.code} onClick={() => setTarget(l.code)} className={`relative rounded-xl border px-2 py-2 text-[13px] transition-colors ${target === l.code ? "border-transparent text-white" : "border-line hover:border-signal/50"}`}>
                     {target === l.code && <motion.span layoutId="tr-lang" className="absolute inset-0 rounded-xl grad-bg" />}
                     <span className="relative font-medium">{l.label}</span>
                   </button>

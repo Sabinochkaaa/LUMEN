@@ -237,6 +237,7 @@ def health():
         "providers": settings.available_providers(), "storage": svc.store.kind,
         "storage_degraded": getattr(svc.store, "degraded", False),
         "storage_error": getattr(svc.store, "last_error", None),
+        "storage_key": getattr(getattr(svc.store, "primary", svc.store), "key_kind", None),
         "auth_required": not settings.public_audits and bool(settings.admin_password),
         "public_audits": settings.public_audits, "login_enabled": bool(settings.admin_password),
         "private_mode": settings.private_mode, "public_demo": settings.public_demo,

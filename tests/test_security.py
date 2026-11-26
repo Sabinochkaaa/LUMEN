@@ -88,8 +88,22 @@ def test_session_signing():
 def test_storage_error_is_secret_free():
     import httpx
     from lumen.storage.store import describe_storage_error
-    req = httpx.Request("GET", "https://x.supabase.co/rest/v1/audits?apikey=SECRET")
+    req = httpx.Request("GET", "https://x.supabase.co/rest/v1/audits?apikey=sb_secret_TOPKEY123")
     resp = httpx.Response(401, json={"message": "Invalid API key"}, request=req)
-    msg = describe_storage_error(httpx.HTTPStatusError("boom SECRET", request=req, response=resp))
-    assert "401" in msg and "service_role" in msg and "SECRET" not in msg
-    assert "SUPABASE_URL" in describe_storage_error(httpx.ConnectError("SECRET", request=req))
+    msg = describe_storage_error(httpx.HTTPStatusError("boom sb_secret_TOPKEY123", request=req, response=resp))
+    assert "401" in msg and "service_role" in msg and "TOPKEY123" not in msg
+    assert "SUPABASE_URL" in describe_storage_error(httpx.ConnectError("sb_secret_TOPKEY123", request=req))
+
+
+def test_supabase_key_kind_and_headers():
+    import base64
+    import json
+
+    from lumen.storage.store import SupabaseStore, key_kind
+
+    jwt = lambda role: "h." + base64.urlsafe_b64encode(json.dumps({"role": role}).encode()).decode().rstrip("=") + ".s"
+    assert [key_kind(k) for k in ("sb_secret_x", "sb_publishable_x", jwt("anon"), jwt("service_role"))] == \
+        ["secret", "publishable", "anon", "service_role"]
+    # new sb_ keys are not JWTs: they must not be sent as a Bearer token
+    assert "authorization" not in SupabaseStore("https://x.supabase.co", "sb_secret_x").h
+    assert SupabaseStore("https://x.supabase.co", jwt("service_role")).h["authorization"].startswith("Bearer ")
