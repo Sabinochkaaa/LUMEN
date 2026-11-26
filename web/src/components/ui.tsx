@@ -1,18 +1,19 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { animate, motion, useInView, Variants } from "framer-motion";
-import { Check, Moon, Sun, Sunrise } from "lucide-react";
+import { Check, Moon, Sparkles, Sun } from "lucide-react";
 import { Readiness, Severity, SEV_COLOR } from "../api";
 import { LANGS, useT } from "../i18n";
 import { Theme, useTheme } from "../theme";
 
 export function Logo({ size = 30 }: { size?: number }) {
+  const id = "lg" + useId().replace(/:/g, "");
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="9" fill="#0B1F33" />
-      <rect x=".5" y=".5" width="31" height="31" rx="8.5" fill="none" stroke="rgb(255 255 255 / .14)" />
-      <rect x="8" y="20" width="17" height="6" rx="2" fill="#FFD43B" transform="rotate(-4 16 23)" />
-      <path d="M11 7v16h11" stroke="#fff" strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <defs><linearGradient id={id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#2557EB" /><stop offset=".55" stopColor="#7C3AED" /><stop offset="1" stopColor="#0EA5E9" /></linearGradient></defs>
+      <rect width="32" height="32" rx="9" fill={`url(#${id})`} />
+      <path d="M10 7v18h12" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <circle cx="21" cy="11" r="3" fill="#fff" />
     </svg>
   );
 }
@@ -59,14 +60,15 @@ export function Num({ value, decimals = 0, suffix = "" }: { value: number; decim
 
 export function QualityArc({ value, size = 150 }: { value: number; size?: number }) {
   const { t } = useT();
+  const arcId = "arc" + useId().replace(/:/g, "");
   const r = size / 2 - 10, c = Math.PI * r;
   const pct = Math.max(0, Math.min(100, value)) / 100;
   return (
     <div className="relative" style={{ width: size, height: size / 2 + 22 }}>
       <svg width={size} height={size / 2 + 10} viewBox={`0 0 ${size} ${size / 2 + 10}`} aria-hidden>
-
+        <defs><linearGradient id={arcId} x1="0" x2="1"><stop offset="0" stopColor="rgb(var(--signal))" /><stop offset=".5" stopColor="rgb(var(--violet))" /><stop offset="1" stopColor="rgb(var(--sky))" /></linearGradient></defs>
         <path d={`M10 ${size / 2} A ${r} ${r} 0 0 1 ${size - 10} ${size / 2}`} fill="none" stroke="rgb(var(--line))" strokeWidth="9" strokeLinecap="round" />
-        <motion.path d={`M10 ${size / 2} A ${r} ${r} 0 0 1 ${size - 10} ${size / 2}`} fill="none" stroke="rgb(var(--brand))" strokeWidth="9"
+        <motion.path d={`M10 ${size / 2} A ${r} ${r} 0 0 1 ${size - 10} ${size / 2}`} fill="none" stroke={`url(#${arcId})`} strokeWidth="9"
           strokeLinecap="round" initial={{ strokeDasharray: `0 ${c}` }} animate={{ strokeDasharray: `${c * pct} ${c}` }} transition={{ duration: 1.3, ease: [0.2, 0.8, 0.2, 1] }} />
       </svg>
       <div className="absolute inset-x-0 bottom-0 text-center">
@@ -124,7 +126,7 @@ export function PageHead({ title, sub, right }: { title: string; sub?: ReactNode
   );
 }
 
-const THEMES: { id: Theme; icon: typeof Sun }[] = [{ id: "light", icon: Sun }, { id: "dark", icon: Moon }, { id: "aspan", icon: Sunrise }];
+const THEMES: { id: Theme; icon: typeof Sun }[] = [{ id: "light", icon: Sun }, { id: "dark", icon: Moon }, { id: "aurora", icon: Sparkles }];
 
 export function ThemeSwitch({ compact }: { compact?: boolean }) {
   const { theme, setTheme } = useTheme();

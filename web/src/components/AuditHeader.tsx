@@ -33,12 +33,12 @@ export default function AuditHeader({ a }: { a: Audit }) {
       <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-line" aria-label={t("tab.summary")}>
         {TABS.map(([to, key]) => (
           <NavLink key={to} end to={`/audits/${a.id}${to ? "/" + to : ""}`}
-            className={({ isActive }) => `relative -mb-px whitespace-nowrap px-3.5 py-2.5 text-sm transition-colors ${isActive ? "font-medium text-ink" : "text-ink-soft hover:text-ink"}`}>
+            className={({ isActive }) => `relative -mb-px whitespace-nowrap px-3.5 py-2.5 text-sm transition-colors ${isActive ? "font-medium text-signal" : "text-ink-soft hover:text-ink"}`}>
             {({ isActive }) => (<>
               {t(key)}
               {to === "issues" && <span className="ml-1.5 text-ink-faint">{a.scores.findings_total}</span>}
               {to === "clarifications" && <span className="ml-1.5 text-ink-faint">{a.scores.open_questions}</span>}
-              {isActive && <span className="absolute inset-x-2 -bottom-px h-[3px] rounded-full bg-marker" />}
+              {isActive && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full grad-bg" />}
             </>)}
           </NavLink>
         ))}

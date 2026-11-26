@@ -69,7 +69,7 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
       <NavLink to="/" className="flex items-center gap-2.5 px-6 pb-6 pt-7" onClick={onNav}>
         <Logo />
         <div>
-          <div className="font-display text-[18px] font-semibold tracking-[0.06em]">LÜMEN</div>
+          <div className="text-[17px] font-semibold tracking-[0.08em]">LÜMEN</div>
           <div className="-mt-0.5 text-[11.5px] text-ink-faint">{t("brand.sub")}</div>
         </div>
       </NavLink>
@@ -78,9 +78,9 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
           const target = n.audit ? (lastId ? `/audits/${lastId}/${n.to}` : `/pick/${n.to}`) : n.to;
           return (
             <NavLink key={n.key} to={target} onClick={onNav}
-              className={({ isActive }) => `relative flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] transition-colors ${isActive ? "font-medium text-ink" : "text-ink-soft hover:bg-ink/5 hover:text-ink"}`}>
+              className={({ isActive }) => `relative flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] transition-colors ${isActive ? "font-medium text-signal" : "text-ink-soft hover:bg-ink/5 hover:text-ink"}`}>
               {({ isActive }) => (<>
-                {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-xl bg-marker/25" transition={{ type: "spring", stiffness: 450, damping: 35 }} />}
+                {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-xl bg-signal/10" transition={{ type: "spring", stiffness: 450, damping: 35 }} />}
                 <n.icon size={17} strokeWidth={1.8} className="relative" />
                 <span className="relative">{t(n.key)}</span>
               </>)}
