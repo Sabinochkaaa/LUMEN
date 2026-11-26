@@ -8,6 +8,7 @@ import { api, Audit, Health } from "./api";
 import { LangProvider, useT } from "./i18n";
 import { ThemeProvider } from "./theme";
 import Landing from "./pages/Landing";
+import SupportWidget from "./components/SupportWidget";
 // heavy screens (graph, charts) load on demand: the first visit downloads only the landing
 const Overview = lazy(() => import("./pages/Overview"));
 const NewAudit = lazy(() => import("./pages/NewAudit"));
@@ -197,6 +198,7 @@ function Root() {
         </Route>
       </Routes>
       </Suspense>
+      <SupportWidget />
     </AppCtx.Provider>
   );
 }

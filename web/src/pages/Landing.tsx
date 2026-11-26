@@ -5,6 +5,7 @@ import { ArrowRight, Bot, FileStack, GitFork, HelpCircle, Landmark, Lock, Quote,
 import { Aurora } from "../App";
 import { Lang, useT } from "../i18n";
 import { LangSwitch, Logo, Num, ThemeSwitch } from "../components/ui";
+import AgentTeamSection from "../components/AgentTeamSection";
 
 const DOC: Record<Lang, string[]> = {
   ru: ["## Функциональные требования", "Ф-1. Клиент задаёт порог от 1 000 до 1 000 000 ₸.", "Ф-2. В расходы входят проведённые покупки.",
@@ -97,12 +98,13 @@ export default function Landing() {
   const { t } = useT();
   const up = { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" }, transition: { duration: 0.6, ease: [0.2, 0.8, 0.2, 1] as const } };
   return (
-    <div className="relative min-h-full overflow-hidden">
+    <div className="relative min-h-full overflow-x-clip">
       <Aurora />
       <header className="sticky top-0 z-30 border-b border-line/60 bg-canvas/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3.5">
           <Link to="/" className="flex items-center gap-2.5"><Logo /><span className="text-[17px] font-semibold tracking-[0.08em]">LÜMEN</span></Link>
           <nav className="ml-6 hidden gap-6 text-sm text-ink-soft md:flex">
+            <a href="#team" className="hover:text-ink">{t("land.navTeam")}</a>
             <a href="#features" className="hover:text-ink">{t("land.navFeatures")}</a>
             <a href="#how" className="hover:text-ink">{t("land.navHow")}</a>
             <a href="#security" className="hover:text-ink">{t("land.navSecurity")}</a>
@@ -146,6 +148,8 @@ export default function Landing() {
             ))}
           </motion.div>
         </section>
+
+        <AgentTeamSection />
 
         <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-24">
           <motion.h2 {...up} className="max-w-2xl text-[32px] font-semibold leading-tight tracking-[-0.02em] md:text-[40px]">{t("land.fTitle")}</motion.h2>

@@ -163,6 +163,70 @@ def me(request: Request):
             "public_audits": settings.public_audits}
 
 
+class SupportBody(BaseModel):
+    message: str
+    history: list[dict] = []
+    lang: str = "ru"
+    audit_id: Optional[str] = None
+
+
+def _support_limit(request: Request, key: str, limit: int) -> None:
+    ip = client_ip(request.headers, request.client.host if request.client else "unknown")
+    ok, retry = limiter.allow(f"{key}:{ip}", limit, 3600)
+    if not ok:
+        raise HTTPException(429, f"Слишком много сообщений. Повторите через {retry // 60 + 1} мин.",
+                            headers={"Retry-After": str(retry)})
+
+
+@app.post("/api/support")
+def support_chat(body: SupportBody, request: Request):
+    """The support agent: answers about LÜMEN and, when given an audit id, about that report."""
+    from ..support import answer
+
+    if not body.message.strip() or len(body.message) > 2000:
+        raise HTTPException(422, "Сообщение пустое или длиннее 2000 символов")
+    _support_limit(request, "support", 60)
+    svc = get_service()
+    audit = None
+    if body.audit_id and AUDIT_ID.match(body.audit_id):
+        try:
+            audit = svc.store.get(body.audit_id)
+        except Exception:
+            audit = None
+    prov = settings.resolve_provider()
+    client = None
+    if prov not in ("offline", "mock"):
+        from ..llm.client import make_chain
+
+        client = make_chain(prov, settings.resolve_model(prov), settings)
+    return answer(body.message, body.history[-8:], body.lang, audit, client).as_dict()
+
+
+class TicketBody(BaseModel):
+    message: str
+    contact: str = ""
+    history: list[dict] = []
+    audit_id: Optional[str] = None
+
+
+@app.post("/api/support/ticket")
+def support_ticket(body: TicketBody, request: Request):
+    from ..support import save_ticket
+
+    if not body.message.strip() or len(body.message) > 2000 or len(body.contact) > 200:
+        raise HTTPException(422, "Опишите вопрос (до 2000 символов)")
+    _support_limit(request, "ticket", 5)
+    t = save_ticket(settings.data_dir, body.message, body.history, body.contact, "site", body.audit_id or "")
+    return {"id": t["id"], "ok": True}
+
+
+@app.get("/api/support/tickets", dependencies=[Depends(require_admin)])
+def support_tickets():
+    from ..support import list_tickets
+
+    return {"items": list_tickets(settings.data_dir)}
+
+
 @app.get("/api/health")
 def health():
     svc = get_service()
