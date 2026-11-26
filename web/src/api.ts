@@ -55,9 +55,6 @@ export interface CompareSide { id: string; document: string; analysed_at: string
 export interface CompareResult { base: CompareSide; new: CompareSide; delta_quality: number; fixed: CmpItem[]; added: CmpItem[]; remaining: CmpItem[]; critical_fixed: number; critical_added: number }
 export interface Criterion { key: string; name: string; ref: string; definition: string; basis: string }
 
-export interface SupportReply { answer: string; source: "llm" | "faq"; escalate: boolean; suggestions: string[] }
-export interface ChatTurn { role: "user" | "agent"; text: string }
-
 export interface OverlayBox { x: number; y: number; w: number; h: number; text: string; orig: string }
 export interface TranslationResult {
   source_name: string; target: string; markdown: string; chunks: number; model: string; provider: string;
@@ -110,12 +107,6 @@ export const api = {
     if (model) fd.append("model", model);
     return req<{ audit_id: string; edit_key?: string }>("/api/audits", { method: "POST", body: fd }).then(keep);
   },
-  support: (message: string, history: ChatTurn[], lang: string, audit_id?: string) =>
-    req<SupportReply>("/api/support", { method: "POST", body: JSON.stringify({ message, history, lang, audit_id }),
-      headers: { "content-type": "application/json" } }),
-  ticket: (message: string, contact: string, history: ChatTurn[], audit_id?: string) =>
-    req<{ id: string; ok: boolean }>("/api/support/ticket", { method: "POST", body: JSON.stringify({ message, contact, history, audit_id }),
-      headers: { "content-type": "application/json" } }),
   demo: () => req<{ audit_id: string; edit_key?: string }>("/api/demo", { method: "POST" }).then(keep),
   compare: (base: string, next: string) => req<CompareResult>(`/api/compare?base=${base}&new=${next}`),
   translate: (file: File, target: string) => {
