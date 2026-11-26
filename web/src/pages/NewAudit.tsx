@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, CircleAlert, FileUp, Loader2, SkipForward, Sparkles } from "lucide-react";
 import { api, Line, StageEvent } from "../api";
 import DocumentLens from "../components/DocumentLens";
+import AgentOffice from "../components/AgentOffice";
 import { ErrorBox, PageHead } from "../components/ui";
 import { useApp } from "../App";
 import { useT } from "../i18n";
@@ -65,7 +66,7 @@ export default function NewAudit() {
   }, [done, nav]);
 
   const finished = stages.filter((s) => s.status && s.status !== "running").length;
-  const pct = stages.length ? Math.round((finished / stages.length) * 100) : 0;
+  const pct = done ? 100 : stages.length ? Math.round((finished / stages.length) * 100) : 0;
   const scanning = !!run && !done && !error;
 
   if (run) {
@@ -85,7 +86,9 @@ export default function NewAudit() {
               <p className="meta absolute bottom-4 left-6 right-6">{t("new.serverText")}</p>
             </div>
           )}
-          <ol className="card divide-y divide-line" aria-live="polite">
+          <div className="flex min-w-0 flex-col gap-4">
+          <AgentOffice stages={stages} finished={!!done} />
+          <ol className="card max-h-[300px] divide-y divide-line overflow-y-auto" aria-live="polite">
             {stages.map((s, i) => (
               <motion.li key={s.key} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }} className="flex items-start gap-3 px-5 py-3">
                 <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
@@ -101,6 +104,7 @@ export default function NewAudit() {
               </motion.li>
             ))}
           </ol>
+          </div>
         </div>
       </div>
     );

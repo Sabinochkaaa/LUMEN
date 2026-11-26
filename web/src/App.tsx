@@ -115,8 +115,8 @@ function AnimatedOutlet() {
   const outlet = useOutlet();
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key={loc.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}>
+      <motion.div key={loc.pathname} initial={{ opacity: 0, y: 14, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none", transform: "none" } }}
+        exit={{ opacity: 0, y: -8, filter: "blur(2px)" }} transition={{ type: "spring", stiffness: 260, damping: 28, mass: 0.8 }}>
         {outlet && cloneElement(outlet, { key: loc.pathname })}
       </motion.div>
     </AnimatePresence>

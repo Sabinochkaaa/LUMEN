@@ -40,6 +40,12 @@ export default function SupportWidget() {
   const list = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener("lumen:support", show);
+    return () => window.removeEventListener("lumen:support", show);
+  }, []);
+
+  useEffect(() => {
     try { sessionStorage.setItem(KEY, JSON.stringify(msgs.slice(-30))); } catch { /* storage off */ }
     list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" });
   }, [msgs, open]);
