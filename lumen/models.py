@@ -219,3 +219,4 @@ class AuditResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     demo: bool = False
     source: list[Line] = Field(default_factory=list)  # normalized document lines for the Document Lens
+    private: bool = False  # not listed publicly (e.g. documents sent to the Telegram bot); reachable only by id

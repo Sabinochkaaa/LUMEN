@@ -169,13 +169,22 @@ uvicorn lumen.api.app:app --port 8000             # http://localhost:8000, API �
 
 ## Деплой: Railway + Supabase
 
-1. **Supabase** (необязательно, для постоянной истории): SQL Editor → выполнить `supabase/migrations/001_audits.sql`;
+1. **Supabase** (необязательно, для постоянной истории): SQL Editor → выполнить `supabase/migrations/001_audits.sql`,
+   затем `002_security.sql`;
    взять `Project URL` и `service_role` ключ (Settings → API). При недоступности Supabase LÜMEN продолжит работу на
    локальном хранилище.
 2. **Railway**: New Project → Deploy from GitHub → этот репозиторий. Сборка по `Dockerfile` (`railway.json`,
    healthcheck `/api/health`). Variables: `ANTHROPIC_API_KEY` (или `GEMINI_API_KEY`), `SUPABASE_URL`,
-   `SUPABASE_SERVICE_KEY`, `TELEGRAM_BOT_TOKEN`, `LUMEN_PUBLIC_URL`, `LUMEN_API_TOKEN` (закрыть запуск аудитов).
+   `SUPABASE_SERVICE_KEY`, `TELEGRAM_BOT_TOKEN`, `LUMEN_PUBLIC_URL`, `LUMEN_API_TOKEN` (закрыть запуск аудитов),
+   `LUMEN_ENCRYPTION_KEY` (шифрование).
    Коммит агента берётся из `RAILWAY_GIT_COMMIT_SHA` и попадает в паспорт прогона.
+
+## Безопасность
+
+HTTPS + HSTS, шифрование сохранённых отчётов **AES-256-GCM**, токен доступа, лимиты запросов, проверка файлов по
+содержимому (исполняемые файлы, макросы, zip-бомбы), строгий CSP, приватные прогоны из бота, защита от prompt
+injection, контейнер без root. Подробно и список переменных — [SECURITY.md](SECURITY.md). Схема проекта простыми
+словами — [docs/GUIDE.md](docs/GUIDE.md).
 
 ## Тесты
 
@@ -184,10 +193,10 @@ pip install -r requirements-dev.txt
 pytest -q
 ```
 
-36 автотестов работают **без платного ключа** (правила + Mock LLM): PDF, DOCX, пустой и повреждённый файл,
+45 автотестов работают **без платного ключа** (правила + Mock LLM): PDF, DOCX, пустой и повреждённый файл,
 документ без идентификаторов, неоднозначность, противоречия, дубли, неполнота, отсутствие критериев приёмки,
 проблемы API-контракта, недостаточно данных, ошибка LLM API, невалидный ответ модели (повтор и безопасный отказ),
-выдуманные цитаты и ID, генерация отчёта, маскирование секретов, контракты провайдеров Claude/Gemini/OpenAI на заглушках HTTP, REST API, токен доступа, Telegram-бот.
+выдуманные цитаты и ID, генерация отчёта, маскирование секретов, шифрование, zip-бомбы и подмена файлов, лимиты, приватность прогонов бота, контракты провайдеров Claude/Gemini/OpenAI на заглушках HTTP, REST API, токен доступа, Telegram-бот.
 CI (GitHub Actions) прогоняет тесты, офлайн-прогон документа организаторов и сборку dashboard.
 
 ## Демо-режим

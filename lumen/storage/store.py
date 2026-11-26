@@ -15,6 +15,7 @@ import httpx
 
 from ..config import Settings, settings as default_settings
 from ..models import AuditResult
+from ..security import Cipher, dumps_sealed, loads_sealed, make_cipher, open_json, sealed_json
 
 log = logging.getLogger("lumen.storage")
 
@@ -27,17 +28,21 @@ def summary(r: AuditResult) -> dict:
         "mode": r.passport.mode, "readiness": r.readiness, "quality_index": s.quality_index,
         "requirements": s.total_requirements, "findings": s.findings_total, "critical": s.by_severity["CRITICAL"],
         "high": s.by_severity["HIGH"], "questions": len(r.questions), "open_questions": s.open_questions,
-        "demo": r.demo, "duration_s": r.passport.duration_s,
+        "demo": r.demo, "duration_s": r.passport.duration_s, "private": r.private,
     }
 
 
 class LocalStore:
     kind = "local"
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, cipher: Optional[Cipher] = None):
         self.root = Path(root) / "audits"
         self.root.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
+        self.cipher = cipher
+
+    def _load(self, p: Path) -> AuditResult:
+        return AuditResult.model_validate_json(loads_sealed(self.cipher, p.read_bytes()))
 
     def _p(self, audit_id: str) -> Path:
         safe = "".join(c for c in audit_id if c.isalnum() or c in "-_")
@@ -46,20 +51,22 @@ class LocalStore:
     def save(self, r: AuditResult) -> None:
         with self._lock:
             tmp = self._p(r.id).with_suffix(".tmp")
-            tmp.write_text(r.model_dump_json(), encoding="utf-8")
+            tmp.write_bytes(dumps_sealed(self.cipher, r.model_dump_json()))
             tmp.replace(self._p(r.id))
 
     def get(self, audit_id: str) -> Optional[AuditResult]:
         p = self._p(audit_id)
         if not p.exists():
             return None
-        return AuditResult.model_validate_json(p.read_text(encoding="utf-8"))
+        return self._load(p)
 
     def list(self, limit: int = 100) -> list[dict]:
         items = []
         for p in sorted(self.root.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True)[:limit]:
             try:
-                items.append(summary(AuditResult.model_validate_json(p.read_text(encoding="utf-8"))))
+                r = self._load(p)
+                if not r.private:
+                    items.append(summary(r))
             except Exception:  # corrupted file must not break the history page
                 log.warning("skip unreadable audit %s", p.name)
         return items
@@ -75,17 +82,26 @@ class LocalStore:
 class SupabaseStore:
     kind = "supabase"
 
-    def __init__(self, url: str, key: str, table: str = "audits"):
+    def __init__(self, url: str, key: str, table: str = "audits", cipher: Optional[Cipher] = None):
         self.base = url.rstrip("/") + f"/rest/v1/{table}"
         self.h = {"apikey": key, "authorization": f"Bearer {key}", "content-type": "application/json"}
+        self.cipher = cipher
+        self.has_private_col = True
 
     def _c(self) -> httpx.Client:
         return httpx.Client(timeout=30, headers=self.h)
 
     def save(self, r: AuditResult) -> None:
-        row = {**summary(r), "result": json.loads(r.model_dump_json())}
+        row = {**summary(r), "result": sealed_json(self.cipher, r.model_dump_json())}
+        if not self.has_private_col:
+            row.pop("private")
         with self._c() as c:
             resp = c.post(self.base, json=row, headers={"prefer": "resolution=merge-duplicates,return=minimal"})
+            if resp.status_code == 400 and "private" in resp.text and self.has_private_col:
+                log.warning("В таблице audits нет колонки private — выполните supabase/migrations/002_security.sql")
+                self.has_private_col = False
+                row.pop("private")
+                resp = c.post(self.base, json=row, headers={"prefer": "resolution=merge-duplicates,return=minimal"})
             resp.raise_for_status()
 
     def get(self, audit_id: str) -> Optional[AuditResult]:
@@ -93,13 +109,21 @@ class SupabaseStore:
             resp = c.get(self.base, params={"id": f"eq.{audit_id}", "select": "result"})
             resp.raise_for_status()
             rows = resp.json()
-        return AuditResult.model_validate(rows[0]["result"]) if rows else None
+        return AuditResult.model_validate_json(open_json(self.cipher, rows[0]["result"])) if rows else None
 
     def list(self, limit: int = 100) -> list[dict]:
         cols = ("id,document_name,document_title,analysed_at,model,provider,mode,readiness,quality_index,"
                 "requirements,findings,critical,high,questions,open_questions,demo,duration_s")
+        params = {"select": cols, "order": "analysed_at.desc", "limit": str(limit)}
         with self._c() as c:
-            resp = c.get(self.base, params={"select": cols, "order": "analysed_at.desc", "limit": str(limit)})
+            if self.has_private_col:
+                resp = c.get(self.base, params={**params, "private": "not.is.true"})
+                if resp.status_code == 400 and "private" in resp.text:
+                    self.has_private_col = False
+                else:
+                    resp.raise_for_status()
+                    return resp.json()
+            resp = c.get(self.base, params=params)
             resp.raise_for_status()
             return resp.json()
 
@@ -150,7 +174,8 @@ class FallbackStore:
 
 def make_store(cfg: Settings | None = None):
     cfg = cfg or default_settings
-    local = LocalStore(cfg.data_dir)
+    cipher = make_cipher(cfg.encryption_key)
+    local = LocalStore(cfg.data_dir, cipher)
     if cfg.supabase_url and cfg.supabase_key:
-        return FallbackStore(SupabaseStore(cfg.supabase_url, cfg.supabase_key), local)
+        return FallbackStore(SupabaseStore(cfg.supabase_url, cfg.supabase_key, cipher=cipher), local)
     return local

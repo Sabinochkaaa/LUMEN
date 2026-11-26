@@ -68,5 +68,48 @@ def test_token_protection(client, monkeypatch):
     from lumen.config import settings
 
     monkeypatch.setattr(settings, "api_token", "t0k")
+    files = {"file": ("r.md", "# S\n\n## Функциональные\n* **F-1.** Тест требования.".encode())}
+    assert client.post("/api/audits", files=files).status_code == 401
+    assert client.post("/api/audits", files=files, headers={"X-API-Token": "wrong"}).status_code == 401
+    assert client.post("/api/audits", files=files, headers={"X-API-Token": "t0k"}).status_code == 200
+    assert client.post("/api/demo").status_code == 200  # demo is public: scripted answers, no model cost
+    monkeypatch.setattr(settings, "public_demo", False)
     assert client.post("/api/demo").status_code == 401
-    assert client.post("/api/demo", headers={"X-API-Token": "t0k"}).status_code == 200
+
+
+def test_private_mode_and_delete_rules(client, monkeypatch):
+    from lumen.config import settings
+
+    monkeypatch.setattr(settings, "private_mode", True)
+    monkeypatch.setattr(settings, "api_token", "t0k")
+    assert client.get("/api/audits").status_code == 401
+    assert client.get("/api/audits", headers={"X-API-Token": "t0k"}).status_code == 200
+    assert client.get("/api/health").status_code == 200
+    monkeypatch.setattr(settings, "private_mode", False)
+    monkeypatch.setattr(settings, "api_token", "")
+    monkeypatch.setattr(settings, "env", "production")
+    assert client.delete("/api/audits/x").status_code == 403
+
+
+def test_security_headers(client):
+    r = client.get("/api/health")
+    assert r.headers["x-content-type-options"] == "nosniff" and r.headers["x-frame-options"] == "DENY"
+    assert "frame-ancestors 'none'" in r.headers["content-security-policy"]
+
+
+def test_upload_content_validation(client):
+    assert client.post("/api/audits", files={"file": ("evil.pdf", b"MZ\x90\x00 not a pdf")}).status_code == 422
+    assert client.post("/api/audits", files={"file": ("fake.docx", b"hello")}).status_code == 422
+    r = client.post("/api/audits", files={"file": ("fake.pdf", b"just text")})
+    assert r.status_code == 422 and "не является PDF" in r.json()["detail"]
+
+
+def test_rate_limit(client, monkeypatch):
+    from lumen.config import settings
+    from lumen.security import limiter
+
+    limiter._hits.clear()
+    monkeypatch.setattr(settings, "rate_audits_per_hour", 2)
+    codes = [client.post("/api/demo").status_code for _ in range(3)]
+    assert codes == [200, 200, 429]
+    limiter._hits.clear()

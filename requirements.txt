@@ -11,3 +11,4 @@ openpyxl>=3.1          # отчёт в Excel
 reportlab>=4.0         # отчёт в PDF
 pytesseract>=0.3.10    # OCR фото и сканов (нужен системный tesseract с языком rus; без него остальное работает)
 pillow>=10
+cryptography>=42        # AES-256-GCM шифрование данных

@@ -50,6 +50,18 @@ class Settings:
     verify: bool = field(default_factory=lambda: _env("LUMEN_VERIFY", "1") != "0")
     api_token: str = field(default_factory=lambda: _env("LUMEN_API_TOKEN"))
     public_url: str = field(default_factory=lambda: _env("LUMEN_PUBLIC_URL"))
+    env: str = field(default_factory=lambda: _env("APP_ENV", "development").lower())
+    encryption_key: str = field(default_factory=lambda: _env("LUMEN_ENCRYPTION_KEY"))
+    private_mode: bool = field(default_factory=lambda: _env("LUMEN_PRIVATE", "0") == "1")
+    public_demo: bool = field(default_factory=lambda: _env("LUMEN_PUBLIC_DEMO", "1") != "0")
+    rate_audits_per_hour: int = field(default_factory=lambda: int(_env("LUMEN_RATE_AUDITS", "20") or 20))
+    rate_requests_per_min: int = field(default_factory=lambda: int(_env("LUMEN_RATE_REQUESTS", "240") or 240))
+    bot_audits_per_hour: int = field(default_factory=lambda: int(_env("LUMEN_BOT_AUDITS", "10") or 10))
+    bot_messages_per_hour: int = field(default_factory=lambda: int(_env("LUMEN_BOT_MESSAGES", "60") or 60))
+
+    @property
+    def production(self) -> bool:
+        return self.env in ("production", "prod")
     temperature: str = field(default_factory=lambda: _env("LLM_TEMPERATURE"))
     max_retries: int = field(default_factory=lambda: int(_env("LLM_MAX_RETRIES", "3") or 3))
     timeout_s: float = field(default_factory=lambda: float(_env("LLM_TIMEOUT", "600") or 600))
@@ -85,7 +97,8 @@ class Settings:
 
     def secrets(self) -> list[str]:
         return [x for x in (self.anthropic_api_key, self.gemini_api_key, self.openai_api_key,
-                            self.supabase_key, self.telegram_token, self.api_token) if x]
+                            self.supabase_key, self.telegram_token, self.api_token,
+                            self.encryption_key) if x]
 
     def available_providers(self) -> dict[str, bool]:
         return {

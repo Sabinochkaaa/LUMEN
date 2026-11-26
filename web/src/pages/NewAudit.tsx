@@ -47,19 +47,13 @@ export default function NewAudit() {
   };
 
   const listen = (id: string) => {
-    const es = api.events(id);
-    es.addEventListener("queued", (e) => {
-      const d = JSON.parse((e as MessageEvent).data);
-      setStages(d.stages.map((s: Stage) => ({ ...s })));
-    });
-    es.addEventListener("stage", (e) => {
-      const ev: StageEvent = JSON.parse((e as MessageEvent).data);
-      setStages((prev) => prev.map((s) => s.key === ev.key ? { ...s, status: ev.status, message: ev.message, ms: ev.elapsed_ms } : s));
-    });
-    es.addEventListener("result", (e) => { setDone(JSON.parse((e as MessageEvent).data)); es.close(); });
-    es.addEventListener("error", (e) => {
-      const data = (e as MessageEvent).data;
-      if (data) { setError(JSON.parse(data).message); es.close(); }
+    api.events(id, (type, d) => {
+      if (type === "queued") setStages(d.stages.map((s: Stage) => ({ ...s })));
+      else if (type === "stage") {
+        const ev = d as StageEvent;
+        setStages((prev) => prev.map((s) => s.key === ev.key ? { ...s, status: ev.status, message: ev.message, ms: ev.elapsed_ms } : s));
+      } else if (type === "result") setDone(d);
+      else if (type === "error") setError(d.message);
     });
   };
 
@@ -189,6 +183,11 @@ export default function NewAudit() {
             <label className="text-sm font-medium" htmlFor="model">Конкретная модель (необязательно)</label>
             <input id="model" className="input mt-1.5" placeholder="например, claude-opus-5-5" value={model} onChange={(e) => setModel(e.target.value)} />
           </div>
+          {health?.auth_required && !localStorage.getItem("lumen.token") && (
+            <p className="rounded-xl bg-signal-wash px-3 py-2 text-[13px] text-signal">
+              Сервер защищён: для проверки своего документа введите токен доступа в разделе «Настройки». Демо-прогон доступен без токена.
+            </p>
+          )}
           {error && <ErrorBox error={error} />}
           <button className="btn-primary justify-center py-3" disabled={!file} onClick={start}>
             <Sparkles size={16} />Запустить аудит

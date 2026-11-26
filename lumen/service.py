@@ -27,6 +27,7 @@ class Job:
     status: str = "queued"  # queued | running | done | error
     events: list[dict] = field(default_factory=list)
     error: str = ""
+    private: bool = False
     created: float = field(default_factory=time.time)
     cond: threading.Condition = field(default_factory=threading.Condition)
 
@@ -46,15 +47,22 @@ class AuditService:
         self.uploads.mkdir(parents=True, exist_ok=True)
 
     def submit(self, path: Path, name: str, provider: Optional[str] = None, model: Optional[str] = None,
-               demo: bool = False) -> Job:
-        job = Job(id=uuid.uuid4().hex[:12], name=name)
+               demo: bool = False, private: bool = False) -> Job:
+        job = Job(id=uuid.uuid4().hex[:20], name=name, private=private)  # 80-bit unguessable id
         self.jobs[job.id] = job
         job.push("queued", {"id": job.id, "name": name, "stages": [{"key": k, "title": t} for k, t in STAGES]})
         self.pool.submit(self._run, job, path, provider, model, demo)
+        self._gc()
         return job
 
-    def submit_demo(self) -> Job:
-        return self.submit(DEMO_DOC, DEMO_DOC.name, provider="mock", demo=True)
+    def _gc(self) -> None:
+        """Forget finished jobs older than an hour (results stay in storage)."""
+        cutoff = time.time() - 3600
+        for jid in [j.id for j in self.jobs.values() if j.status in ("done", "error") and j.created < cutoff]:
+            self.jobs.pop(jid, None)
+
+    def submit_demo(self, private: bool = False) -> Job:
+        return self.submit(DEMO_DOC, DEMO_DOC.name, provider="mock", demo=True, private=private)
 
     def _run(self, job: Job, path: Path, provider, model, demo) -> None:
         job.status = "running"
@@ -70,6 +78,7 @@ class AuditService:
         try:
             result = run_audit(path, provider=provider, model=model, display_name=job.name, progress=cb,
                                responder=responder, demo=demo, audit_id=job.id, cfg=self.cfg)
+            result.private = job.private
             for key, title, msg in (("report", "Генерация отчёта", "Markdown, HTML и JSON доступны для скачивания"),
                                     ("save", "Сохранение отчёта", f"Хранилище: {self.store.kind}")):
                 idx = next(i for i, (k, _) in enumerate(STAGES) if k == key) + 1
