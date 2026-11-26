@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { FileSearch } from "lucide-react";
 import { api, AuditSummary } from "../api";
+import AgentDeck from "../components/AgentDeck";
 import { useT } from "../i18n";
 import { Empty, ErrorBox, Loading, Num, PageHead, ReadinessBadge, Stat, fmtDate, rise, stagger } from "../components/ui";
 
@@ -21,6 +22,7 @@ export default function Overview() {
   return (
     <div>
       <PageHead title={t("ov.title")} sub={t("ov.sub")} right={<Link to="/new" className="btn-primary"><FileSearch size={16} />{t("nav.new")}</Link>} />
+      <AgentDeck lastId={items[0]?.id} />
       {!items.length ? (
         <Empty title={t("ov.emptyT")} text={t("ov.emptyD")} action={<Link to="/new" className="btn-primary">{t("land.cta")}</Link>} />
       ) : (

@@ -39,10 +39,13 @@ body { @apply bg-canvas text-ink font-sans antialiased; font-feature-settings: "
 
 @layer components {
   .card { @apply bg-surface rounded-2xl border border-line; transition: background-color .35s ease, border-color .35s ease, box-shadow .25s ease, transform .25s ease; }
-  .card-hover:hover { @apply shadow-lift; transform: translateY(-2px); }
+  .card-hover { transition: transform .35s cubic-bezier(.2,.9,.3,1.25), box-shadow .3s ease; }
+  .card-hover:hover { @apply shadow-lift; transform: translateY(-3px); }
   .btn { @apply inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-primary { @apply btn text-white shadow-glow; background: var(--grad); background-size: 200% 100%; }
   .btn-primary:hover:not(:disabled) { background-position: 100% 0; transform: translateY(-1px); }
+  /* tactile press: buttons and clickable cards give way under the finger */
+  .btn:active:not(:disabled), .card-hover:active { transform: translateY(0) scale(.97); transition-duration: 80ms; }
   .btn-ghost { @apply btn text-ink-soft hover:bg-ink/5 hover:text-ink; }
   .btn-line { @apply btn border border-line bg-surface hover:border-signal/50 hover:text-signal; }
   .h1 { @apply text-[28px] leading-[1.15] font-semibold tracking-[-0.02em]; }
