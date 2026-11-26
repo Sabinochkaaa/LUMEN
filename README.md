@@ -135,6 +135,8 @@ cp .env.example .env                                  # Windows: copy .env.examp
 
 ```bash
 python -m lumen --input docs/requirements.md --output reports/audit_report.md
+# или то же самое через корневой файл:
+python main.py --input docs/requirements.md --output reports/audit_report.md
 ```
 
 * вход — путь к документу (PDF, DOCX, MD, TXT, HTML, RTF, PNG/JPG), выход — путь к отчёту; директория создаётся автоматически;
