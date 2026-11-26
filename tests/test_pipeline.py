@@ -287,3 +287,21 @@ def test_failed_parallel_step_is_retried(tmp_path, cfg):
     assert calls["set:consistency"] == 2
     assert any(f.title == "Повтор сработал" for f in res.findings)
     assert any("повторно" in w for w in res.warnings) and not any("ошибкой" in w for w in res.warnings)
+
+
+def test_same_document_reuses_result(tmp_path, monkeypatch):
+    from lumen.config import Settings
+    from lumen.service import AuditService
+    cfg = Settings(); cfg.data_dir = str(tmp_path); cfg.cache_hours = 24
+    svc = AuditService(cfg)
+    doc = tmp_path / "a.md"; doc.write_text("# ТЗ\n\n1. Система должна быстро работать.\n", encoding="utf-8")
+    calls = []
+    import lumen.service as s
+    real = s.run_audit
+    def fake(*a, **k):
+        calls.append(1); r = real(*a, **k)
+        r.passport.mode = "llm"; return r
+    monkeypatch.setattr(s, "run_audit", fake)
+    r1 = svc.run_sync(doc, "a.md", provider="offline")
+    r2 = svc.run_sync(doc, "a.md", provider="offline")
+    assert len(calls) == 1 and r1.id != r2.id and r1.scores.quality_index == r2.scores.quality_index

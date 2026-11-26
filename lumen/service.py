@@ -1,6 +1,7 @@
 """Job service shared by the REST API and the Telegram bot: background audits with live progress."""
 from __future__ import annotations
 
+import hashlib
 import logging
 import threading
 import time
@@ -45,6 +46,10 @@ class AuditService:
         self.pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="lumen-audit")
         self.uploads = Path(self.cfg.data_dir) / "uploads"
         self.uploads.mkdir(parents=True, exist_ok=True)
+        # (sha256 of file, provider, model) -> (audit id, time): the same document gets the same report
+        # on the site and in the bot instead of a fresh, slightly different LLM run.
+        self.cache: dict[tuple, tuple[str, float]] = {}
+        self.cache_lock = threading.Lock()
 
     def submit(self, path: Path, name: str, provider: Optional[str] = None, model: Optional[str] = None,
                demo: bool = False, private: bool = False) -> Job:
@@ -76,6 +81,20 @@ class AuditService:
             job.push("stage", ev.model_dump())
 
         try:
+            cache_key = self._cache_key(path, provider, model) if not demo and provider != "mock" else None
+            cached = self._cached(cache_key)
+            if cached is not None:
+                for ev in cached.stages:
+                    cb(ev)
+                result = cached.model_copy(deep=True)
+                result.id, result.private = job.id, job.private
+                result.warnings = [*result.warnings, "Документ уже проверялся — показан тот же результат, "
+                                   "чтобы сайт и бот давали одинаковый отчёт."]
+                self.store.save(result)
+                job.status = "done"
+                job.push("result", {"id": result.id, "readiness": result.readiness,
+                                    "quality_index": result.scores.quality_index})
+                return
             result = run_audit(path, provider=provider, model=model, display_name=job.name, progress=cb,
                                responder=responder, demo=demo, audit_id=job.id, cfg=self.cfg)
             result.private = job.private
@@ -86,6 +105,9 @@ class AuditService:
                 result.stages.append(ev)
                 cb(ev)
             self.store.save(result)
+            if cache_key and result.passport.mode == "llm" and not any("ошибк" in w.lower() for w in result.warnings):
+                with self.cache_lock:
+                    self.cache[cache_key] = (result.id, time.time())
             job.status = "done"
             job.push("result", {"id": result.id, "readiness": result.readiness,
                                 "quality_index": result.scores.quality_index})
@@ -102,6 +124,28 @@ class AuditService:
                     path.unlink()
                 except OSError:
                     pass
+
+    def _cache_key(self, path: Path, provider, model) -> Optional[tuple]:
+        if self.cfg.cache_hours <= 0:
+            return None
+        try:
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError:
+            return None
+        prov = provider or self.cfg.resolve_provider()
+        return digest, prov, model or self.cfg.resolve_model(prov)
+
+    def _cached(self, key: Optional[tuple]) -> Optional[AuditResult]:
+        if key is None:
+            return None
+        with self.cache_lock:
+            hit = self.cache.get(key)
+        if not hit or time.time() - hit[1] > self.cfg.cache_hours * 3600:
+            return None
+        try:
+            return self.store.get(hit[0])
+        except Exception:
+            return None
 
     def run_sync(self, path: Path, name: str, provider=None, model=None, demo=False, timeout: float = 1800) -> AuditResult:
         job = self.submit(path, name, provider, model, demo)

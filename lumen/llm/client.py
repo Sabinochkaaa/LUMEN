@@ -246,7 +246,7 @@ class GeminiClient(LLMClient):
             "contents": [{"role": "user", "parts": [{"text": user + "\n\nJSON Schema ответа:\n" +
                                                       json.dumps(schema, ensure_ascii=False)}]}],
             "generationConfig": {"responseMimeType": "application/json", "maxOutputTokens": 16000,
-                                 "temperature": float(self.settings.temperature or 0.1)},
+                                 "temperature": float(self.settings.temperature or 0)},
         }
         headers = {"x-goog-api-key": self.settings.gemini_api_key, "content-type": "application/json"}
         with httpx.Client(timeout=self.settings.timeout_s) as c:
@@ -286,8 +286,8 @@ class OpenAICompatClient(LLMClient):
         }
         if self.json_mode:
             body["response_format"] = {"type": "json_object"}
-        if self.settings.temperature:
-            body["temperature"] = float(self.settings.temperature)
+        # 0 by default: the same document should give (almost) the same report every time
+        body["temperature"] = float(self.settings.temperature or 0)
         headers = {"authorization": f"Bearer {self._key()}", "content-type": "application/json",
                    "x-title": "LUMEN Requirements Intelligence"}
         url = self._base().rstrip("/") + "/chat/completions"

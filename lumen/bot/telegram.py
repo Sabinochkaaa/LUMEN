@@ -330,7 +330,12 @@ class TelegramBot:
             self.send(chat, "Отчёт не найден")
             return
         s = r.scores
-        crit = [f for f in r.findings if f.status == "confirmed" and f.severity in ("CRITICAL", "HIGH")][:5]
+        crit, seen = [], set()
+        for f in r.findings:  # same ordering as the site; skip repeated titles (one term flagged in two places)
+            if f.status == "confirmed" and f.severity in ("CRITICAL", "HIGH") and f.title.lower() not in seen:
+                seen.add(f.title.lower())
+                crit.append(f)
+        crit = crit[:5]
         lines = [
             f"<b>{READY[r.readiness]}</b>" + (" · <i>демо</i>" if r.demo else ""),
             html.escape(r.readiness_reason), "",
@@ -342,7 +347,7 @@ class TelegramBot:
         if crit:
             lines += ["", "<b>Главное исправить:</b>"]
             for f in crit:
-                where = f"стр. {f.loc.line_start}" if f.loc else "набор"
+                where = ((f"стр. {f.loc.page}, " if f.loc.page else "") + f"строка {f.loc.line_start}") if f.loc else "набор"
                 lines.append(f"{SEV[f.severity]} {html.escape(f.title)} <i>({', '.join(f.req_ids[:3]) or 'набор'}; {where})</i>")
         lines += ["", "💬 Спросите меня об отчёте или выберите формат файла ниже."]
         if settings.public_url:
