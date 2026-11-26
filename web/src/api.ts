@@ -48,6 +48,7 @@ export interface AuditSummary {
 export interface Health {
   status: string; version: string; commit: string; provider: string; provider_label: string; model: string;
   providers: Record<string, boolean>; storage: string; storage_degraded: boolean; auth_required: boolean; telegram: boolean; formats: string[];
+  private_mode: boolean; public_demo: boolean; encryption: boolean;
 }
 export interface Criterion { key: string; name: string; ref: string; definition: string; basis: string }
 
@@ -88,7 +89,44 @@ export const api = {
       { method: "PATCH", body: JSON.stringify(body), headers: { "content-type": "application/json" } }),
   reportUrl: (id: string, fmt: "md" | "html" | "json" | "pdf" | "docx" | "xlsx", download = false) =>
     `${BASE}/api/audits/${id}/report.${fmt}${download ? "?download=true" : ""}`,
-  events: (id: string) => new EventSource(`${BASE}/api/audits/${id}/events`),
+  /** SSE over fetch: the token travels in a header, never in the URL (and so never in server logs). */
+  events: (id: string, on: (type: string, data: any) => void): (() => void) => {
+    const ctrl = new AbortController();
+    (async () => {
+      try {
+        const r = await fetch(`${BASE}/api/audits/${id}/events`, { headers: headers(), signal: ctrl.signal });
+        if (!r.ok || !r.body) { on("error", { message: `Ошибка ${r.status}: нет доступа к прогрессу анализа` }); return; }
+        const reader = r.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          let i;
+          while ((i = buf.indexOf("\n\n")) >= 0) {
+            const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+            let type = "message", data = "";
+            for (const line of chunk.split("\n")) {
+              if (line.startsWith("event: ")) type = line.slice(7);
+              else if (line.startsWith("data: ")) data += line.slice(6);
+            }
+            if (data) on(type, JSON.parse(data));
+          }
+        }
+      } catch (e: any) { if (e?.name !== "AbortError") on("error", { message: "Соединение с сервером прервано" }); }
+    })();
+    return () => ctrl.abort();
+  },
+  /** Download a report through fetch (works in private mode, where plain links would get 401). */
+  download: async (id: string, fmt: "md" | "html" | "json" | "pdf" | "docx" | "xlsx", name = "lumen_report") => {
+    const r = await fetch(`${BASE}/api/audits/${id}/report.${fmt}?download=true`, { headers: headers() });
+    if (!r.ok) throw new Error(`Не удалось скачать отчёт (${r.status})`);
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement("a");
+    a.href = url; a.download = `${name}.${fmt}`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  },
 };
 
 export const SEV_ORDER: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];

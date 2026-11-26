@@ -18,6 +18,7 @@ create table if not exists public.audits (
   open_questions  int,
   demo            boolean default false,
   duration_s      numeric,
+  private         boolean default false,
   result          jsonb not null,
   created_at      timestamptz default now()
 );

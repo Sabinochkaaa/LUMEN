@@ -48,6 +48,8 @@ export default function Settings() {
                 <dt className="text-ink-faint">История</dt><dd>{health.storage === "supabase" ? `Supabase${health.storage_degraded ? " (недоступен, используется локальное)" : ""}` : "Локальные файлы (data/)"}</dd>
                 <dt className="text-ink-faint">Telegram-бот</dt><dd>{health.telegram ? "подключён" : "не настроен (TELEGRAM_BOT_TOKEN)"}</dd>
                 <dt className="text-ink-faint">Форматы</dt><dd>{health.formats.join(", ").toUpperCase()}</dd>
+                <dt className="text-ink-faint">Шифрование</dt><dd>{health.encryption ? "AES-256-GCM для сохранённых отчётов" : "не включено (LUMEN_ENCRYPTION_KEY)"}</dd>
+                <dt className="text-ink-faint">Режим доступа</dt><dd>{health.private_mode ? "закрытый: просмотр только с токеном" : "открытый просмотр, запуск анализа — с токеном"}{health.public_demo ? " · демо доступно всем" : ""}</dd>
               </dl>
             )}
           </div>

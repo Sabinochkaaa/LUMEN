@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, ExternalLink, Trash2 } from "lucide-react";
 import { api, AuditSummary, MODE_RU } from "../api";
+import ReportLink from "../components/ReportLink";
 import { Empty, ErrorBox, Loading, PageHead, ReadinessBadge, fmtDate } from "../components/ui";
 
 export default function Reports() {
@@ -30,12 +31,12 @@ export default function Reports() {
             <ReadinessBadge r={x.readiness} />
             <div className="text-right text-sm tabular-nums"><div className="font-semibold">{x.quality_index}</div><div className="meta">{x.requirements} треб. · {x.findings} зам.</div></div>
             <div className="flex items-center gap-1">
-              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "md", true)} title="Скачать Markdown"><Download size={15} />MD</a>
-              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "html")} target="_blank" rel="noreferrer" title="Открыть HTML"><ExternalLink size={15} />HTML</a>
-              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "pdf")} target="_blank" rel="noreferrer" title="Открыть PDF">PDF</a>
-              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "docx", true)} title="Скачать Word">Word</a>
-              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "xlsx", true)} title="Скачать Excel">Excel</a>
-              <a className="btn-ghost px-2.5" href={api.reportUrl(x.id, "json", true)} title="Скачать JSON">JSON</a>
+              <ReportLink className="btn-ghost px-2.5" id={x.id} fmt="md"><Download size={15} />MD</ReportLink>
+              <ReportLink className="btn-ghost px-2.5" id={x.id} fmt="html" open><ExternalLink size={15} />HTML</ReportLink>
+              <ReportLink className="btn-ghost px-2.5" id={x.id} fmt="pdf" open>PDF</ReportLink>
+              <ReportLink className="btn-ghost px-2.5" id={x.id} fmt="docx">Word</ReportLink>
+              <ReportLink className="btn-ghost px-2.5" id={x.id} fmt="xlsx">Excel</ReportLink>
+              <ReportLink className="btn-ghost px-2.5" id={x.id} fmt="json">JSON</ReportLink>
               {confirm === x.id ? (
                 <>
                   <button className="btn-ghost px-2.5 text-red-600" onClick={() => remove(x.id)}>Удалить навсегда</button>

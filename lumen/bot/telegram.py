@@ -28,9 +28,11 @@ from ..llm.schemas import ChatAnswer
 from ..models import AuditResult
 from ..parsing.loader import IMAGE_EXT, SUPPORTED
 from ..report.export import render, safe_name
+from ..security import UploadRejected, limiter, validate_upload
 from ..service import AuditService
 
 log = logging.getLogger("lumen.bot")
+logging.getLogger("httpx").setLevel(logging.WARNING)  # never log URLs that contain the bot token
 READY = {"READY": "✅ READY", "READY WITH CONDITIONS": "🟡 READY WITH CONDITIONS", "NOT READY": "❌ NOT READY",
          "INSUFFICIENT DATA": "⚪ INSUFFICIENT DATA"}
 SEV = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🔵", "INFO": "⚪"}
@@ -183,7 +185,7 @@ class TelegramBot:
             ph = max(m["photo"], key=lambda p: p.get("file_size", 0))
             self.audit(chat, {"file_id": ph["file_id"], "file_name": "photo.jpg", "file_size": ph.get("file_size", 0)})
         elif text and self._looks_like_requirements(text):
-            path = self.svc.uploads / f"tg_{uuid.uuid4().hex[:8]}_text.md"
+            path = self.svc.uploads / f"tg_{uuid.uuid4().hex}_text.md"
             path.write_text(text, encoding="utf-8")
             self.audit(chat, None, path=path, name="текст из сообщения")
         elif text:
@@ -198,12 +200,17 @@ class TelegramBot:
             re.search(r"должн|требован|систем|пользовател|клиент|\b[A-ZА-Я]{1,4}-\d", text, re.I))
 
     def _latest(self) -> Optional[str]:
-        items = [x for x in self.svc.store.list(5) if not x.get("demo")]
-        return items[0]["id"] if items else None
+        return None  # чужие прогоны боту не показываем: только свои, из этого чата
 
     # ------------------------------------------------------------------ flows
     def audit(self, chat: int, document: Optional[dict], demo: bool = False, path: Optional[Path] = None,
               name: str = "") -> None:
+        ok, retry = limiter.allow(f"bot-audit:{chat}", self.svc.cfg.bot_audits_per_hour, 3600)
+        if not ok:
+            self.send(chat, f"⏳ Лимит анализов на этот час исчерпан. Попробуйте через {retry // 60 + 1} мин.")
+            if path and path.exists():
+                path.unlink()
+            return
         if demo:
             name = "demo_requirements.md"
         elif document is not None:
@@ -219,12 +226,17 @@ class TelegramBot:
             self.typing(chat, "upload_document")
             info = self.call("getFile", file_id=document["file_id"])
             content = self.http.get(f"{self.file_api}/{info['file_path']}").content
+            try:
+                validate_upload(name, content)
+            except UploadRejected as e:
+                self.send(chat, f"⚠️ {html.escape(str(e))}")
+                return
             safe = re.sub(r"[^\w.\-]+", "_", name)[-80:]
-            path = self.svc.uploads / f"tg_{uuid.uuid4().hex[:8]}_{safe}"
+            path = self.svc.uploads / f"tg_{uuid.uuid4().hex}_{safe}"
             path.write_bytes(content)
         note = " (распознаю текст с изображения)" if Path(name).suffix.lower() in IMAGE_EXT else ""
         msg = self.send(chat, f"🔍 <b>LÜMEN Core</b> анализирует «{html.escape(name)}»{note}…\n▱▱▱▱▱▱▱▱▱▱ 0/15")
-        job = self.svc.submit_demo() if demo else self.svc.submit(path, name)
+        job = self.svc.submit_demo(private=True) if demo else self.svc.submit(path, name, private=True)
         shown = 0
         while job.status in ("queued", "running"):
             with job.cond:
@@ -293,6 +305,11 @@ class TelegramBot:
         self.send_doc(chat, safe_name(r, fmt), data, f"{FORMATS.get(fmt, fmt)} · отчёт LÜMEN по «{html.escape(r.passport.document_name)}»")
 
     def chat(self, chat: int, text: str) -> None:
+        ok, retry = limiter.allow(f"bot-msg:{chat}", self.svc.cfg.bot_messages_per_hour, 3600)
+        if not ok:
+            self.send(chat, f"⏳ Слишком много сообщений. Попробуйте через {retry // 60 + 1} мин.")
+            return
+        text = text[:2000]
         aid = self.last.get(chat)
         r = self.svc.store.get(aid) if aid else None
         fmt = wanted_format(text)
