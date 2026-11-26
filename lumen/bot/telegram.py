@@ -23,7 +23,7 @@ import httpx
 
 from ..config import settings
 from ..llm import prompts
-from ..llm.client import LLMError, make_client
+from ..llm.client import LLMError, make_chain
 from ..llm.schemas import ChatAnswer
 from ..models import AuditResult
 from ..parsing.loader import IMAGE_EXT, SUPPORTED
@@ -128,7 +128,7 @@ class TelegramBot:
         if self._llm is None:
             cfg = self.svc.cfg
             prov = cfg.resolve_provider()
-            self._llm = False if prov in ("offline", "mock") else make_client(prov, cfg.resolve_model(prov), cfg)
+            self._llm = False if prov in ("offline", "mock") else make_chain(prov, cfg.resolve_model(prov), cfg)
         return self._llm or None
 
     # ------------------------------------------------------------------ loop
@@ -328,8 +328,11 @@ class TelegramBot:
         hist = self.history.setdefault(chat, [])
         context = audit_context(r) if r else "Аудита ещё нет: пользователь не присылал документ."
         try:
-            ans: ChatAnswer = client.structured(prompts.CHAT_SYSTEM, prompts.chat_prompt(context, hist, text),
-                                                ChatAnswer, "telegram-chat")
+            from ..knowledge.glossary import knowledge_block
+
+            kb = knowledge_block("\n".join(l.text for l in r.source)) if r else ""
+            ans: ChatAnswer = client.structured(prompts.CHAT_SYSTEM + ("\n\n" + kb if kb else ""),
+                                                prompts.chat_prompt(context, hist, text), ChatAnswer, "telegram-chat")
         except LLMError as e:
             log.warning("chat LLM error: %s", e)
             quota = "Квота" in str(e)

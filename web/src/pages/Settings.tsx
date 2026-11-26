@@ -6,6 +6,7 @@ import { PageHead } from "../components/ui";
 const LABEL: Record<string, string> = {
   anthropic: "Claude — Anthropic API (ANTHROPIC_API_KEY)", gemini: "Gemini — Google AI Studio (GEMINI_API_KEY)",
   openai: "OpenAI-совместимый (OPENAI_API_KEY + OPENAI_BASE_URL)", "claude-cli": "Claude Code CLI на сервере",
+  openrouter: "OpenRouter (OPENROUTER_API_KEY)", groq: "Groq (GROQ_API_KEY)",
   offline: "Только правила (без ключа)", mock: "Mock (тесты и демо)",
 };
 
@@ -38,7 +39,7 @@ export default function Settings() {
               </li>
             ))}
           </ul>
-          <p className="meta mt-4">Сменить модель: LLM_PROVIDER и LLM_MODEL в .env. Для отдельного прогона модель выбирается на странице «Новый аудит».</p>
+          <p className="meta mt-4">Сменить модель: LLM_PROVIDER и LLM_MODEL. Если основная модель недоступна, LÜMEN сам переключится на резервные модели (LLM_FALLBACK_MODELS) и на других провайдеров с заданными ключами.</p>
         </section>
         <section className="space-y-6">
           <div className="card p-6">

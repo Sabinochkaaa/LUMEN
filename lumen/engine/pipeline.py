@@ -30,7 +30,7 @@ from ..models import (
 )
 from ..parsing.loader import DocumentError, load_document
 from ..llm import prompts
-from ..llm.client import LLMClient, LLMError, make_client
+from ..llm.client import LLMClient, LLMError, make_chain
 from ..llm.schemas import ClarifyResponse, FintechResponse, ReqAuditResponse, SetAuditResponse, VerifyResponse
 from .criteria import REQUIREMENT_CRITERIA, criterion_basis, criterion_ref
 from .evidence import EvidenceIndex, norm
@@ -201,6 +201,9 @@ def _dedupe(findings: list[Finding]) -> list[Finding]:
     for f in ordered:
         dup = None
         for k in kept:
+            if (f.rule_id.startswith("R-TERM") or k.rule_id.startswith("R-TERM")) and f.rule_id != k.rule_id \
+                    and f.source.startswith("rule") and k.source.startswith("rule"):
+                continue  # different glossary terms are different defects
             same_place = (f.loc and k.loc and abs(f.loc.line_start - k.loc.line_start) <= 1) or \
                 (set(f.req_ids) == set(k.req_ids) and f.req_ids)
             same_family = families.get(f.criterion, f.criterion) == families.get(k.criterion, k.criterion)
@@ -279,7 +282,7 @@ def run_audit(
     # LLM client
     prov = cfg.resolve_provider(provider)
     mdl = cfg.resolve_model(prov, model)
-    client: Optional[LLMClient] = make_client(prov, mdl, cfg, responder)
+    client: Optional[LLMClient] = make_chain(prov, mdl, cfg, responder)
     mode = "offline" if client is None else ("mock" if prov == "mock" else "llm")
     if client is None:
         warnings.append("Семантическая проверка моделью не выполнялась (офлайн-режим): отчёт построен только "
@@ -291,6 +294,10 @@ def run_audit(
     rule_findings = list(ctx.findings)
     grounder = _Grounder(ev, reqs, warnings)
     doc_text = doc.numbered_text()
+    from ..knowledge.glossary import knowledge_block
+
+    kb = knowledge_block("\n".join(l.text for l in doc.lines))
+    system = prompts.SYSTEM + ("\n\n" + kb if kb else "")
     rule_brief = [_brief(f) for f in rule_findings]
     llm_findings: list[Finding] = []
     llm_relations: list[Relation] = []
@@ -303,18 +310,18 @@ def run_audit(
     def do_batch(batch: list[Requirement]):
         payload = [_req_payload(r) for r in batch]
         related = [b for b in rule_brief if set(b["req"]) & {r.id for r in batch} or not b["req"]]
-        return client.structured(prompts.SYSTEM, prompts.requirements_prompt(doc_text, payload, related),
+        return client.structured(system, prompts.requirements_prompt(doc_text, payload, related),
                                  ReqAuditResponse, f"requirements {batch[0].id}–{batch[-1].id}")
 
     def do_set(focus: str):
         payload = [{"id": r.id, "source_id": r.source_id, "type": r.type, "section": r.section,
                     "summary": r.summary} for r in reqs]
-        return client.structured(prompts.SYSTEM, prompts.set_prompt(doc_text, payload, rule_brief, focus),
+        return client.structured(system, prompts.set_prompt(doc_text, payload, rule_brief, focus),
                                  SetAuditResponse, f"set:{focus}")
 
     def do_fin():
         payload = [{"id": r.id, "summary": r.summary} for r in reqs]
-        return client.structured(prompts.SYSTEM, prompts.fintech_prompt(doc_text, payload, aspects_for_prompt()),
+        return client.structured(system, prompts.fintech_prompt(doc_text, payload, aspects_for_prompt()),
                                  FintechResponse, "fintech")
 
     if client is not None:
@@ -552,6 +559,10 @@ def run_audit(
 
     ver = agent_version()
     usage = client.usage if client else None
+    if client is not None and (client.provider != prov or client.model != mdl):
+        warnings.append(f"Основная модель {prov}/{mdl} была недоступна; анализ выполнен резервной моделью "
+                        f"{client.provider}/{client.model}.")
+        prov, mdl = client.provider, client.model
     passport = Passport(
         document_name=doc.name, document_title=doc.title, document_format=doc.format, document_sha256=doc.sha256,
         analysed_at=datetime.now(ALMATY).isoformat(timespec="seconds"), provider=prov, model=mdl,

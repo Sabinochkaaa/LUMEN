@@ -156,7 +156,7 @@ class LLMClient:
                 code = e.response.status_code
                 msg = self._error_text(e.response)
                 quota = self._quota_exhausted(code, e.response.text)
-                missing_model = code == 404 and bool(tried)
+                missing_model = code == 404
                 if (quota or missing_model) and self._next_model(tried):
                     log.warning("LLM %s: модель %s недоступна (%s) — переключаюсь на %s",
                                 name, tried[-1], "квота" if quota else "нет модели", self.model)
@@ -263,25 +263,34 @@ class GeminiClient(LLMClient):
 
 
 class OpenAICompatClient(LLMClient):
-    """Any OpenAI-compatible Chat Completions endpoint: OpenAI, OpenRouter, DeepSeek, Groq, local vLLM/Ollama."""
+    """Any OpenAI-compatible Chat Completions endpoint: OpenAI, DeepSeek, local vLLM/Ollama (+ OpenRouter, Groq below)."""
 
     provider = "openai"
+    json_mode = True
+
+    def _key(self) -> str:
+        return self.settings.openai_api_key
+
+    def _base(self) -> str:
+        return self.settings.openai_base_url
 
     def _call(self, system, user, schema, name):
-        if not self.settings.openai_api_key:
-            raise LLMError("OPENAI_API_KEY не задан (для OpenRouter/DeepSeek задайте также OPENAI_BASE_URL).")
+        if not self._key():
+            raise LLMError(f"Ключ для {self.provider} не задан (см. .env.example).")
         body = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user + "\n\nВерни ТОЛЬКО JSON по схеме:\n" + json.dumps(schema, ensure_ascii=False)},
             ],
-            "response_format": {"type": "json_object"},
         }
+        if self.json_mode:
+            body["response_format"] = {"type": "json_object"}
         if self.settings.temperature:
             body["temperature"] = float(self.settings.temperature)
-        headers = {"authorization": f"Bearer {self.settings.openai_api_key}", "content-type": "application/json"}
-        url = self.settings.openai_base_url.rstrip("/") + "/chat/completions"
+        headers = {"authorization": f"Bearer {self._key()}", "content-type": "application/json",
+                   "x-title": "LUMEN Requirements Intelligence"}
+        url = self._base().rstrip("/") + "/chat/completions"
         with httpx.Client(timeout=self.settings.timeout_s) as c:
             r = c.post(url, headers=headers, json=body)
             r.raise_for_status()
@@ -289,6 +298,75 @@ class OpenAICompatClient(LLMClient):
         u = data.get("usage", {})
         text = data["choices"][0]["message"].get("content") or ""
         return _extract_json(text), u.get("prompt_tokens", 0), u.get("completion_tokens", 0)
+
+
+class OpenRouterClient(OpenAICompatClient):
+    provider = "openrouter"
+    json_mode = False  # not every free model supports response_format; JSON is extracted from the text
+
+    def _key(self):
+        return self.settings.openrouter_api_key
+
+    def _base(self):
+        return "https://openrouter.ai/api/v1"
+
+
+class GroqClient(OpenAICompatClient):
+    provider = "groq"
+
+    def _key(self):
+        return self.settings.groq_api_key
+
+    def _base(self):
+        return "https://api.groq.com/openai/v1"
+
+
+class ChainClient(LLMClient):
+    """Primary provider first; on failure of a call, the next configured provider takes over (and stays active)."""
+
+    def __init__(self, clients: list[LLMClient], settings: Settings):
+        self.clients = clients
+        self.settings = settings
+        self.active = 0
+        self._lock = threading.Lock()
+        self.switches: list[str] = []
+
+    @property
+    def provider(self):  # type: ignore[override]
+        return self.clients[self.active].provider
+
+    @property
+    def model(self):  # type: ignore[override]
+        return self.clients[self.active].model
+
+    @property
+    def usage(self):  # type: ignore[override]
+        u = Usage()
+        for c in self.clients:
+            u.calls += c.usage.calls
+            u.failures += c.usage.failures
+            u.tokens_in += c.usage.tokens_in
+            u.tokens_out += c.usage.tokens_out
+            u.log += c.usage.log
+        return u
+
+    def structured(self, system, user, model_cls, name):
+        start = self.active
+        last: Exception | None = None
+        for i in range(start, len(self.clients)):
+            try:
+                out = self.clients[i].structured(system, user, model_cls, name)
+                with self._lock:
+                    if i > self.active:
+                        self.switches.append(f"{self.clients[self.active].provider}/{self.clients[self.active].model} → "
+                                             f"{self.clients[i].provider}/{self.clients[i].model}")
+                        self.active = i
+                return out
+            except LLMError as e:
+                last = e
+                log.warning("LLM %s: провайдер %s не справился (%s) — пробую следующий", name, self.clients[i].provider,
+                            str(e)[:160])
+        raise last or LLMError("Нет доступных провайдеров LLM")
 
 
 class ClaudeCLIClient(LLMClient):
@@ -342,6 +420,16 @@ class MockClient(LLMClient):
         return {}, len(user) // 4, 0
 
 
+def make_chain(provider: str, model: str, settings: Settings, responder=None) -> LLMClient | None:
+    """Primary client plus every other configured provider as a fallback chain."""
+    primary = make_client(provider, model, settings, responder)
+    if primary is None or provider in ("mock",):
+        return primary
+    rest = [make_client(p, settings.resolve_model(p), settings) for p in settings.chain_providers(provider)]
+    rest = [c for c in rest if c is not None]
+    return ChainClient([primary] + rest, settings) if rest else primary
+
+
 def make_client(provider: str, model: str, settings: Settings, responder=None) -> LLMClient | None:
     if provider == "anthropic":
         return AnthropicClient(model, settings)
@@ -349,10 +437,14 @@ def make_client(provider: str, model: str, settings: Settings, responder=None) -
         return GeminiClient(model, settings)
     if provider == "openai":
         return OpenAICompatClient(model, settings)
+    if provider == "openrouter":
+        return OpenRouterClient(model, settings)
+    if provider == "groq":
+        return GroqClient(model, settings)
     if provider == "claude-cli":
         return ClaudeCLIClient(model, settings)
     if provider == "mock":
         return MockClient(model, settings, responder)
     if provider == "offline":
         return None
-    raise LLMError(f"Неизвестный провайдер LLM: {provider}. Допустимо: anthropic, claude-cli, gemini, openai, offline, mock.")
+    raise LLMError(f"Неизвестный провайдер LLM: {provider}. Допустимо: anthropic, claude-cli, gemini, openrouter, groq, openai, offline, mock.")

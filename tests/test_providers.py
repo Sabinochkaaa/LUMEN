@@ -125,3 +125,44 @@ def test_per_minute_limit_waits_instead_of_switching(monkeypatch):
     c = GeminiClient("gemini-flash-latest", settings(gemini_api_key="g-key-123456"))
     c.structured("s", "u", ReqAuditResponse, "t")
     assert c.model == "gemini-flash-latest" and n["c"] == 2
+
+
+def test_provider_chain_switches_to_next_provider(monkeypatch):
+    from lumen.llm.client import ChainClient, make_chain
+
+    def handler(req):
+        if "generativelanguage" in str(req.url):
+            return httpx.Response(429, json={"error": {"message": "You exceeded your current quota, check your plan and billing. limit: 0"}})
+        assert "openrouter.ai" in str(req.url)
+        body = json.loads(req.content)
+        assert "response_format" not in body  # free OpenRouter models: JSON is parsed from text
+        return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps(PAYLOAD)}}]})
+
+    stub(monkeypatch, handler)
+    monkeypatch.setenv("LLM_FALLBACK_MODELS", "")
+    s = settings(gemini_api_key="g-key-123456", openrouter_api_key="or-key-123456", anthropic_api_key="", groq_api_key="",
+                 openai_api_key="")
+    c = make_chain("gemini", "gemini-flash-latest", s)
+    assert isinstance(c, ChainClient)
+    out = c.structured("s", "u", ReqAuditResponse, "t")
+    assert out.requirements and c.provider == "openrouter" and c.switches
+
+
+def test_glossary_terms_and_clarifications(tmp_path, cfg):
+    from lumen.engine.pipeline import run_audit
+    from lumen.knowledge.glossary import find_terms, knowledge_block
+
+    text = ("# Сервис\n\n## Функциональные требования\n* **F-1.** В расходы входят проведённые покупки по карте.\n"
+            "* **F-2.** Возврат уменьшает расходы.\n* **F-3.** Клиент получает push-уведомление.\n")
+    keys = {t.key for t in find_terms(text)}
+    assert {"posted", "refund", "push"} <= keys
+    assert "клиринг" in knowledge_block(text)
+    p = tmp_path / "r.md"
+    p.write_text(text, encoding="utf-8")
+    res = run_audit(p, cfg=cfg)
+    posted = [f for f in res.findings if f.rule_id == "R-TERM-posted"][0]
+    assert posted.severity == "HIGH" and "проведённые покупки" in posted.quote
+    assert any("авторизация или клиринг" in q.question for q in res.questions)
+    # a term the document defines itself is not flagged
+    p.write_text(text + "\n## Глоссарий\nВозврат — это refund продавца, включая частичный.\n", encoding="utf-8")
+    assert not [f for f in run_audit(p, cfg=cfg).findings if f.rule_id == "R-TERM-refund"]

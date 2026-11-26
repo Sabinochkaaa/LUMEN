@@ -21,6 +21,8 @@ DEFAULT_MODELS = {
     "claude-cli": "claude-opus-5-5",
     "gemini": "gemini-flash-latest",
     "openai": "gpt-5.5-mini",
+    "openrouter": "meta-llama/llama-3.3-70b-instruct:free",
+    "groq": "llama-3.3-70b-versatile",
     "mock": "mock-llm",
     "offline": "rules-only",
 }
@@ -29,12 +31,16 @@ DEFAULT_FALLBACKS = {
     "gemini": ["gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemma-3-27b-it"],
     "anthropic": ["claude-sonnet-5-5", "claude-haiku-5-5"],
     "claude-cli": ["claude-sonnet-5-5"],
+    "openrouter": ["deepseek/deepseek-chat-v3-0324:free", "qwen/qwen3-235b-a22b:free", "google/gemma-3-27b-it:free"],
+    "groq": ["qwen/qwen3-32b", "llama-3.1-8b-instant"],
 }
 PROVIDER_LABELS = {
     "anthropic": "Anthropic Claude API",
     "claude-cli": "Claude Code CLI",
     "gemini": "Google Gemini API",
     "openai": "OpenAI-совместимый API",
+    "openrouter": "OpenRouter",
+    "groq": "Groq",
     "mock": "Mock LLM (тесты/демо)",
     "offline": "Без LLM (только детерминированные правила)",
 }
@@ -52,6 +58,9 @@ class Settings:
     gemini_api_key: str = field(default_factory=lambda: _env("GEMINI_API_KEY"))
     openai_api_key: str = field(default_factory=lambda: _env("OPENAI_API_KEY"))
     openai_base_url: str = field(default_factory=lambda: _env("OPENAI_BASE_URL", "https://api.openai.com/v1"))
+    openrouter_api_key: str = field(default_factory=lambda: _env("OPENROUTER_API_KEY"))
+    groq_api_key: str = field(default_factory=lambda: _env("GROQ_API_KEY"))
+    provider_chain: bool = field(default_factory=lambda: _env("LLM_PROVIDER_CHAIN", "1") != "0")
     concurrency: int = field(default_factory=lambda: int(_env("LUMEN_CONCURRENCY", "4") or 4))
     verify: bool = field(default_factory=lambda: _env("LUMEN_VERIFY", "1") != "0")
     api_token: str = field(default_factory=lambda: _env("LUMEN_API_TOKEN"))
@@ -82,17 +91,29 @@ class Settings:
         p = (override or self.provider or "auto").lower()
         if p in ("claude",):
             p = "anthropic"
-        if p in ("openrouter", "deepseek", "groq"):
+        if p in ("deepseek",):
             p = "openai"
         if p == "auto":
             if self.anthropic_api_key:
                 return "anthropic"
             if self.gemini_api_key:
                 return "gemini"
+            if self.openrouter_api_key:
+                return "openrouter"
+            if self.groq_api_key:
+                return "groq"
             if self.openai_api_key:
                 return "openai"
             return "offline"
         return p
+
+    def chain_providers(self, primary: str) -> list[str]:
+        """Other configured cloud providers to fall back to, in priority order."""
+        if not self.provider_chain:
+            return []
+        keys = {"anthropic": self.anthropic_api_key, "gemini": self.gemini_api_key,
+                "openrouter": self.openrouter_api_key, "groq": self.groq_api_key, "openai": self.openai_api_key}
+        return [p for p in ("anthropic", "gemini", "openrouter", "groq", "openai") if p != primary and keys[p]]
 
     def resolve_model(self, provider: str, override: str | None = None) -> str:
         if override:
@@ -110,6 +131,7 @@ class Settings:
     def secrets(self) -> list[str]:
         return [x for x in (self.anthropic_api_key, self.gemini_api_key, self.openai_api_key,
                             self.supabase_key, self.telegram_token, self.api_token,
+                            self.openrouter_api_key, self.groq_api_key,
                             self.encryption_key) if x]
 
     def available_providers(self) -> dict[str, bool]:
@@ -117,6 +139,8 @@ class Settings:
             "anthropic": bool(self.anthropic_api_key),
             "gemini": bool(self.gemini_api_key),
             "openai": bool(self.openai_api_key),
+            "openrouter": bool(self.openrouter_api_key),
+            "groq": bool(self.groq_api_key),
             "claude-cli": shutil.which("claude") is not None,
             "offline": True,
             "mock": True,
