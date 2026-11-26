@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AgentBuddy from "../components/AgentBuddy";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, CircleAlert, FileUp, Loader2, SkipForward, Sparkles } from "lucide-react";
 import { api, Line, StageEvent } from "../api";
@@ -42,6 +42,13 @@ export default function NewAudit() {
     if (f.size > 20 * 1024 * 1024) { setError(t("new.tooBig")); return; }
     setError(""); setFile(f); preview(f);
   };
+  // a spec handed over from the generator arrives ready to review
+  const loc = useLocation();
+  useEffect(() => {
+    const md = (loc.state as { markdown?: string; name?: string } | null)?.markdown;
+    if (md) pick(new File([md], (loc.state as any).name || "generated_spec.md", { type: "text/markdown" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const start = async () => {
     if (!file) return;

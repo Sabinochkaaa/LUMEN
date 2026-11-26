@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Send, X } from "lucide-react";
+import { Mic, Send, X } from "lucide-react";
+import { useSpeech } from "../speech";
 import { api, ChatTurn } from "../api";
 import { useT } from "../i18n";
 
@@ -67,6 +68,8 @@ export default function SupportWidget() {
     } finally { setBusy(false); }
   };
   const submit = (e: FormEvent) => { e.preventDefault(); ask(text); };
+  // voice: words appear in the field while speaking; the finished phrase is sent right away
+  const voice = useSpeech(lang, (said, final) => { if (final) ask(said); else setText(said); });
   const sendTicket = async (e: FormEvent) => {
     e.preventDefault();
     const lastQ = [...msgs].reverse().find((m) => m.role === "user")?.text || text;
@@ -125,8 +128,15 @@ export default function SupportWidget() {
               </form>
             ) : (
               <form onSubmit={submit} className="flex gap-2 border-t border-line p-3">
-                <input value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} placeholder={t("sup.place")} aria-label={t("sup.place")}
+                <input value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} placeholder={voice.listening ? t("voice.listening") : t("sup.place")} aria-label={t("sup.place")}
                   className="min-w-0 flex-1 rounded-xl border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-signal" />
+                {voice.supported && (
+                  <button type="button" onClick={voice.toggle} aria-pressed={voice.listening} aria-label={t("voice.mic")} title={t("voice.mic")}
+                    className={`relative rounded-xl border px-3 ${voice.listening ? "border-transparent bg-bad text-white" : "border-line text-ink-soft hover:text-ink"}`}>
+                    {voice.listening && <span className="absolute inset-0 animate-ping rounded-xl bg-bad/40" />}
+                    <Mic size={16} className="relative" />
+                  </button>
+                )}
                 <button className="btn-primary px-3" disabled={!text.trim() || busy} aria-label={t("sup.send")}><Send size={16} /></button>
               </form>
             )}
