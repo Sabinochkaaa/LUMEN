@@ -1,4 +1,4 @@
-import { cloneElement, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Suspense, cloneElement, createContext, lazy, useCallback, useContext, useEffect, useState } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useOutlet, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -8,18 +8,19 @@ import { api, Audit, Health } from "./api";
 import { LangProvider, useT } from "./i18n";
 import { ThemeProvider } from "./theme";
 import Landing from "./pages/Landing";
-import Overview from "./pages/Overview";
-import NewAudit from "./pages/NewAudit";
-import AuditHome from "./pages/AuditHome";
-import Requirements from "./pages/Requirements";
-import Issues from "./pages/Issues";
-import Graph from "./pages/Graph";
-import Clarifications from "./pages/Clarifications";
-import Fintech from "./pages/Fintech";
-import Compare from "./pages/Compare";
-import Translate from "./pages/Translate";
-import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
+// heavy screens (graph, charts) load on demand: the first visit downloads only the landing
+const Overview = lazy(() => import("./pages/Overview"));
+const NewAudit = lazy(() => import("./pages/NewAudit"));
+const AuditHome = lazy(() => import("./pages/AuditHome"));
+const Requirements = lazy(() => import("./pages/Requirements"));
+const Issues = lazy(() => import("./pages/Issues"));
+const Graph = lazy(() => import("./pages/Graph"));
+const Clarifications = lazy(() => import("./pages/Clarifications"));
+const Fintech = lazy(() => import("./pages/Fintech"));
+const Compare = lazy(() => import("./pages/Compare"));
+const Translate = lazy(() => import("./pages/Translate"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Settings = lazy(() => import("./pages/Settings"));
 import { Empty, ErrorBox, LangSwitch, Loading, Logo, ThemeSwitch } from "./components/ui";
 
 // ---------------------------------------------------------------- shared state
@@ -175,6 +176,7 @@ function Root() {
   useEffect(() => { api.health().then(setHealth).catch(() => setHealth(null)); refreshAuth(); }, [refreshAuth]);
   return (
     <AppCtx.Provider value={{ health, lastId, setLastId, admin, refreshAuth }}>
+      <Suspense fallback={<Loading />}>
       <Routes>
         <Route index element={<Landing />} />
         <Route element={<Shell />}>
@@ -194,6 +196,7 @@ function Root() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      </Suspense>
     </AppCtx.Provider>
   );
 }
