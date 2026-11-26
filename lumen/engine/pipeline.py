@@ -330,6 +330,24 @@ def run_audit(
         tr.start("consistency", "Правила + LLM (параллельно)")
         tr.start("completeness", "LLM (параллельно)")
         tr.start("fintech", "Правила применимости + LLM (параллельно)")
+        retried = {"ok": 0}
+
+        def settle(fut, fn, *args):
+            """Result of a parallel LLM step; on failure, retry once sequentially (after a pause) on whatever
+            provider/model is working now. Free tiers often reject bursts of parallel calls."""
+            try:
+                return fut.result()
+            except LLMError as first:
+                log.warning("LLM step failed (%s) — retrying sequentially", str(first)[:160])
+                time.sleep(cfg.retry_pause)
+                try:
+                    out = fn(*args)
+                    retried["ok"] += 1
+                    return out
+                except LLMError as e:
+                    step_errors.append(str(e))
+                    raise
+
         with ThreadPoolExecutor(max_workers=max(1, cfg.concurrency)) as pool:
             f_batches = [pool.submit(do_batch, b) for b in batches]
             f_cons = pool.submit(do_set, "consistency")
@@ -339,10 +357,9 @@ def run_audit(
             ok_batches = 0
             for fut, batch in zip(f_batches, batches):
                 try:
-                    resp: ReqAuditResponse = fut.result()
+                    resp: ReqAuditResponse = settle(fut, do_batch, batch)
                     ok_batches += 1
-                except LLMError as e:
-                    step_errors.append(str(e))
+                except LLMError:
                     continue
                 allowed = {r.id for r in batch}
                 for item in resp.requirements:
@@ -367,9 +384,8 @@ def run_audit(
             # set-level
             for key, fut in (("consistency", f_cons), ("completeness", f_comp)):
                 try:
-                    resp: SetAuditResponse = fut.result()
+                    resp: SetAuditResponse = settle(fut, do_set, key)
                 except LLMError as e:
-                    step_errors.append(str(e))
                     tr.error(key, str(e)[:200])
                     continue
                 n = 0
@@ -393,9 +409,12 @@ def run_audit(
                                                       note=rel.note[:200], origin="llm"))
                 tr.done(key, f"LLM: {n} замечаний, {len(resp.relations)} связей")
             try:
-                fin_llm = f_fin.result()
-            except LLMError as e:
-                step_errors.append(str(e))
+                fin_llm = settle(f_fin, do_fin)
+            except LLMError:
+                pass
+        if retried["ok"]:
+            warnings.append(f"{retried['ok']} шаг(ов) LLM не прошли с первого раза (лимиты бесплатного тарифа) и "
+                            "были успешно выполнены повторно — результат полный.")
     else:
         tr.done("individual", f"Правила: {len(rule_findings)} замечаний")
         tr.done("consistency", f"Правила: {sum(1 for f in rule_findings if f.scope == 'set')} замечаний набора, "

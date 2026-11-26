@@ -269,3 +269,21 @@ def test_secrets_are_masked():
     from lumen.llm.client import _mask
 
     assert "sk-ant-SECRET123456" not in _mask("key sk-ant-SECRET123456 leaked", ["sk-ant-SECRET123456"])
+
+
+def test_failed_parallel_step_is_retried(tmp_path, cfg):
+    calls = {"set:consistency": 0}
+
+    def responder(step, user):
+        if step == "set:consistency":
+            calls[step] += 1
+            if calls[step] == 1:
+                return LLMError("HTTP 429 burst")
+            return {"issues": [{"kind": "conflict", "severity": "HIGH", "title": "Повтор сработал",
+                                "quotes": ["Клиент задаёт лимит от 1 000 до 100 000 ₸ включительно."], "problem": "x"}]}
+        return {}
+
+    res = run_audit(write(tmp_path, GOOD_MD), provider="mock", cfg=cfg, responder=responder)
+    assert calls["set:consistency"] == 2
+    assert any(f.title == "Повтор сработал" for f in res.findings)
+    assert any("повторно" in w for w in res.warnings) and not any("ошибкой" in w for w in res.warnings)

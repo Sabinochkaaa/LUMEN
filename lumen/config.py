@@ -22,7 +22,7 @@ DEFAULT_MODELS = {
     "gemini": "gemini-flash-latest",
     "openai": "gpt-5.5-mini",
     "openrouter": "meta-llama/llama-3.3-70b-instruct:free",
-    "groq": "llama-3.3-70b-versatile",
+    "groq": "openai/gpt-oss-120b",
     "mock": "mock-llm",
     "offline": "rules-only",
 }
@@ -32,7 +32,7 @@ DEFAULT_FALLBACKS = {
     "anthropic": ["claude-sonnet-5-5", "claude-haiku-5-5"],
     "claude-cli": ["claude-sonnet-5-5"],
     "openrouter": ["deepseek/deepseek-chat-v3-0324:free", "qwen/qwen3-235b-a22b:free", "google/gemma-3-27b-it:free"],
-    "groq": ["qwen/qwen3-32b", "llama-3.1-8b-instant"],
+    "groq": ["openai/gpt-oss-20b", "qwen/qwen3.8-27b", "llama-3.3-70b-versatile"],
 }
 PROVIDER_LABELS = {
     "anthropic": "Anthropic Claude API",
@@ -62,6 +62,7 @@ class Settings:
     groq_api_key: str = field(default_factory=lambda: _env("GROQ_API_KEY"))
     provider_chain: bool = field(default_factory=lambda: _env("LLM_PROVIDER_CHAIN", "1") != "0")
     concurrency: int = field(default_factory=lambda: int(_env("LUMEN_CONCURRENCY", "4") or 4))
+    retry_pause: float = field(default_factory=lambda: float(_env("LUMEN_RETRY_PAUSE", "8") or 8))
     verify: bool = field(default_factory=lambda: _env("LUMEN_VERIFY", "1") != "0")
     api_token: str = field(default_factory=lambda: _env("LUMEN_API_TOKEN"))
     public_url: str = field(default_factory=lambda: _env("LUMEN_PUBLIC_URL"))
@@ -130,7 +131,11 @@ class Settings:
         return DEFAULT_MODELS.get(provider, "")
 
     def fallback_models(self, provider: str) -> list[str]:
-        raw = _env("LLM_FALLBACK_MODELS")
+        """Per-provider list (LLM_FALLBACK_MODELS_GEMINI, …_GROQ, …); the generic LLM_FALLBACK_MODELS applies only
+        to the primary provider, so a Gemini model name is never tried on Groq."""
+        raw = _env("LLM_FALLBACK_MODELS_" + provider.upper().replace("-", "_"))
+        if not raw and provider == self.resolve_provider():
+            raw = _env("LLM_FALLBACK_MODELS")
         if raw:
             return [m.strip() for m in raw.split(",") if m.strip()]
         return list(DEFAULT_FALLBACKS.get(provider, []))

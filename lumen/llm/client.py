@@ -353,6 +353,7 @@ class ChainClient(LLMClient):
     def structured(self, system, user, model_cls, name):
         start = self.active
         last: Exception | None = None
+        errors: list[str] = []
         for i in range(start, len(self.clients)):
             try:
                 out = self.clients[i].structured(system, user, model_cls, name)
@@ -364,8 +365,11 @@ class ChainClient(LLMClient):
                 return out
             except LLMError as e:
                 last = e
+                errors.append(f"{self.clients[i].provider}: {str(e)[:180]}")
                 log.warning("LLM %s: провайдер %s не справился (%s) — пробую следующий", name, self.clients[i].provider,
                             str(e)[:160])
+        if len(errors) > 1:
+            raise LLMError("Все провайдеры LLM отказали — " + " | ".join(errors))
         raise last or LLMError("Нет доступных провайдеров LLM")
 
 
