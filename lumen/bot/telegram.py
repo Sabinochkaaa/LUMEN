@@ -379,6 +379,21 @@ class TelegramBot:
             self.send_report(chat, r, fmt)
             return
         client = self.llm()
+        if r is None:  # no report yet: the support agent answers questions about LÜMEN itself
+            from ..support import answer as support_answer, save_ticket
+
+            hist = self.history.setdefault(chat, [])
+            self.typing(chat)
+            rep = support_answer(text, [{"role": "user" if who == "Пользователь" else "agent", "text": t}
+                                        for who, t in hist], "ru", None, client)
+            msg = rep.answer
+            if rep.escalate:
+                save_ticket(self.svc.cfg.data_dir, text, None, f"telegram:{chat}", "telegram")
+                msg += "\n\n📨 Передал вопрос команде LÜMEN."
+            hist += [("Пользователь", text), ("LÜMEN", rep.answer)]
+            del hist[:-12]
+            self.send(chat, html.escape(msg) + "\n\nЧтобы проверить ТЗ, просто пришлите файл 📎")
+            return
         if client is None:
             if r:
                 self.send(chat, "Чат с ИИ недоступен: на сервере не задан ключ модели. Могу прислать отчёт — выберите формат:",
