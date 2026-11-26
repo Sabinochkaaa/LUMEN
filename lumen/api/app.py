@@ -230,7 +230,7 @@ def support_ticket(body: TicketBody, request: Request):
     if not body.message.strip() or len(body.message) > 2000 or len(body.contact) > 200:
         raise HTTPException(422, "Опишите вопрос (до 2000 символов)")
     _support_limit(request, "ticket", 5)
-    t = save_ticket(settings.data_dir, body.message, body.history, body.contact, "site", body.audit_id or "")
+    t = save_ticket(settings.data_dir, body.message, body.history, body.contact, "site", body.audit_id or "", cfg=settings)
     return {"id": t["id"], "ok": True}
 
 
@@ -238,7 +238,7 @@ def support_ticket(body: TicketBody, request: Request):
 def support_tickets():
     from ..support import list_tickets
 
-    return {"items": list_tickets(settings.data_dir)}
+    return {"items": list_tickets(settings.data_dir, cfg=settings)}
 
 
 @app.get("/api/health")

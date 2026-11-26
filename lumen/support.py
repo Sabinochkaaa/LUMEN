@@ -15,7 +15,7 @@ LANG_NAME = {"ru": "русском", "kk": "казахском", "en": "англ
 
 # (keywords, question, answer) — the single source of truth for both the model and the offline fallback.
 FAQ: list[tuple[str, str, str]] = [
-    ("что такое lumen что делает зачем агент", "Что такое LÜMEN?",
+    ("что такое lumen что умеет сервис зачем нужен", "Что такое LÜMEN?",
      "LÜMEN — AI-агент, который проверяет техническое задание до начала разработки. Он находит размытые формулировки, "
      "противоречия, пропуски и банковские риски по ISO/IEC/IEEE 29148 и IEEE 830, показывает цитату и номер строки, "
      "предлагает готовую формулировку и вопросы владельцу ТЗ. Итог — вердикт: готов, готов с условиями, не готов или "
@@ -23,10 +23,11 @@ FAQ: list[tuple[str, str, str]] = [
     ("как проверить загрузить документ тз начать файл", "Как проверить документ?",
      "Откройте «Новая проверка», перетащите файл и нажмите «Запустить анализ». Прогресс 15 этапов виден в реальном "
      "времени, обычно 1–2 минуты. В Telegram-боте достаточно отправить файл в чат."),
-    ("формат форматы pdf docx word фото картинка txt rtf html поддерживает", "Какие форматы поддерживаются?",
+    ("формат форматы pdf docx word фото картинка скан изображение txt rtf html поддерживает можно загрузить фото",
+     "Какие форматы поддерживаются?",
      "PDF, DOCX, Markdown, TXT, HTML, RTF и фото (PNG, JPG) — текст с фото распознаётся автоматически. Размер файла до "
      "20 МБ. Файлы с макросами, исполняемые файлы и архивы-бомбы отклоняются."),
-    ("долго медленно время сколько ждать минуты", "Почему проверка идёт долго?",
+    ("долго медленно время ждать минуты сколько времени", "Почему проверка идёт долго?",
      "Агент делает около 10 запросов к модели ИИ с полным текстом документа, а бесплатные модели ограничивают число "
      "запросов в минуту. Обычно это 1–2 минуты. Повторная проверка того же файла выдаётся мгновенно из кэша."),
     ("вердикт готов не готов мало данных insufficient ready", "Что значит вердикт?",
@@ -63,7 +64,7 @@ FAQ: list[tuple[str, str, str]] = [
      "а затем пришлёт вердикт, 5 главных исправлений, вопросы владельцу и PDF-отчёт. После этого можно писать обычными "
      "словами: «что исправить первым?», «объясни F-003», «пришли в ворде» или «в excel». Проверки из бота приватные: "
      "они не попадают в общий список на сайте. Если отчёта ещё нет, бот отвечает как служба поддержки."),
-    ("бот команды старт start help помощь меню", "Какие команды у бота?",
+    ("команды бота меню бота /start /help /demo /last /format демо последний", "Какие команды у бота?",
      "/start и /help — инструкция, /demo — пример проверки без своего файла, /last — последний отчёт, /format — "
      "в каком формате присылать отчёт (PDF, Word, Excel…). Остальное делается без команд: пришлите файл или задайте "
      "вопрос текстом."),
@@ -79,7 +80,7 @@ FAQ: list[tuple[str, str, str]] = [
      "Пять агентов: Аналитик нарезает документ на требования и проверяет каждое; Скептик перепроверяет серьёзные "
      "замечания, чтобы не было ложных тревог; FinTech-эксперт ищет банковские риски; Переводчик переводит ТЗ на "
      "10 языков; Поддержка — это я, отвечаю на вопросы 24/7."),
-    ("тиын тенге единицы сумма валюта копейка", "Почему агент ругается на тиыны и тенге?",
+    ("тиын тенге единицы сумма валюта копейка", "Почему тиыны и тенге — это замечание?",
      "₸ — это знак тенге, а тиын — 1/100 тенге. Если сумма покупки хранится в тиынах, а порог в тенге и в ТЗ не "
      "сказано, где переводить одно в другое, разработчик может сравнить их напрямую и ошибиться в 100 раз. Агент "
      "просит явно указать единицы."),
@@ -94,7 +95,7 @@ FAQ: list[tuple[str, str, str]] = [
      "Да, раздел «Генератор ТЗ»: опишите идею текстом или голосом — Аналитик напишет черновик по банковскому шаблону "
      "с нумерацией Ф-1, Ф-2, критериями приёмки и нефункциональными требованиями. Чего нет в идее, агент не выдумывает, "
      "а помечает «[уточнить: …]». Кнопка «Проверить этот ТЗ» сразу отправляет черновик на проверку командой."),
-    ("голос голосовой микрофон говорить надиктовать распознавание", "Можно ли говорить голосом?",
+    ("голос голосовой микрофон говорить надиктовать распознавание не работает микрофон", "Можно ли говорить голосом?",
      "Да, нажмите на микрофон в чате поддержки или в «Генераторе ТЗ» и говорите — текст появится сам. Распознавание "
      "делает браузер (Chrome, Edge, Safari) на русском, казахском или английском, по языку интерфейса."),
     ("удалить отчет стереть история", "Как удалить отчёт?",
@@ -123,6 +124,8 @@ SYSTEM = """Ты — «Поддержка LÜMEN», агент службы по
 Отвечай дружелюбно, коротко (до 6 предложений), по делу, на {lang} языке.
 
 Правила:
+- Люди пишут по-разному: если вопрос ПО СМЫСЛУ совпадает с пунктом базы знаний (другими словами, с опечатками,
+  на казахском или английском), отвечай по этому пункту, а не передавай команде.
 - Опирайся ТОЛЬКО на базу знаний и на данные проверки пользователя ниже. Не придумывай функций, цен, сроков,
   контактов и обещаний. Если ответа там нет или вопрос не про LÜMEN — честно скажи, что не знаешь, и поставь
   escalate=true: вопрос передадут команде.
@@ -159,34 +162,117 @@ def kb_text() -> str:
     return "\n\n".join(f"В: {q}\nО: {a}" for _, q, a in FAQ)
 
 
-# short or slang words people really type, mapped to the words the FAQ uses
-SYN = {"тг": "телеграм", "tg": "телеграм", "тгбот": "телеграм бот", "пдф": "pdf", "ворд": "word", "эксель": "excel",
-       "тз": "документ", "кз": "казахский"}
+# ---------------------------------------------------------------- understanding what people actually type
+# Each concept gathers the many ways people say one thing («отправить», «скинуть», «загрузить» …). Single words match
+# by prefix, phrases by substring. The FAQ goes through the same normalisation, so a question meets its answer even
+# when they share no literal word.
+CONCEPTS: dict[str, list[str]] = {
+    "@безоп": ["безопас", "безоп", "конфиден", "утеч", "утек", "слив", "секрет", "защищ", "защит", "шифр", "приватн",
+               "украд", "сворует", "чужие увид", "кто увид", "не увидят", "хран", "gdpr"],
+    "@загруз": ["загруз", "отправ", "скин", "присл", "кинут", "закин", "залит", "подгруз", "прикреп", "upload"],
+    "@тз": ["тз", "техзад", "техничес", "задани", "спецификац", "документ", "файл"],
+    "@бот": ["бот", "телеграм", "телега", "тг", "tg", "telegram"],
+    "@формат": ["формат", "pdf", "пдф", "docx", "word", "png", "jpg", "jpeg", "фото", "картин", "скан", "txt", "rtf", "html",
+                "расширени", "изображен"],
+    "@долго": ["долг", "медлен", "тормоз", "висит", "завис", "ждат", "жду", "минут", "быстрее", "скорост", "сколько времени"],
+    "@вердикт": ["вердикт", "not ready", "статус готов", "что значит готов", "мало данных", "insufficient"],
+    "@индекс": ["индекс", "балл", "оценк", "формул", "рейтинг", "из 100"],
+    "@доверие": ["довер", "верит", "галлюц", "выдум", "ошибает", "точн", "правд", "врет", "ложн", "цитат", "находит ошибк"],
+    "@вопрос": ["вопрос владел", "вопросы владел", "владельц", "уточнен", "ответить на вопрос"],
+    "@скачать": ["скача", "скачи", "выгруз", "экспорт", "сохранить отч", "excel", "эксель", "xlsx", "ворд", "download"],
+    "@перевод": ["перев", "translate", "казахск", "английск", "узбек", "кыргыз", "киргиз", "турецк", "китайск",
+                 "немецк", "французск", "испанск"],
+    "@сравн": ["сравн", "верси", "разниц", "diff"],
+    "@ошибка": ["ошибк", "не работ", "сломал", "429", "лимит", "квот", "исчерп", "баг", "глюк", "падает", "не грузит",
+                "не открыва"],
+    "@запуск": ["установ", "запуст", "локальн", "терминал", "github", "гитхаб", "api ключ", "развернут", "docker",
+                "у себя", "исходник", "код открыт"],
+    "@крит": ["критич", "critical", "high", "medium", "серьезн", "уровн", "уровен", "важност"],
+    "@финтех": ["финтех", "fintech", "банковск", "платеж", "идемпотент"],
+    "@агенты": ["агент", "робот", "аналитик", "скептик", "переводчик"],
+    "@тиын": ["тиын", "тенге", "валют", "копейк", "₸"],
+    "@кэш": ["кэш", "кеш", "тот же результат", "такой же результат", "одинаков", "заново", "перепровер"],
+    "@резерв": ["резерв", "основная модель", "flash", "lite", "запасн"],
+    "@удалить": ["удал", "стере", "стерет"],
+    "@поделиться": ["подел", "ссылк", "коллег"],
+    "@язык": ["язык интерфейс", "сменить язык", "переключить язык", "интерфейс"],
+    "@авторы": ["кто сдел", "кто созд", "кто разраб", "автор", "хакатон", "разработчик"],
+    "@генер": ["генер", "написать тз", "напиши тз", "создать тз", "составить тз", "черновик", "с нуля"],
+    "@голос": ["голос", "микрофон", "надикт", "распозна", "говорить"],
+    "@lumen": ["lumen", "люмен", "что такое", "что умеет", "ваш сервис", "этот сервис", "зачем нуж", "для чего"],
+    "@команды": ["команды бот", "команды у бот", "/start", "/help", "/demo", "/last", "/format", "меню бот"],
+}
+STOP = {"как", "что", "кто", "это", "для", "или", "так", "мне", "можно", "есть", "ли", "мой", "моё", "мое", "свое", "своё",
+        "вы", "вам", "нас", "наш", "все", "уже", "его", "она", "они", "там", "тут", "где", "когда", "если", "бы", "же",
+        "the", "and", "how", "what", "is", "can", "do", "a", "an", "to", "of", "my", "it"}
 
-STOP = {"как", "что", "это", "для", "или", "так", "мне", "можно", "есть", "the", "and", "how", "what"}
+
+def _norm(text: str) -> str:
+    return " " + re.sub(r"\s+", " ", text.lower().replace("ё", "е")) + " "
 
 
 def _words(text: str) -> set[str]:
-    raw = re.findall(r"[a-zа-яёәғқңөұүһі0-9]+", text.lower().replace("ё", "е"))
-    raw = " ".join(SYN.get(w, w) for w in raw).split()
-    return {w[:6] for w in raw if len(w) > 2 and w not in STOP}
+    """Concept tags plus 6-letter stems of the words no concept explains."""
+    low = _norm(text)
+    out: set[str] = set()
+    explained: set[str] = set()
+    for tag, keys in CONCEPTS.items():
+        for k in keys:
+            if " " in k or not k.isalnum():
+                if k in low:
+                    out.add(tag)
+            else:
+                for w in re.findall(r"[a-zа-яәғқңөұүһі0-9]+", low):
+                    if w.startswith(k):
+                        out.add(tag)
+                        explained.add(w)
+    for w in re.findall(r"[a-zа-яәғқңөұүһі0-9]+", low):
+        if w not in explained and len(w) > 2 and w not in STOP:
+            out.add(w[:6])
+    return out
 
 
-def _faq_best(message: str) -> tuple[Optional[tuple[str, str]], int, int]:
+_FAQ_WORDS: list[set[str]] = []
+_Q_WORDS: list[set[str]] = []
+_IDF: dict[str, float] = {}
+
+
+def _index() -> None:
+    import math
+
+    if _FAQ_WORDS:
+        return
+    _FAQ_WORDS.extend(_words(keys + " " + q) for keys, q, _ in FAQ)
+    _Q_WORDS.extend(_words(q) for _, q, _ in FAQ)
+    df: dict[str, int] = {}
+    for ws in _FAQ_WORDS:
+        for w in ws:
+            df[w] = df.get(w, 0) + 1
+    n = len(FAQ)
+    _IDF.update({w: math.log(1 + n / c) for w, c in df.items()})
+
+
+def _faq_best(message: str) -> tuple[Optional[tuple[str, str]], float, int]:
+    """Best FAQ entry by weighted overlap: concepts and rare words count more than common ones."""
+    _index()
     msg = _words(message)
-    best, score = None, 0
-    for keys, q, a in FAQ:
-        s = len(msg & _words(keys + " " + q))
+    best, score = None, 0.0
+    for (keys, q, a), ws, qs in zip(FAQ, _FAQ_WORDS, _Q_WORDS):
+        shared = msg & ws
+        # a concept counts more than a plain word; a word from the question itself more than one from the keywords
+        s = sum(_IDF.get(w, 0) * (1.6 if w.startswith("@") else 1.0) * (1.5 if w in qs else 1.0) for w in shared)
         if s > score:
             best, score = (q, a), s
     return best, score, len(msg)
 
 
-def faq_match(message: str) -> Optional[tuple[str, str]]:
-    """Best FAQ entry by shared word stems (first 6 letters, so «отчёта» meets «отчёт»)."""
-    best, score, n = _faq_best(message)
-    # a long message needs two shared stems: one common word must not hijack an unrelated question
-    return best if score >= (2 if n >= 5 else 1) else None
+CONFIDENT = 5.0   # tuned on tests/test_support_eval.py: lowest correct match 5.6, highest off-topic below 4
+GUESS = 4.0       # when the model is unavailable: offered as «похоже, вы спрашиваете…»
+
+
+def faq_match(message: str, threshold: float = CONFIDENT) -> Optional[tuple[str, str]]:
+    best, score, _ = _faq_best(message)
+    return best if score >= threshold else None
 
 
 # questions about the user's own report go to the model, which sees that report
@@ -222,7 +308,7 @@ def answer(message: str, history: list[dict] | None = None, lang: str = "ru", au
     lang = lang if lang in LANG_NAME else "ru"
     # instant answer for clear product questions (Russian knowledge base; other languages go to the model)
     best, score, n = _faq_best(message)
-    confident = best is not None and score >= (2 if n >= 4 else 1)
+    confident = best is not None and score >= CONFIDENT
     if confident and lang == "ru" and not (audit is not None and ABOUT_REPORT.search(message)):
         q, a = best
         return Reply(a, "faq", False, _related(q))
@@ -244,6 +330,10 @@ def answer(message: str, history: list[dict] | None = None, lang: str = "ru", au
     if hit:
         q, a = hit
         return Reply(a, "faq", False, _related(q))
+    guess = faq_match(message, GUESS)
+    if guess:
+        q, a = guess
+        return Reply(f"Похоже, вы спрашиваете: «{q}»\n\n{a}", "faq", False, _related(q))
     return Reply("Я пока не знаю ответа на этот вопрос. Нажмите «Передать команде» и оставьте контакт — "
                  "человек из команды LÜMEN ответит вам.", "faq", True, [FAQ[0][1], FAQ[1][1], FAQ[3][1]])
 
@@ -256,11 +346,27 @@ def _related(q: str) -> list[str]:
 
 
 # ---------------------------------------------------------------- hand-over to a person
+def _ticket_db(cfg):
+    """(url, headers) of the Supabase support_tickets table, or None when Supabase is not configured."""
+    if cfg is None or not (cfg.supabase_url and cfg.supabase_key):
+        return None
+    key = cfg.supabase_key.strip()
+    h = {"apikey": key, "content-type": "application/json"}
+    if not key.startswith("sb_"):
+        h["authorization"] = f"Bearer {key}"
+    return cfg.supabase_url.rstrip("/") + "/rest/v1/support_tickets", h
+
+
 def save_ticket(data_dir, message: str, history: list[dict] | None, contact: str = "", channel: str = "site",
-                audit_id: str = "") -> dict:
-    """Keeps the question for the team (data/support/tickets.jsonl) and, if LUMEN_SUPPORT_CHAT_ID is set, forwards it
-    to that Telegram chat. Returns the ticket."""
+                audit_id: str = "", cfg=None) -> dict:
+    """Keeps the question for the team and returns the ticket.
+
+    Where it goes: the Supabase table support_tickets (survives restarts; migration 003), otherwise the server file
+    data/support/tickets.jsonl; plus a Telegram message to LUMEN_SUPPORT_CHAT_ID when that is set. The admin sees all
+    tickets in Settings → «Обращения в поддержку».
+    """
     import json
+    import logging
     import os
     import time
     import uuid
@@ -269,10 +375,23 @@ def save_ticket(data_dir, message: str, history: list[dict] | None, contact: str
     t = {"id": uuid.uuid4().hex[:10], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "channel": channel,
          "message": message[:2000], "contact": contact[:200], "audit_id": audit_id[:64],
          "history": [{"role": h.get("role"), "text": str(h.get("text", ""))[:600]} for h in (history or [])[-6:]]}
-    folder = Path(data_dir) / "support"
-    folder.mkdir(parents=True, exist_ok=True)
-    with open(folder / "tickets.jsonl", "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(t, ensure_ascii=False) + "\n")
+    saved = False
+    db = _ticket_db(cfg)
+    if db:
+        try:
+            import httpx
+
+            r = httpx.post(db[0], json=t, headers={**db[1], "prefer": "return=minimal"}, timeout=10)
+            r.raise_for_status()
+            saved = True
+        except Exception as e:  # table missing or no rights: keep the ticket on disk instead
+            logging.getLogger("lumen.support").warning("Обращение не записано в Supabase (%s) — сохраняю в файл",
+                                                       type(e).__name__)
+    if not saved:
+        folder = Path(data_dir) / "support"
+        folder.mkdir(parents=True, exist_ok=True)
+        with open(folder / "tickets.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(t, ensure_ascii=False) + "\n")
     chat, token = os.environ.get("LUMEN_SUPPORT_CHAT_ID", ""), os.environ.get("TELEGRAM_BOT_TOKEN", "")
     if chat and token:
         try:
@@ -288,12 +407,23 @@ def save_ticket(data_dir, message: str, history: list[dict] | None, contact: str
     return t
 
 
-def list_tickets(data_dir, limit: int = 100) -> list[dict]:
+def list_tickets(data_dir, limit: int = 100, cfg=None) -> list[dict]:
     import json
     from pathlib import Path
 
+    rows: list[dict] = []
+    db = _ticket_db(cfg)
+    if db:
+        try:
+            import httpx
+
+            r = httpx.get(db[0], params={"select": "*", "order": "at.desc", "limit": str(limit)}, headers=db[1], timeout=10)
+            r.raise_for_status()
+            rows = r.json()
+        except Exception:
+            rows = []
     p = Path(data_dir) / "support" / "tickets.jsonl"
-    if not p.exists():
-        return []
-    rows = [json.loads(line) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
-    return rows[-limit:][::-1]
+    if p.exists():
+        rows += [json.loads(line) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()][::-1]
+    rows.sort(key=lambda x: x.get("at", ""), reverse=True)
+    return rows[:limit]

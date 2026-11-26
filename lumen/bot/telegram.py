@@ -416,7 +416,7 @@ class TelegramBot:
                                         for who, t in hist], "ru", None, client)
             msg = rep.answer
             if rep.escalate:
-                save_ticket(self.svc.cfg.data_dir, text, None, f"telegram:{chat}", "telegram")
+                save_ticket(self.svc.cfg.data_dir, text, None, f"telegram:{chat}", "telegram", cfg=self.svc.cfg)
                 msg += "\n\n📨 Передал вопрос команде LÜMEN."
             hist += [("Пользователь", text), ("LÜMEN", rep.answer)]
             del hist[:-12]
