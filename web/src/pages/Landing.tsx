@@ -187,14 +187,6 @@ export default function Landing() {
           </motion.div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-20">
-          <motion.div {...up} className="relative overflow-hidden rounded-3xl p-10 text-center text-white md:p-14 grad-bg animate-shimmer" style={{ backgroundSize: "200% 100%" }}>
-            <div className="text-[28px] font-semibold tracking-[-0.02em] md:text-[36px]">{t("land.final")}</div>
-            <Link to="/new" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-[15px] font-semibold text-[#1a2a6b] shadow-xl transition hover:-translate-y-0.5">
-              {t("land.cta")}<ArrowRight size={17} />
-            </Link>
-          </motion.div>
-        </section>
       </main>
       <footer className="relative z-[1] border-t border-line py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 text-[13px] text-ink-faint">
