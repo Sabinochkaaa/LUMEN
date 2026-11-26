@@ -121,7 +121,7 @@ export default function NewAudit() {
   return (
     <div>
       <PageHead title={t("new.title")} sub={t("new.sub")} />
-      <AgentBuddy compact agent={0} mood="idle" say={file ? t("ab.newFile", { name: file.name }) : t("ab.new")} />
+      <AgentBuddy agent={0} mood="idle" say={file ? t("ab.newFile", { name: file.name }) : t("ab.new")} />
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <motion.div
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}

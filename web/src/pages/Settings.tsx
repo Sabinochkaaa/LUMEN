@@ -29,7 +29,7 @@ export default function Settings() {
   return (
     <div>
       <PageHead title={t("set.title")} sub={t("set.sub")} />
-      <AgentBuddy compact agent={4} mood="idle"
+      <AgentBuddy agent={4} mood="idle"
         say={health?.storage_degraded && health.storage_error ? t("ab.setDb", { err: health.storage_error }) : t("ab.set")}
         onPick={() => window.dispatchEvent(new Event("lumen:support"))} />
       <section className="card mb-6 flex flex-wrap items-center gap-6 p-6">

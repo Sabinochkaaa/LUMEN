@@ -32,7 +32,12 @@ export function useSpeech(lang: string, onText: (text: string, final: boolean) =
       }
       cb.current(text.trim(), final);
     };
-    r.onerror = (e: any) => setError(e.error === "not-allowed" ? "mic" : e.error || "error");
+    // "no-speech" and "aborted" are normal (silence, user stopped); everything else is shown to the user
+    r.onerror = (e: any) => {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      setError(e.error === "not-allowed" || e.error === "service-not-allowed" ? "mic" : e.error === "network" ? "network"
+        : e.error === "language-not-supported" ? "lang" : "error");
+    };
     r.onend = () => setListening(false);
     rec.current = r;
     try { r.start(); setListening(true); } catch { setListening(false); }

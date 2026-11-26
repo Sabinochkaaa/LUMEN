@@ -120,6 +120,7 @@ export default function SupportWidget() {
                 {chips.map((c) => <button key={c} onClick={() => ask(c)} className="rounded-full border border-line px-3 py-1 text-[12.5px] text-ink-soft hover:border-signal/50 hover:text-ink">{c}</button>)}
               </div>
             )}
+            {voice.error && <div className="px-4 pb-1 text-[12.5px] text-bad">{t(`voice.${voice.error}`)}</div>}
             {handoff ? (
               <form onSubmit={sendTicket} className="flex gap-2 border-t border-line p-3">
                 <input value={contact} onChange={(e) => setContact(e.target.value)} maxLength={200} placeholder={t("sup.contact")} aria-label={t("sup.contact")}
@@ -131,7 +132,7 @@ export default function SupportWidget() {
                 <input value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} placeholder={voice.listening ? t("voice.listening") : t("sup.place")} aria-label={t("sup.place")}
                   className="min-w-0 flex-1 rounded-xl border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-signal" />
                 {voice.supported && (
-                  <button type="button" onClick={voice.toggle} aria-pressed={voice.listening} aria-label={t("voice.mic")} title={t("voice.mic")}
+                  <button type="button" onClick={voice.toggle} aria-pressed={voice.listening} aria-label={t("voice.btn")} title={t("voice.btn")}
                     className={`relative rounded-xl border px-3 ${voice.listening ? "border-transparent bg-bad text-white" : "border-line text-ink-soft hover:text-ink"}`}>
                     {voice.listening && <span className="absolute inset-0 animate-ping rounded-xl bg-bad/40" />}
                     <Mic size={16} className="relative" />

@@ -153,11 +153,15 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
 
     // solo: a glowing tablet held in front of the chest, and a head that follows the pointer
     const tabletMat = new THREE.MeshStandardMaterial({ color: "#0F1626", emissive: new THREE.Color(tint ?? AGENT_COLORS[agent] ?? "#7C4DFF"), emissiveIntensity: 0.25 });
-    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.44, 0.04), tabletMat);
+    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.32, 0.025), tabletMat);
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.38, 0.02),
+      new THREE.MeshPhysicalMaterial({ color: "#F1F3F8", roughness: 0.25, clearcoat: 1 }));
+    frame.position.z = -0.015;
+    tablet.add(frame);
     const sparks: THREE.Mesh[] = [];
     if (solo) {
-      tablet.position.set(0, 0.95, 0.62);
-      tablet.rotation.x = -0.35;
+      tablet.position.set(0, 0.86, 0.6);
+      tablet.rotation.x = -0.55;
       bots[0].root.add(tablet);
       for (let k = 0; k < 6; k++) {
         const sp = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0 }));
@@ -238,7 +242,7 @@ export default function AgentTeam3D({ active = -1, onPick, mode = "lineup", work
           const busy = md === "working";
           const done = md === "done";
           if (tn) tabletMat.emissive.lerp(new THREE.Color(tn), 0.08);
-          tabletMat.emissiveIntensity = busy ? 0.9 + Math.sin(t * 10) * 0.3 : done ? 0.75 : 0.22;
+          tabletMat.emissiveIntensity = busy ? 1.1 + Math.sin(t * 10) * 0.3 : done ? 0.9 : 0.55;
           const s = over ? 1.06 : 1;
           b.root.scale.lerp(tmp.set(s, s, s), 0.12);
           if (!still) {

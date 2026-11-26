@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Download, FileSearch, Loader2, Mic, Sparkles } from "lucide-react";
@@ -21,8 +21,12 @@ export default function Generate() {
   const [res, setRes] = useState<{ title: string; markdown: string } | null>(() => {
     try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; }
   });
+  // spoken words appear in the field live; the phrase is appended to what was already typed
+  const base = useRef<string | null>(null);
   const voice = useSpeech(lang, (said, final) => {
-    if (final) setIdea((v) => (v ? v.trimEnd() + " " : "") + said);
+    if (base.current === null) base.current = idea ? idea.trimEnd() + " " : "";
+    setIdea(base.current + said);
+    if (final) base.current = null;
   });
 
   const run = async () => {
@@ -53,7 +57,7 @@ export default function Generate() {
             <textarea value={idea} onChange={(e) => setIdea(e.target.value)} maxLength={4000} rows={9} placeholder={t("gen.place")}
               className="w-full resize-y rounded-xl border border-line bg-canvas px-3.5 py-3 text-[14px] leading-relaxed outline-none focus:border-signal" />
             {voice.supported && (
-              <button type="button" onClick={voice.toggle} aria-pressed={voice.listening} aria-label={t("voice.mic")} title={t("voice.mic")}
+              <button type="button" onClick={voice.toggle} aria-pressed={voice.listening} aria-label={t("voice.btn")} title={t("voice.btn")}
                 className={`absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full ${voice.listening ? "bg-bad text-white" : "bg-line/80 text-ink-soft hover:text-ink"}`}>
                 {voice.listening && <span className="absolute inset-0 animate-ping rounded-full bg-bad/40" />}
                 <Mic size={16} className="relative" />
@@ -65,7 +69,7 @@ export default function Generate() {
               <button key={x} onClick={() => setIdea(x)} className="rounded-full border border-line px-3 py-1 text-[12.5px] text-ink-soft hover:border-signal/50 hover:text-ink">{x.slice(0, 42)}…</button>
             ))}
           </div>
-          {voice.error === "mic" && <p className="meta">{t("voice.denied")}</p>}
+          {voice.error && <p className="text-[13px] text-bad">{t(`voice.${voice.error}`)}</p>}
           {error && <ErrorBox error={error} />}
           <button className="btn-primary justify-center py-3" disabled={idea.trim().length < 10 || busy} onClick={run}>
             {busy ? <><Loader2 size={16} className="animate-spin" />{t("gen.running")}</> : <><Sparkles size={16} />{t("gen.run")}</>}
