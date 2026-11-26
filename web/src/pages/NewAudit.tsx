@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, CircleAlert, FileUp, Loader2, SkipForward, Sparkles } from "lucide-react";
+import { Check, CircleAlert, FileUp, Highlighter, Loader2, SkipForward } from "lucide-react";
 import { api, Line, StageEvent } from "../api";
 import DocumentLens from "../components/DocumentLens";
 import { ErrorBox, PageHead } from "../components/ui";
@@ -116,9 +116,8 @@ export default function NewAudit() {
           onClick={() => input.current?.click()} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && input.current?.click()}
           role="button" tabIndex={0} animate={{ scale: drag ? 1.015 : 1 }}
           className={`card relative flex min-h-[360px] cursor-pointer flex-col items-center justify-center overflow-hidden border-2 border-dashed px-8 text-center transition-colors ${drag ? "border-signal bg-signal/5" : "border-line hover:border-signal/50"}`}>
-          <div className="absolute -bottom-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full opacity-25 blur-3xl grad-bg" />
           <input ref={input} type="file" hidden accept=".pdf,.docx,.md,.markdown,.txt,.html,.htm,.rtf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp" onChange={(e) => pick(e.target.files?.[0])} />
-          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity }} className="relative flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-glow grad-bg">
+          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity }} className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-marker text-[#0B1F33]">
             <FileUp size={30} strokeWidth={1.7} />
           </motion.div>
           {file ? (<>
@@ -146,7 +145,7 @@ export default function NewAudit() {
           </div>
           {health?.auth_required && !localStorage.getItem("lumen.token") && <p className="rounded-xl bg-signal/10 px-3 py-2 text-[13px] text-signal">{t("new.token")}</p>}
           {error && <ErrorBox error={error} />}
-          <button className="btn-primary mt-auto justify-center py-3" disabled={!file} onClick={start}><Sparkles size={16} />{t("new.start")}</button>
+          <button className="btn-primary mt-auto justify-center py-3" disabled={!file} onClick={start}><Highlighter size={16} />{t("new.start")}</button>
         </div>
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-3">

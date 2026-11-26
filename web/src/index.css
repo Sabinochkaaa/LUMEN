@@ -2,79 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Themes ──────────────────────────────────────────────────────────── */
+/* ── Themes ──────────────────────────────────────────────────────────────
+   Identity: a reviewer's highlighter on a bank document. Ink + marker yellow;
+   «Аспан» uses the sky-blue and sun-gold of the Kazakh flag. */
 :root, [data-theme="light"] {
   color-scheme: light;
-  --canvas: 243 245 250; --surface: 255 255 255; --surface-2: 248 250 253;
-  --ink: 14 26 51; --ink-soft: 71 84 103; --ink-faint: 145 155 175; --line: 228 232 240;
-  --signal: 37 87 235; --signal-dark: 26 64 190; --sky: 14 165 233; --violet: 124 58 237; --pink: 219 39 119;
-  --ok: 18 161 80; --warn: 202 138 4; --bad: 217 45 32; --shadow: 14 26 51;
-  --grad: linear-gradient(120deg, #2557EB 0%, #7C3AED 50%, #0EA5E9 100%);
-  --blob-a: 37 87 235; --blob-b: 124 58 237; --blob-c: 14 165 233; --blob-o: .16;
+  --canvas: 244 246 248; --surface: 255 255 255; --surface-2: 248 250 251;
+  --ink: 11 31 51; --ink-soft: 74 91 109; --ink-faint: 142 155 170; --line: 225 230 236;
+  --brand: 21 101 216; --marker: 255 212 59; --fill: 11 31 51;
+  --btn: 11 31 51; --on-btn: 255 255 255;
+  --signal: 21 101 216; --signal-dark: 14 78 176; --sky: 34 139 230; --violet: 112 72 232; --pink: 230 73 128;
+  --ok: 19 163 110; --warn: 176 137 0; --bad: 224 49 49; --shadow: 11 31 51;
+  --dot: 11 31 51; --dot-o: .07;
 }
 [data-theme="dark"] {
   color-scheme: dark;
-  --canvas: 8 12 22; --surface: 16 22 36; --surface-2: 21 29 46;
-  --ink: 233 237 246; --ink-soft: 160 171 192; --ink-faint: 102 115 140; --line: 36 46 68;
-  --signal: 99 145 255; --signal-dark: 70 118 240; --sky: 56 189 248; --violet: 167 139 250; --pink: 244 114 182;
-  --ok: 52 211 153; --warn: 251 191 36; --bad: 248 113 113; --shadow: 0 0 0;
-  --grad: linear-gradient(120deg, #6391FF 0%, #A78BFA 50%, #38BDF8 100%);
-  --blob-a: 99 145 255; --blob-b: 167 139 250; --blob-c: 56 189 248; --blob-o: .14;
+  --canvas: 10 18 28; --surface: 17 28 41; --surface-2: 22 35 51;
+  --ink: 234 240 246; --ink-soft: 158 174 192; --ink-faint: 98 115 136; --line: 34 51 72;
+  --brand: 255 212 59; --marker: 255 212 59; --fill: 61 123 255;
+  --btn: 255 212 59; --on-btn: 11 31 51;
+  --signal: 110 160 255; --signal-dark: 80 135 245; --sky: 116 192 252; --violet: 177 151 252; --pink: 247 131 172;
+  --ok: 56 217 169; --warn: 255 212 59; --bad: 255 107 107; --shadow: 0 0 0;
+  --dot: 255 255 255; --dot-o: .05;
 }
-[data-theme="aurora"] {
+[data-theme="aspan"] {
   color-scheme: dark;
-  --canvas: 11 8 30; --surface: 24 19 52; --surface-2: 32 26 66;
-  --ink: 244 241 255; --ink-soft: 190 182 226; --ink-faint: 132 122 176; --line: 56 47 98;
-  --signal: 94 172 255; --signal-dark: 64 146 240; --sky: 45 226 196; --violet: 232 90 255; --pink: 255 107 179;
-  --ok: 74 222 160; --warn: 255 200 87; --bad: 255 112 130; --shadow: 0 0 0;
-  --grad: linear-gradient(120deg, #5EACFF 0%, #E85AFF 45%, #2DE2C4 100%);
-  --blob-a: 94 172 255; --blob-b: 232 90 255; --blob-c: 45 226 196; --blob-o: .28;
+  --canvas: 3 39 52; --surface: 6 54 70; --surface-2: 9 66 84;
+  --ink: 236 252 255; --ink-soft: 166 214 226; --ink-faint: 104 160 176; --line: 18 90 110;
+  --brand: 254 197 12; --marker: 254 197 12; --fill: 0 150 180;
+  --btn: 254 197 12; --on-btn: 3 39 52;
+  --signal: 0 200 230; --signal-dark: 0 170 200; --sky: 0 200 230; --violet: 190 160 255; --pink: 255 140 170;
+  --ok: 80 230 170; --warn: 254 197 12; --bad: 255 120 120; --shadow: 0 0 0;
+  --dot: 254 197 12; --dot-o: .06;
 }
 
 html, body, #root { height: 100%; }
 body { @apply bg-canvas text-ink font-sans antialiased; font-feature-settings: "ss01", "cv11"; transition: background-color .35s ease, color .35s ease; }
-::selection { background: rgb(var(--signal) / .25); }
-:focus-visible { outline: 2px solid rgb(var(--signal)); outline-offset: 2px; border-radius: 6px; }
+::selection { background: rgb(var(--marker) / .55); color: rgb(11 31 51); }
+:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 2px; border-radius: 6px; }
 * { scrollbar-width: thin; scrollbar-color: rgb(var(--line)) transparent; }
+h1, h2, .font-display { font-family: "Geologica Variable", "Onest Variable", system-ui, sans-serif; }
 
 @layer components {
   .card { @apply bg-surface rounded-2xl border border-line; transition: background-color .35s ease, border-color .35s ease, box-shadow .25s ease, transform .25s ease; }
-  .card-hover:hover { @apply shadow-lift; transform: translateY(-2px); }
+  .card-hover:hover { @apply shadow-lift; transform: translateY(-2px); border-color: rgb(var(--ink) / .14); }
   .btn { @apply inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-primary { @apply btn text-white shadow-glow; background: var(--grad); background-size: 200% 100%; }
-  .btn-primary:hover:not(:disabled) { background-position: 100% 0; transform: translateY(-1px); }
+  .btn-primary { @apply btn; background: rgb(var(--btn)); color: rgb(var(--on-btn)); }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 0 4px rgb(var(--marker) / .45); }
   .btn-ghost { @apply btn text-ink-soft hover:bg-ink/5 hover:text-ink; }
-  .btn-line { @apply btn border border-line bg-surface hover:border-signal/50 hover:text-signal; }
+  .btn-line { @apply btn border border-line bg-surface hover:border-ink/30; }
   .h1 { @apply text-[28px] leading-[1.15] font-semibold tracking-[-0.02em]; }
   .h2 { @apply text-lg font-semibold tracking-[-0.01em]; }
   .meta { @apply text-[13px] text-ink-soft; }
   .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium; }
-  .input { @apply w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20; }
-  .grad-text { background: var(--grad); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .grad-bg { background: var(--grad); }
+  .input { @apply w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-marker/40; }
+  /* legacy names kept for components: now solid, theme-aware */
+  .grad-text { color: rgb(var(--brand)); }
+  .grad-bg { background: rgb(var(--fill)); color: #fff; }
+  /* highlighter stroke, like a reviewer's marker */
+  .mark { background: linear-gradient(100deg, transparent 0.6%, rgb(var(--marker) / .85) 2%, rgb(var(--marker) / .55) 96%, transparent 98.5%);
+          border-radius: .35em .15em; padding: .02em .25em; box-decoration-break: clone; -webkit-box-decoration-break: clone; color: #0B1F33; }
 }
 
-/* ── Aurora background (all themes; strongest in Aurora) ─────────────── */
-.aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.aurora i { position: absolute; width: 46vmax; height: 46vmax; border-radius: 50%; filter: blur(70px); opacity: var(--blob-o); animation: drift 26s ease-in-out infinite alternate; }
-.aurora i:nth-child(1) { background: rgb(var(--blob-a)); top: -18vmax; left: -10vmax; }
-.aurora i:nth-child(2) { background: rgb(var(--blob-b)); top: 20vh; right: -16vmax; animation-duration: 32s; }
-.aurora i:nth-child(3) { background: rgb(var(--blob-c)); bottom: -22vmax; left: 30vw; animation-duration: 38s; }
-@keyframes drift { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(6vmax, 4vmax) scale(1.12); } 100% { transform: translate(-4vmax, 8vmax) scale(.95); } }
+/* ── Document-paper background: faint dot grid (replaces glowing blobs) ── */
+.aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(rgb(var(--dot) / var(--dot-o)) 1px, transparent 1.2px); background-size: 22px 22px;
+  mask-image: linear-gradient(180deg, #000 0%, transparent 85%); -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 85%); }
+.aurora i { display: none; }
 
-/* ── The LÜMEN beam ──────────────────────────────────────────────────── */
+/* ── The LÜMEN beam ─────────────────────────────────────────────────────── */
 .lens-beam {
-  position: absolute; left: 0; right: 0; height: 120px; pointer-events: none; z-index: 2;
-  background: linear-gradient(180deg, transparent 0%, rgb(var(--sky) / .14) 42%, rgb(var(--signal) / .30) 50%, rgb(var(--violet) / .14) 58%, transparent 100%);
+  position: absolute; left: 0; right: 0; height: 90px; pointer-events: none; z-index: 2;
+  background: linear-gradient(180deg, transparent 0%, rgb(var(--marker) / .10) 40%, rgb(var(--marker) / .28) 50%, rgb(var(--marker) / .10) 60%, transparent 100%);
   animation: beam 2.6s cubic-bezier(.45,0,.55,1) infinite alternate;
 }
-@keyframes beam { from { top: -60px } to { top: calc(100% - 60px) } }
+@keyframes beam { from { top: -45px } to { top: calc(100% - 45px) } }
 .lens-line-hit { transition: background-color .5s ease; }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-  .lens-beam, .aurora { display: none; }
-}
 
 /* React Flow follows the theme */
 .react-flow__controls-button { background: rgb(var(--surface)); border-color: rgb(var(--line)); fill: rgb(var(--ink-soft)); }
@@ -82,4 +85,8 @@ body { @apply bg-canvas text-ink font-sans antialiased; font-feature-settings: "
 .react-flow__edge-textbg { fill: rgb(var(--surface)); }
 .react-flow__node { color: rgb(var(--ink)); }
 .react-flow, .react-flow__pane, .react-flow__renderer { background: transparent !important; }
-.react-flow { --xy-background-color: transparent; --xy-background-color-default: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .lens-beam { display: none; }
+}

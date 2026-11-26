@@ -33,7 +33,6 @@ function View({ a }: { a: Audit }) {
       <AuditHeader a={a} />
       <motion.div variants={stagger} initial="hidden" animate="show">
         <motion.section variants={rise} className="card relative mb-6 grid gap-8 overflow-hidden p-6 md:grid-cols-[auto_1fr] md:p-8">
-          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-15 blur-3xl grad-bg" />
           <QualityArc value={s.quality_index} size={190} />
           <div className="relative min-w-0">
             <p className="text-[21px] font-medium leading-snug tracking-[-0.01em]">{a.readiness_reason}</p>
