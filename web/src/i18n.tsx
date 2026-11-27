@@ -455,6 +455,8 @@ const D: Record<string, [string, string, string]> = {
   "tk.empty": ["Пока обращений нет.", "Әзірге өтініштер жоқ.", "No tickets yet."],
   "tk.site": ["Сайт", "Сайт", "Website"],
   "buddy.trIdle": ["Привет! Я Переводчик. Брось ТЗ, скан или фото — переведу и сохраню таблицы, ID требований и суммы.", "Сәлем! Мен Аудармашымын. ТЗ, скан немесе фото жіберіңіз — кестелер, талап ID және сомалар сақталады.", "Hi! I'm the Translator. Drop a spec, scan or photo — tables, requirement IDs and amounts stay intact."],
+  "buddy.trShown": ["Справа перевод «{name}» на {lang}. Брось следующий файл — или нажми «Новый перевод».", "Оң жақта «{name}» файлының {lang} аудармасы. Келесі файлды жіберіңіз — немесе «Жаңа аударма» батырмасын басыңыз.", "On the right: «{name}» in {lang}. Drop the next file — or press New translation."],
+  "tr.new": ["Новый перевод", "Жаңа аударма", "New translation"],
   "buddy.trPicked": ["«{name}» у меня. Перевожу на {lang}? Жми «Перевести» — или выбери другой язык.", "«{name}» дайын. {lang} тіліне аударамыз ба? «Аудару» батырмасын басыңыз.", "Got «{name}». Into {lang}? Press Translate — or pick another language."],
   "buddy.trBusy": ["Перевожу на {lang}… таблицы, коды и суммы не трогаю.", "{lang} тіліне аударып жатырмын… кестелер мен кодтар өзгермейді.", "Translating into {lang}… tables, codes and amounts stay as they are."],
   "buddy.trDone": ["Готово! Перевод на {lang} справа — можно скопировать или скачать в Word.", "Дайын! {lang} аудармасы оң жақта — көшіруге не Word-қа жүктеуге болады.", "Done! The {lang} version is on the right — copy it or download as Word."],

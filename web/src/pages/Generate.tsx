@@ -6,6 +6,7 @@ import { api } from "../api";
 import { useT } from "../i18n";
 import { useSpeech } from "../speech";
 import AgentBuddy from "../components/AgentBuddy";
+import MarkdownView from "../components/MarkdownView";
 import { CopyButton, ErrorBox, PageHead } from "../components/panelUi";
 
 const KEY = "lumen.generate.v1";
@@ -95,8 +96,9 @@ export default function Generate() {
               {Array.from({ length: 16 }).map((_, i) => <div key={i} className="mb-3 h-3 animate-pulse rounded bg-line" style={{ width: `${30 + ((i * 37) % 65)}%` }} />)}
             </div>
           ) : res ? (
-            <motion.pre key={res.markdown.length} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="flex-1 overflow-auto whitespace-pre-wrap p-5 font-mono text-[13px] leading-relaxed">{res.markdown}</motion.pre>
+            <motion.div key={res.markdown.length} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 overflow-auto p-5">
+              <MarkdownView text={res.markdown} />
+            </motion.div>
           ) : <div className="meta flex flex-1 items-center justify-center p-6 text-center">{t("gen.empty")}</div>}
         </div>
       </div>
