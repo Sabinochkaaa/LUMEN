@@ -189,7 +189,8 @@ export const api = {
 
 export const SEV_ORDER: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
 export const SEV_RU: Record<Severity, string> = { CRITICAL: "Критический", HIGH: "Высокий", MEDIUM: "Средний", LOW: "Низкий", INFO: "Инфо" };
-export const SEV_COLOR: Record<Severity, string> = { CRITICAL: "#E5484D", HIGH: "#F76B15", MEDIUM: "#E2A30F", LOW: "#3E8BFF", INFO: "#8B95A7" };
+// design 2.0: muted severity palette (docs/DESIGN.md §3) — keep in sync with tailwind.config.js `sev`
+export const SEV_COLOR: Record<Severity, string> = { CRITICAL: "#C53030", HIGH: "#D9622B", MEDIUM: "#B7791F", LOW: "#2B6CB0", INFO: "#718096" };
 export const READY_RU: Record<Readiness, { label: string; tone: string; hint: string }> = {
   "READY": { label: "Готов к разработке", tone: "ready", hint: "Блокирующих проблем нет" },
   "READY WITH CONDITIONS": { label: "Готов с условиями", tone: "cond", hint: "Нужны исправления и согласования" },

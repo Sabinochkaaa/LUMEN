@@ -8,7 +8,8 @@ import { TYPE_I18N, pick, useT } from "../i18n";
 import AuditHeader from "../components/AuditHeader";
 
 const COLS = ["business_goal", "functional", "nonfunctional", "data", "integration", "architecture", "ui", "acceptance", "api", "security", "testing", "other"];
-const RC: Record<string, string> = { conflicts_with: "#E5484D", duplicates: "#F76B15", depends_on: "#3E8BFF", refines: "#0EA5E9", implements: "#12A150", traces_to: "#A855F7" };
+// design 2.0: conflicts and duplicates stand out, ordinary links stay calm
+const RC: Record<string, string> = { conflicts_with: "#C53030", duplicates: "#D9622B", depends_on: "#2B6CB0", refines: "#5A7FA8", implements: "#1E7F4F", traces_to: "#718096" };
 
 export default function Graph() {
   return <AuditGate>{(a) => <View a={a} />}</AuditGate>;
@@ -36,7 +37,7 @@ function View({ a }: { a: Audit }) {
             <div className="flex items-center gap-1.5 text-[12px] font-semibold text-ink"><span className="h-2 w-2 rounded-full" style={{ background: c }} />{r.id}{r.source_id_kind === "explicit" && <span className="font-normal text-ink-soft">{r.source_id}</span>}</div>
             <div className="mt-0.5 line-clamp-2 text-[11px] leading-tight text-ink-soft">{r.summary}</div>
           </div>) },
-        style: { width: 210, borderRadius: 12, border: `1.5px solid ${sel === r.id ? "rgb(var(--signal))" : c}`, background: "rgb(var(--surface))", padding: 8, fontFamily: "inherit", boxShadow: sel === r.id ? "0 0 0 4px rgb(var(--signal) / .2)" : undefined },
+        style: { width: 210, borderRadius: 6, border: `1px solid ${sel === r.id ? "rgb(var(--signal))" : c}`, background: "rgb(var(--surface))", padding: 8, fontFamily: "inherit", boxShadow: sel === r.id ? "0 0 0 3px rgb(var(--signal) / .15)" : undefined },
       };
     });
     const ids = new Set(reqs.map((r) => r.id));

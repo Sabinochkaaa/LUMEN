@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { FileSearch } from "lucide-react";
-import { api, AuditSummary } from "../api";
+import { api, AuditSummary, SEV_COLOR } from "../api";
 import AgentDeck from "../components/AgentDeck";
 import { useT } from "../i18n";
 import { Empty, ErrorBox, Loading, Num, PageHead, ReadinessBadge, Stat, fmtDate, rise, stagger } from "../components/ui";
@@ -31,7 +31,7 @@ export default function Overview() {
             <Stat value={items.length} label={t("ov.audits")} to="/reports" />
             <Stat value={items.reduce((s, x) => s + x.requirements, 0)} label={t("ov.reqs")} />
             <Stat value={avg} decimals={1} label={t("ov.avg")} />
-            <Stat value={items.reduce((s, x) => s + x.critical, 0)} label={t("ov.crit")} tone="#E5484D" />
+            <Stat value={items.reduce((s, x) => s + x.critical, 0)} label={t("ov.crit")} tone={SEV_COLOR.CRITICAL} />
           </motion.div>
           <motion.div variants={rise} className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
             <Link to={`/audits/${last.id}`} className="card card-hover relative block overflow-hidden p-6">
