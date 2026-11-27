@@ -77,6 +77,13 @@ class LocalStore:
             return True
         return False
 
+    def clear(self) -> int:
+        n = 0
+        for p in self.root.glob("*.json"):
+            p.unlink(missing_ok=True)
+            n += 1
+        return n
+
 
 class SupabaseStore:
     kind = "supabase"
@@ -136,6 +143,13 @@ class SupabaseStore:
             resp = c.delete(self.base, params={"id": f"eq.{audit_id}"})
             resp.raise_for_status()
         return True
+
+    def clear(self) -> int:
+        with self._c() as c:  # PostgREST refuses a DELETE without a filter: «every row with an id» is all of them
+            resp = c.delete(self.base, params={"id": "not.is.null"}, headers={**self.h, "prefer": "count=exact"})
+            resp.raise_for_status()
+            rng = resp.headers.get("content-range", "")
+        return int(rng.split("/")[-1]) if rng.split("/")[-1].isdigit() else 0
 
 
 def key_kind(key: str) -> str:
@@ -219,6 +233,10 @@ class FallbackStore:
     def delete(self, audit_id: str) -> bool:
         self._try("delete", audit_id)
         return self.local.delete(audit_id)
+
+    def clear(self) -> int:
+        remote = self._try("clear", default=0) or 0
+        return max(remote, self.local.clear())
 
 
 def make_store(cfg: Settings | None = None):

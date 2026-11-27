@@ -84,6 +84,7 @@ export default function Settings() {
         </section>
       </div>
       {admin && <Tickets />}
+      {admin && <WipeAll />}
       {crit && (
         <section className="card mt-6 p-6">
           <div className="h2">{t("set.criteria")}</div>
@@ -127,6 +128,41 @@ function Tickets() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/** Admin only: delete every report before a clean demo. Two steps, so a stray click cannot wipe the archive. */
+function WipeAll() {
+  const { t } = useT();
+  const { setLastId } = useApp();
+  const [step, setStep] = useState<"idle" | "confirm" | "busy" | "done">("idle");
+  const [n, setN] = useState(0);
+  const [err, setErr] = useState("");
+  const wipe = async () => {
+    setStep("busy"); setErr("");
+    try {
+      const r = await api.removeAll();
+      setN(r.deleted); setStep("done");
+      setLastId("");
+      try { localStorage.removeItem("lumen.last"); } catch { /* storage off */ }
+    } catch (e: any) { setErr(e.message); setStep("idle"); }
+  };
+  return (
+    <section className="card mt-6 border-bad/30 p-6">
+      <div className="h2">{t("wipe.title")}</div>
+      <p className="meta mt-1">{t("wipe.sub")}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {step === "idle" && <button className="btn-line border-bad/50 text-bad" onClick={() => setStep("confirm")}>{t("wipe.btn")}</button>}
+        {step === "confirm" && <>
+          <span className="text-[14px] font-medium text-bad">{t("wipe.sure")}</span>
+          <button className="btn-primary !bg-bad" onClick={wipe}>{t("wipe.yes")}</button>
+          <button className="btn-line" onClick={() => setStep("idle")}>{t("wipe.no")}</button>
+        </>}
+        {step === "busy" && <span className="meta">{t("wipe.busy")}</span>}
+        {step === "done" && <span className="text-[14px] text-ok">{t("wipe.done", { n })}</span>}
+      </div>
+      {err && <p className="mt-2 text-[13px] text-bad">{err}</p>}
     </section>
   );
 }
