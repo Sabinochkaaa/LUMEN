@@ -24,7 +24,8 @@ const Translate = lazy(() => import("./pages/Translate"));
 const Generate = lazy(() => import("./pages/Generate"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
-import { Empty, ErrorBox, LangSwitch, Loading, Logo, ThemeSwitch } from "./components/ui";
+import { LangSwitch, Logo, ThemeSwitch } from "./components/ui";
+import { Empty, ErrorBox, Loading } from "./components/panelUi";
 
 // ---------------------------------------------------------------- shared state
 interface Ctx { health: Health | null; lastId: string | null; setLastId: (id: string) => void; admin: boolean; refreshAuth: () => void }
@@ -145,7 +146,8 @@ function AnimatedOutlet() {
   const outlet = useOutlet();
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key={loc.pathname} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12, ease: "easeOut" }}>
+      <motion.div key={loc.pathname} initial={{ opacity: 0, y: 14, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none", transform: "none" } }}
+        exit={{ opacity: 0, y: -8, filter: "blur(2px)" }} transition={{ type: "spring", stiffness: 260, damping: 28, mass: 0.8 }}>
         {outlet && cloneElement(outlet, { key: loc.pathname })}
       </motion.div>
     </AnimatePresence>
@@ -175,7 +177,11 @@ function Shell() {
           <button className="btn-ghost px-2" onClick={() => setOpen(!open)} aria-label={t("ui.menu")}>{open ? <X size={18} /> : <Menu size={18} />}</button>
           <Logo size={30} /><span className="font-semibold tracking-[0.06em]">LÜMEN</span>
         </div>
-        <div className="mx-auto max-w-[1280px] px-5 py-7 md:px-10"><AnimatedOutlet /></div>
+        {/* the page content keeps the design 1.0 look (index.css, .panel-v1); the menu stays on the current design */}
+        <div className="panel-v1 relative min-h-screen">
+          <div className="aurora" aria-hidden><i /><i /><i /></div>
+          <div className="relative z-[1] mx-auto max-w-[1280px] px-5 py-8 md:px-10"><AnimatedOutlet /></div>
+        </div>
       </main>
     </div>
   );

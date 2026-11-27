@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { FileSearch } from "lucide-react";
-import { api, AuditSummary, SEV_COLOR } from "../api";
+import { api, AuditSummary } from "../api";
 import AgentDeck from "../components/AgentDeck";
 import { useT } from "../i18n";
-import { Empty, ErrorBox, Loading, Num, PageHead, ReadinessBadge, Stat, fmtDate, rise, stagger } from "../components/ui";
+import { Empty, ErrorBox, Loading, Num, PageHead, ReadinessBadge, Stat, fmtDate, rise, stagger } from "../components/panelUi";
 
 export default function Overview() {
   const { t, lang } = useT();
@@ -31,15 +31,16 @@ export default function Overview() {
             <Stat value={items.length} label={t("ov.audits")} to="/reports" />
             <Stat value={items.reduce((s, x) => s + x.requirements, 0)} label={t("ov.reqs")} />
             <Stat value={avg} decimals={1} label={t("ov.avg")} />
-            <Stat value={items.reduce((s, x) => s + x.critical, 0)} label={t("ov.crit")} tone={SEV_COLOR.CRITICAL} />
+            <Stat value={items.reduce((s, x) => s + x.critical, 0)} label={t("ov.crit")} tone="#E5484D" />
           </motion.div>
           <motion.div variants={rise} className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
             <Link to={`/audits/${last.id}`} className="card card-hover relative block overflow-hidden p-6">
+              <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-20 blur-2xl grad-bg" />
               <div className="meta">{t("ov.last")} · {fmtDate(last.analysed_at, lang)}</div>
               <div className="mt-2 text-xl font-semibold leading-snug">{last.document_title || last.document_name}</div>
               <div className="mt-3"><ReadinessBadge r={last.readiness} /></div>
               <div className="mt-6 grid grid-cols-3 gap-4">
-                <div><div className="text-2xl font-semibold"><Num value={last.quality_index} decimals={1} /></div><div className="meta">{t("ov.index")}</div></div>
+                <div><div className="text-2xl font-semibold grad-text"><Num value={last.quality_index} decimals={1} /></div><div className="meta">{t("ov.index")}</div></div>
                 <div><div className="text-2xl font-semibold"><Num value={last.findings} /></div><div className="meta">{t("ov.findings")}</div></div>
                 <div><div className="text-2xl font-semibold text-violet"><Num value={last.open_questions} /></div><div className="meta">{t("ov.questions")}</div></div>
               </div>

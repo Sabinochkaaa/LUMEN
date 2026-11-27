@@ -1,47 +1,50 @@
-import { ReactNode } from "react";
+import { ReactNode, Suspense, lazy } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
 import { useT } from "../i18n";
 import { AGENTS, AGENT_COLORS } from "./agents";
-import RobotIcon from "./RobotIcon";
+
+const AgentTeam3D = lazy(() => import("./AgentTeam3D"));
 
 /**
- * One agent «on duty» for a page. Design 2.0: a compact hint strip with a flat portrait (no 3D in the panel,
- * docs/DESIGN.md §9) — the agent's name, its role and what it says about this page right now.
+ * One agent «on duty» for a page: a live 3D robot that follows the pointer, holds a glowing tablet,
+ * works while the page is busy and celebrates when it is done, plus what it says right now.
  */
-export default function AgentBuddy({ agent, mood, say, onPick, children, compact = false }: {
+export default function AgentBuddy({ agent, mood, say, tint, onPick, children, compact = false }: {
   agent: number; mood: "idle" | "working" | "done"; say: string; tint?: string; onPick?: () => void; children?: ReactNode;
   /** a lower strip for pages where the content matters more than the robot */
   compact?: boolean;
 }) {
-  const { lang, t } = useT();
+  const { lang } = useT();
   const a = AGENTS[agent];
   const color = AGENT_COLORS[agent];
   return (
-    <div className={`card flex items-start gap-3.5 ${compact ? "mb-5 px-4 py-3" : "mb-6 px-4 py-3.5"}`} style={{ borderLeft: `3px solid ${color}` }}>
-      <button type="button" onClick={onPick} disabled={!onPick} aria-label={a.name[lang]}
-        className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-line bg-surface-2 disabled:cursor-default">
-        <RobotIcon agent={agent} size={28} active={mood === "working"} />
-      </button>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 text-[13px]">
-          <span className="font-semibold text-ink">{a.name[lang]}</span>
-          <span className="text-ink-faint">{a.role[lang]}</span>
-          {mood === "working" && <span className="chip bg-signal/10 text-signal">{t("ui.loading")}</span>}
+    <div className={`card relative flex items-stretch overflow-hidden ${compact ? "mb-5 flex-row" : "mb-6 flex-col sm:flex-row"}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-[0.10]"
+        style={{ background: `radial-gradient(60% 120% at 12% 50%, ${tint ?? color} 0%, transparent 70%)` }} />
+      <div className={`relative shrink-0 ${compact ? "h-[128px] w-[120px] sm:w-[150px]" : "h-[190px] sm:h-[200px] sm:w-[220px]"}`}>
+        <Suspense fallback={null}>
+          <AgentTeam3D mode="solo" agent={agent} mood={mood} tint={tint} onPick={onPick ? () => onPick() : undefined}
+            className="h-full w-full" label={a.name[lang]} />
+        </Suspense>
+      </div>
+      <div className={`relative flex min-w-0 flex-1 flex-col justify-center ${compact ? "gap-2 py-3 pr-4" : "gap-3 px-5 pb-5 sm:py-5 sm:pl-0"}`}>
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            {mood === "working" && <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: color }} />}
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+          </span>
+          <span className="font-semibold" style={{ color: agent === 1 ? "#7B8496" : color }}>{a.name[lang]}</span>
+          <span className="meta truncate">· {a.role[lang]}</span>
         </div>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.p key={say} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-            className="mt-0.5 max-w-3xl text-[14px] leading-[22px] text-ink-soft">
+        <AnimatePresence mode="wait">
+          <motion.div key={say} initial={{ opacity: 0, y: 8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+            className={`max-w-2xl self-start rounded-2xl rounded-tl-md border border-line bg-surface/95 shadow-lift ${compact ? "px-3.5 py-2 text-[13.5px]" : "px-4 py-2.5 text-[14.5px]"}`}>
             {say}
-          </motion.p>
+          </motion.div>
         </AnimatePresence>
         {children}
       </div>
-      {onPick && (
-        <button type="button" onClick={onPick} className="btn-ghost hidden h-8 shrink-0 px-2 sm:inline-flex" aria-label={a.name[lang]}>
-          <ArrowRight size={16} />
-        </button>
-      )}
     </div>
   );
 }

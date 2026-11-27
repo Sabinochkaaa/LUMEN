@@ -4,7 +4,7 @@ import { api, Ticket, Criterion } from "../api";
 import { useApp } from "../App";
 import { CRIT_I18N, pick, useT } from "../i18n";
 import { Lock, ShieldCheck } from "lucide-react";
-import { LangSwitch, PageHead, ThemeSwitch } from "../components/ui";
+import { LangSwitch, PageHead, ThemeSwitch } from "../components/panelUi";
 
 const LABEL: Record<string, string> = {
   anthropic: "Claude — Anthropic API", gemini: "Gemini — Google AI Studio", openrouter: "OpenRouter", groq: "Groq",
@@ -43,7 +43,7 @@ export default function Settings() {
           {health && <dl className="mt-4 grid grid-cols-[150px_1fr] gap-y-2 text-sm">{row(t("set.default"), `${health.provider_label}, ${health.model}`)}{row(t("set.version"), `LÜMEN ${health.version} · ${health.commit}`)}</dl>}
           <ul className="mt-5 space-y-2">
             {health && Object.entries(health.providers).filter(([k]) => k !== "mock").map(([k, v]) => (
-              <li key={k} className="flex items-center justify-between rounded-md bg-ink/[0.04] px-3 py-2 text-sm">
+              <li key={k} className="flex items-center justify-between rounded-xl bg-ink/[0.04] px-3 py-2 text-sm">
                 <span>{LABEL[k] || k}</span>
                 <span className={`chip ${v ? "bg-ok/15 text-ok" : "bg-ink/5 text-ink-faint"}`}>{v ? t("set.available") : t("set.missing")}</span>
               </li>
@@ -67,9 +67,9 @@ export default function Settings() {
             <div className="flex items-center gap-2 h2">{admin ? <ShieldCheck size={18} className="text-ok" /> : <Lock size={18} />}{t("set.admin")}</div>
             <p className="meta mt-1">{t("set.adminD")}</p>
             {health && <p className="mt-2 text-[13px]"><span className="text-ink-faint">{t("set.mode")}: </span>{health.public_audits ? t("set.modePublic") : t("set.modeClosed")}</p>}
-            {!health?.login_enabled ? <p className="mt-3 rounded-md bg-warn/15 px-3 py-2 text-[13px] text-warn">{t("set.noLogin")}</p>
+            {!health?.login_enabled ? <p className="mt-3 rounded-xl bg-warn/15 px-3 py-2 text-[13px] text-warn">{t("set.noLogin")}</p>
               : admin ? (
-                <div className="mt-4 flex items-center justify-between rounded-md bg-ok/15 px-4 py-3 text-sm">
+                <div className="mt-4 flex items-center justify-between rounded-xl bg-ok/15 px-4 py-3 text-sm">
                   <span className="font-medium text-ok">{t("set.signedIn")}</span>
                   <button className="btn-line py-1.5" onClick={signOut}>{t("set.signOut")}</button>
                 </div>
@@ -116,7 +116,7 @@ function Tickets() {
       {items && !items.length && <p className="meta mt-4">{t("tk.empty")}</p>}
       <ul className="mt-4 space-y-2">
         {items?.map((x) => (
-          <li key={x.id} className="rounded-md border border-line px-4 py-3">
+          <li key={x.id} className="rounded-xl border border-line px-4 py-3">
             <div className="meta flex flex-wrap gap-x-3">
               <span className="font-mono">№{x.id}</span>
               <span>{new Date(x.at).toLocaleString(lang === "en" ? "en-GB" : lang === "kk" ? "kk-KZ" : "ru-RU")}</span>

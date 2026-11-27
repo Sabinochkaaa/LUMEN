@@ -5,7 +5,7 @@ import { Audit, FintechCheck } from "../api";
 import { useT } from "../i18n";
 import AuditHeader from "../components/AuditHeader";
 import FindingCard from "../components/FindingCard";
-import { SevBadge, rise, stagger } from "../components/ui";
+import { SevBadge, rise, stagger } from "../components/panelUi";
 
 const ST: Record<FintechCheck["status"], string> = { missing: "bad", partial: "warn", covered: "ok", na: "ink-faint", unknown: "ink-faint" };
 

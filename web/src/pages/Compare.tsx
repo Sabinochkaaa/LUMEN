@@ -7,7 +7,7 @@ import { AuditGate } from "../App";
 import { api, Audit, AuditSummary, CmpItem, CompareResult } from "../api";
 import { useT } from "../i18n";
 import AuditHeader from "../components/AuditHeader";
-import { ErrorBox, Loading, Num, ReadinessBadge, SevBadge, fmtDate } from "../components/ui";
+import { ErrorBox, Loading, Num, ReadinessBadge, SevBadge, fmtDate } from "../components/panelUi";
 
 export default function Compare() {
   return <AuditGate>{(a) => <View a={a} />}</AuditGate>;

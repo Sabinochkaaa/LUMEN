@@ -4,7 +4,7 @@ import { Clock, Download, FileText, FileUp, Languages, Loader2, Trash2 } from "l
 import { api, TranslationResult } from "../api";
 import { useT } from "../i18n";
 import AgentBuddy from "../components/AgentBuddy";
-import { CopyButton, ErrorBox, PageHead } from "../components/ui";
+import { CopyButton, ErrorBox, PageHead } from "../components/panelUi";
 
 /** One finished translation, kept in this browser so the user sees what they translated before. */
 interface Entry { id: string; at: number; name: string; target: string; image?: string; res: TranslationResult }
@@ -53,7 +53,7 @@ function Overlay({ src, overlay, show }: { src: string; overlay: NonNullable<Tra
     return () => ro.disconnect();
   }, [overlay.width]);
   return (
-    <div ref={box} className="relative w-full overflow-hidden rounded-md border border-line">
+    <div ref={box} className="relative w-full overflow-hidden rounded-xl border border-line">
       <img src={src} alt="" className="block w-full" />
       <AnimatePresence>
         {show && overlay.boxes.map((b, i) => (
@@ -147,7 +147,7 @@ export default function Translate() {
         onPick={() => input.current?.click()} />
       <div className="grid gap-6 lg:grid-cols-[380px_1fr] lg:grid-rows-[auto_1fr]">
           <div className="card flex min-w-0 flex-col gap-4 p-6 lg:col-start-1 lg:row-start-1">
-            <button onClick={() => input.current?.click()} className="group flex flex-col items-center overflow-hidden rounded-md border-2 border-dashed border-line px-4 py-6 text-center transition-colors hover:border-signal/50">
+            <button onClick={() => input.current?.click()} className="group flex flex-col items-center overflow-hidden rounded-xl border-2 border-dashed border-line px-4 py-6 text-center transition-colors hover:border-signal/50">
               <input ref={input} type="file" hidden accept=".pdf,.docx,.md,.markdown,.txt,.html,.htm,.rtf,.png,.jpg,.jpeg"
                 onChange={(e) => { pick(e.target.files?.[0] || null); e.target.value = ""; }} />
               {preview ? <img src={preview} alt="" className="mb-3 max-h-40 rounded-lg object-contain shadow-sm" />
@@ -159,8 +159,8 @@ export default function Translate() {
               <div className="mb-1.5 text-sm font-medium">{t("tr.target")}</div>
               <div className="grid grid-cols-3 gap-2">
                 {TR_LANGS.map((l) => (
-                  <button key={l.code} onClick={() => setTarget(l.code)} className={`relative rounded-md border px-2 py-2 text-[13px] transition-colors ${target === l.code ? "border-transparent text-white" : "border-line hover:border-signal/50"}`}>
-                    {target === l.code && <motion.span layoutId="tr-lang" className="absolute inset-0 rounded-md bg-primary" />}
+                  <button key={l.code} onClick={() => setTarget(l.code)} className={`relative rounded-xl border px-2 py-2 text-[13px] transition-colors ${target === l.code ? "border-transparent text-white" : "border-line hover:border-signal/50"}`}>
+                    {target === l.code && <motion.span layoutId="tr-lang" className="absolute inset-0 rounded-xl grad-bg" />}
                     <span className="relative font-medium">{l.label}</span>
                   </button>
                 ))}
@@ -219,7 +219,7 @@ export default function Translate() {
           )}
           {busy ? (
             <div className="relative flex-1 overflow-hidden p-6">
-              <div className="scanbar" />
+              <div className="lens-beam" />
               {Array.from({ length: 14 }).map((_, i) => <div key={i} className="mb-3 h-3 animate-pulse rounded bg-line" style={{ width: `${35 + ((i * 41) % 60)}%` }} />)}
             </div>
           ) : res && cur ? (
@@ -228,7 +228,7 @@ export default function Translate() {
                 <>
                   {view === "overlay" && !res.overlay && <p className="meta mb-3">{t("tr.noOverlay")}</p>}
                   {res.overlay ? <Overlay src={cur.image} overlay={res.overlay} show={view === "overlay"} />
-                    : <img src={cur.image} alt="" className="w-full rounded-md border border-line" />}
+                    : <img src={cur.image} alt="" className="w-full rounded-xl border border-line" />}
                   {view === "original" && res.source_text && <pre className={`${pre} mt-4 text-ink-soft`}>{res.source_text}</pre>}
                 </>
               ) : view === "side" ? (

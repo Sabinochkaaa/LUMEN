@@ -9,7 +9,7 @@ import { CRIT_I18N, pick, useT } from "../i18n";
 import AuditHeader from "../components/AuditHeader";
 import DocumentLens from "../components/DocumentLens";
 import FindingCard from "../components/FindingCard";
-import { QualityArc, Stat, rise, stagger } from "../components/ui";
+import { QualityArc, Stat, rise, stagger } from "../components/panelUi";
 
 export default function AuditHome() {
   return <AuditGate>{(a) => <View a={a} />}</AuditGate>;
@@ -35,6 +35,7 @@ function View({ a }: { a: Audit }) {
       <AuditBuddy a={a} page="home" />
       <motion.div variants={stagger} initial="hidden" animate="show">
         <motion.section variants={rise} className="card relative mb-6 grid gap-8 overflow-hidden p-6 md:grid-cols-[auto_1fr] md:p-8">
+          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-15 blur-3xl grad-bg" />
           <QualityArc value={s.quality_index} size={190} />
           <div className="relative min-w-0">
             <p className="text-[21px] font-medium leading-snug tracking-[-0.01em]">{a.readiness_reason}</p>
@@ -58,7 +59,7 @@ function View({ a }: { a: Audit }) {
                 <XAxis dataKey="k" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "rgb(var(--ink-soft))" }} />
                 <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "rgb(var(--ink-faint))" }} />
                 <Tooltip cursor={{ fill: "rgb(var(--ink) / .04)" }} contentStyle={{ background: "rgb(var(--surface))", border: "1px solid rgb(var(--line))", borderRadius: 12 }} formatter={(v: any) => [v, t("home.found")]} />
-                <Bar dataKey="v" radius={[2, 2, 0, 0]} animationDuration={1100}>{sevData.map((d) => <Cell key={d.k} fill={SEV_COLOR[d.k]} />)}</Bar>
+                <Bar dataKey="v" radius={[8, 8, 0, 0]} animationDuration={1100}>{sevData.map((d) => <Cell key={d.k} fill={SEV_COLOR[d.k]} />)}</Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -69,7 +70,7 @@ function View({ a }: { a: Audit }) {
                 <div key={d.k} className="grid grid-cols-[170px_1fr_28px] items-center gap-3 text-[13px]">
                   <span className="truncate text-ink-soft">{d.k}</span>
                   <div className="h-2 overflow-hidden rounded-full bg-ink/5">
-                    <motion.div className="h-2 rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${(d.v / (critData[0]?.v || 1)) * 100}%` }} transition={{ duration: 0.9, delay: 0.05 * i }} />
+                    <motion.div className="h-2 rounded-full grad-bg" initial={{ width: 0 }} animate={{ width: `${(d.v / (critData[0]?.v || 1)) * 100}%` }} transition={{ duration: 0.9, delay: 0.05 * i }} />
                   </div>
                   <span className="text-right tabular-nums">{d.v}</span>
                 </div>

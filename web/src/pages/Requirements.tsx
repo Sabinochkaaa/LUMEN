@@ -44,10 +44,10 @@ function View({ a }: { a: Audit }) {
           <option value="">{t("req.allTypes")}</option>
           {types.map((x) => <option key={x} value={x}>{pick(TYPE_I18N[x], lang, x)}</option>)}
         </select>
-        <div className="flex rounded-md border border-line bg-surface p-0.5">
+        <div className="flex rounded-xl border border-line bg-surface p-0.5">
           {(["list", "matrix"] as const).map((m) => (
             <button key={m} onClick={() => setMode(m)} className={`relative rounded-lg px-3 py-1.5 text-sm ${mode === m ? "text-white" : "text-ink-soft"}`}>
-              {mode === m && <motion.span layoutId="req-mode" className="absolute inset-0 rounded-lg bg-primary" />}
+              {mode === m && <motion.span layoutId="req-mode" className="absolute inset-0 rounded-lg grad-bg" />}
               <span className="relative">{m === "list" ? t("req.cards") : t("req.matrix")}</span>
             </button>
           ))}
@@ -108,7 +108,7 @@ function View({ a }: { a: Audit }) {
                   <span className="chip ml-auto bg-ink/5 text-ink-soft">{pick(TYPE_I18N[r.type], lang, r.type)}</span>
                 </div>
                 <div className="meta mt-1">{r.section} · {t("ui.lines")} {r.loc.line_start}–{r.loc.line_end}{r.loc.page ? ` · ${t("ui.page")} ${r.loc.page}` : ""} · {t("ui.score")} {asm[r.id]?.score.toFixed(0)}/100</div>
-                <blockquote className="mt-4 whitespace-pre-wrap rounded-lg border-l-2 border-ink/25 bg-surface-2 px-4 py-3 font-mono text-[13px] leading-relaxed">{r.quote}</blockquote>
+                <blockquote className="mt-4 whitespace-pre-wrap rounded-lg border-l-2 border-sky bg-sky/10 px-4 py-3 font-mono text-[13px] leading-relaxed">{r.quote}</blockquote>
                 <div className="mt-5 flex flex-wrap gap-1.5">
                   {CRITS.map((k) => <span key={k} className="chip border" style={chip(asm[r.id]?.criteria[k] || "unknown")}>{pick(CRIT_I18N[k], lang, k)}</span>)}
                 </div>

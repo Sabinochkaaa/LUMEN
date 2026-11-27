@@ -7,7 +7,7 @@ import { useT } from "../i18n";
 import ReportLink from "../components/ReportLink";
 import AgentBuddy from "../components/AgentBuddy";
 import { useApp } from "../App";
-import { Empty, ErrorBox, Loading, PageHead, ReadinessBadge, fmtDate, rise, stagger } from "../components/ui";
+import { Empty, ErrorBox, Loading, PageHead, ReadinessBadge, fmtDate, rise, stagger } from "../components/panelUi";
 
 export default function Reports() {
   const { t, lang } = useT();

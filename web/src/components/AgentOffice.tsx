@@ -40,7 +40,7 @@ export default function AgentOffice({ stages, finished }: { stages: Stage[]; fin
           <AnimatePresence mode="wait">
             <motion.div key={finished ? "fin" : current?.key ?? "idle"} initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}
-              className="rounded-lg rounded-bl-md border border-line bg-surface px-3.5 py-2 shadow-lift">
+              className="rounded-2xl rounded-bl-md border border-line bg-surface/95 px-3.5 py-2 shadow-lift backdrop-blur">
               {finished ? (
                 <div className="text-[13.5px] font-medium">{t("office.done")}</div>
               ) : current ? (<>
