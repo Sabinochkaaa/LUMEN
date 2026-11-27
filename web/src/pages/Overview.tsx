@@ -35,12 +35,11 @@ export default function Overview() {
           </motion.div>
           <motion.div variants={rise} className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
             <Link to={`/audits/${last.id}`} className="card card-hover relative block overflow-hidden p-6">
-              <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-20 blur-2xl grad-bg" />
               <div className="meta">{t("ov.last")} · {fmtDate(last.analysed_at, lang)}</div>
               <div className="mt-2 text-xl font-semibold leading-snug">{last.document_title || last.document_name}</div>
               <div className="mt-3"><ReadinessBadge r={last.readiness} /></div>
               <div className="mt-6 grid grid-cols-3 gap-4">
-                <div><div className="text-2xl font-semibold grad-text"><Num value={last.quality_index} decimals={1} /></div><div className="meta">{t("ov.index")}</div></div>
+                <div><div className="text-2xl font-semibold"><Num value={last.quality_index} decimals={1} /></div><div className="meta">{t("ov.index")}</div></div>
                 <div><div className="text-2xl font-semibold"><Num value={last.findings} /></div><div className="meta">{t("ov.findings")}</div></div>
                 <div><div className="text-2xl font-semibold text-violet"><Num value={last.open_questions} /></div><div className="meta">{t("ov.questions")}</div></div>
               </div>

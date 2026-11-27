@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Download, FileSearch, Loader2, Mic, Sparkles } from "lucide-react";
+import { Download, FileSearch, Loader2, Mic, PenLine } from "lucide-react";
 import { api } from "../api";
 import { useT } from "../i18n";
 import { useSpeech } from "../speech";
@@ -55,7 +55,7 @@ export default function Generate() {
           <div className="text-sm font-medium">{t("gen.idea")}</div>
           <div className="relative">
             <textarea value={idea} onChange={(e) => setIdea(e.target.value)} maxLength={4000} rows={9} placeholder={t("gen.place")}
-              className="w-full resize-y rounded-xl border border-line bg-canvas px-3.5 py-3 text-[14px] leading-relaxed outline-none focus:border-signal" />
+              className="w-full resize-y rounded-md border border-line bg-canvas px-3.5 py-3 text-[14px] leading-relaxed outline-none focus:border-signal" />
             {voice.supported && (
               <button type="button" onClick={voice.toggle} aria-pressed={voice.listening} aria-label={t("voice.btn")} title={t("voice.btn")}
                 className={`absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full ${voice.listening ? "bg-bad text-white" : "bg-line/80 text-ink-soft hover:text-ink"}`}>
@@ -72,7 +72,7 @@ export default function Generate() {
           {voice.error && <p className="text-[13px] text-bad">{t(`voice.${voice.error}`)}</p>}
           {error && <ErrorBox error={error} />}
           <button className="btn-primary justify-center py-3" disabled={idea.trim().length < 10 || busy} onClick={run}>
-            {busy ? <><Loader2 size={16} className="animate-spin" />{t("gen.running")}</> : <><Sparkles size={16} />{t("gen.run")}</>}
+            {busy ? <><Loader2 size={16} className="animate-spin" />{t("gen.running")}</> : <><PenLine size={16} />{t("gen.run")}</>}
           </button>
           <p className="meta">{t("gen.note")}</p>
         </div>

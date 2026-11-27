@@ -88,19 +88,19 @@ export default function SupportWidget() {
       <AnimatePresence>
         {!open && (
           <motion.button key="fab" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }}
-            whileHover={{ y: -3 }} onClick={() => setOpen(true)} aria-label={t("sup.open")}
-            className="fixed bottom-5 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full border border-line bg-surface shadow-lift">
-            <SupportFace size={44} />
-            <span className="absolute right-1 top-1 h-3 w-3 rounded-full border-2 border-surface bg-ok" />
+            transition={{ duration: 0.15 }} onClick={() => setOpen(true)} aria-label={t("sup.open")}
+            className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-line bg-surface shadow-lift transition-colors hover:border-ink/25">
+            <SupportFace size={38} />
+            <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full border-2 border-surface bg-ok" />
           </motion.button>
         )}
       </AnimatePresence>
       <AnimatePresence>
         {open && (
           <motion.div key="panel" role="dialog" aria-label={t("sup.title")}
-            initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 24, scale: 0.97 }}
-            transition={{ duration: 0.22 }}
-            className="fixed inset-x-3 bottom-3 z-50 flex max-h-[min(640px,calc(100vh-24px))] flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-lift sm:inset-x-auto sm:right-5 sm:w-[380px]">
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-x-3 bottom-3 z-50 flex max-h-[min(640px,calc(100vh-24px))] flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-lift sm:inset-x-auto sm:right-5 sm:w-[380px]">
             <div className="flex items-center gap-3 border-b border-line px-4 py-3">
               <SupportFace size={36} />
               <div className="min-w-0">
@@ -117,24 +117,24 @@ export default function SupportWidget() {
             </div>
             {chips.length > 0 && !busy && (
               <div className="flex flex-wrap gap-1.5 px-4 pb-2">
-                {chips.map((c) => <button key={c} onClick={() => ask(c)} className="rounded-full border border-line px-3 py-1 text-[12.5px] text-ink-soft hover:border-signal/50 hover:text-ink">{c}</button>)}
+                {chips.map((c) => <button key={c} onClick={() => ask(c)} className="rounded-md border border-line px-2.5 py-1 text-[12.5px] text-ink-soft hover:border-ink/25 hover:text-ink">{c}</button>)}
               </div>
             )}
             {voice.error && <div className="px-4 pb-1 text-[12.5px] text-bad">{t(`voice.${voice.error}`)}</div>}
             {handoff ? (
               <form onSubmit={sendTicket} className="flex gap-2 border-t border-line p-3">
                 <input value={contact} onChange={(e) => setContact(e.target.value)} maxLength={200} placeholder={t("sup.contact")} aria-label={t("sup.contact")}
-                  className="min-w-0 flex-1 rounded-xl border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-signal" />
+                  className="min-w-0 flex-1 rounded-md border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-signal" />
                 <button className="btn-primary px-3 text-sm">{t("sup.handoff")}</button>
               </form>
             ) : (
               <form onSubmit={submit} className="flex gap-2 border-t border-line p-3">
                 <input value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} placeholder={voice.listening ? t("voice.listening") : t("sup.place")} aria-label={t("sup.place")}
-                  className="min-w-0 flex-1 rounded-xl border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-signal" />
+                  className="min-w-0 flex-1 rounded-md border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-signal" />
                 {voice.supported && (
                   <button type="button" onClick={voice.toggle} aria-pressed={voice.listening} aria-label={t("voice.btn")} title={t("voice.btn")}
-                    className={`relative rounded-xl border px-3 ${voice.listening ? "border-transparent bg-bad text-white" : "border-line text-ink-soft hover:text-ink"}`}>
-                    {voice.listening && <span className="absolute inset-0 animate-ping rounded-xl bg-bad/40" />}
+                    className={`relative rounded-md border px-3 ${voice.listening ? "border-transparent bg-bad text-white" : "border-line text-ink-soft hover:text-ink"}`}>
+                    {voice.listening && <span className="absolute inset-0 animate-ping rounded-md bg-bad/40" />}
                     <Mic size={16} className="relative" />
                   </button>
                 )}
@@ -152,7 +152,7 @@ function Bubble({ role, text }: ChatTurn) {
   const mine = role === "user";
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-[14px] leading-relaxed ${mine ? "rounded-br-md bg-signal text-white" : "rounded-bl-md bg-canvas text-ink"}`}>{text}</div>
+      <div className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3.5 py-2 text-[14px] leading-relaxed ${mine ? "rounded-br-sm bg-primary text-white" : "rounded-bl-sm bg-surface-2 text-ink"}`}>{text}</div>
     </motion.div>
   );
 }

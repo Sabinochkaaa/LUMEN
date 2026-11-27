@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AgentBuddy from "../components/AgentBuddy";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, CircleAlert, FileUp, Loader2, SkipForward, Sparkles } from "lucide-react";
+import { ArrowRight, Check, CircleAlert, FileUp, Loader2, SkipForward } from "lucide-react";
 import { api, Line, StageEvent } from "../api";
 import DocumentLens from "../components/DocumentLens";
 import AgentOffice from "../components/AgentOffice";
@@ -83,12 +83,12 @@ export default function NewAudit() {
         <PageHead title={done ? t("new.done") : t("new.reading")} sub={run.name}
           right={done && <button className="btn-primary" onClick={() => nav(`/audits/${done.id}`)}>{t("new.open")}</button>} />
         <div className="mb-6 h-2 overflow-hidden rounded-full bg-line">
-          <motion.div className="h-full grad-bg" animate={{ width: `${pct}%` }} transition={{ ease: "easeOut", duration: 0.5 }} />
+          <motion.div className="h-full bg-primary" animate={{ width: `${pct}%` }} transition={{ ease: "easeOut", duration: 0.5 }} />
         </div>
         {error && <div className="mb-4"><ErrorBox error={error} /></div>}
         <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
           {lines.length ? <DocumentLens lines={lines} scanning={scanning} height={620} /> : (
-            <div className="relative h-[620px] overflow-hidden rounded-xl border border-line bg-surface-2 p-6">
+            <div className="relative h-[620px] overflow-hidden rounded-md border border-line bg-surface-2 p-6">
               {scanning && <div className="scanbar" />}
               {Array.from({ length: 22 }).map((_, i) => <div key={i} className="mb-3 h-3 rounded bg-line" style={{ width: `${40 + ((i * 37) % 55)}%` }} />)}
               <p className="meta absolute bottom-4 left-6 right-6">{t("new.serverText")}</p>
@@ -127,13 +127,12 @@ export default function NewAudit() {
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
           onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files?.[0]); }}
           onClick={() => input.current?.click()} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && input.current?.click()}
-          role="button" tabIndex={0} animate={{ scale: drag ? 1.015 : 1 }}
+          role="button" tabIndex={0}
           className={`card relative flex min-h-[360px] cursor-pointer flex-col items-center justify-center overflow-hidden border-2 border-dashed px-8 text-center transition-colors ${drag ? "border-signal bg-signal/5" : "border-line hover:border-signal/50"}`}>
-          <div className="absolute -bottom-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full opacity-25 blur-3xl grad-bg" />
           <input ref={input} type="file" hidden accept=".pdf,.docx,.md,.markdown,.txt,.html,.htm,.rtf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp" onChange={(e) => pick(e.target.files?.[0])} />
-          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity }} className="relative flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-glow grad-bg">
-            <FileUp size={30} strokeWidth={1.7} />
-          </motion.div>
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink-soft">
+            <FileUp size={26} strokeWidth={1.6} />
+          </div>
           {file ? (<>
             <div className="relative mt-5 text-lg font-medium">{file.name}</div>
             <div className="meta relative">{(file.size / 1024).toFixed(1)} KB · {t("new.other")}</div>
@@ -157,9 +156,9 @@ export default function NewAudit() {
             <label className="text-sm font-medium" htmlFor="model">{t("new.modelName")}</label>
             <input id="model" className="input mt-1.5" placeholder="claude-opus-5-5" value={model} onChange={(e) => setModel(e.target.value)} />
           </div>
-          {health?.auth_required && !admin && <p className="rounded-xl bg-signal/10 px-3 py-2 text-[13px] text-signal">{t("new.adminNeeded")}</p>}
+          {health?.auth_required && !admin && <p className="rounded-md bg-signal/10 px-3 py-2 text-[13px] text-signal">{t("new.adminNeeded")}</p>}
           {error && <ErrorBox error={error} />}
-          <button className="btn-primary mt-auto justify-center py-3" disabled={!file} onClick={start}><Sparkles size={16} />{t("new.start")}</button>
+          <button className="btn-primary mt-auto h-11 justify-center" disabled={!file} onClick={start}>{t("new.start")}<ArrowRight size={16} /></button>
         </div>
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-3">

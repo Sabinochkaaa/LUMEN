@@ -59,10 +59,8 @@ export function QualityArc({ value, size = 150 }: { value: number; size?: number
   const tone = pct >= 80 ? "rgb(var(--ok))" : pct >= 60 ? "rgb(var(--warn))" : "rgb(var(--bad))";
   return (
     <div style={{ width: Math.max(size, 180) }}>
-      <div className="flex items-baseline justify-between">
-        <span className="meta">{t("home.quality")}</span>
-        <span className="text-[28px] font-medium leading-8 tracking-tight"><Num value={value} decimals={1} /></span>
-      </div>
+      <div className="meta">{t("home.quality")}</div>
+      <div className="mt-1 text-[32px] font-medium leading-10 tracking-tight"><Num value={value} decimals={1} /></div>
       <div className="relative mt-2 h-2 rounded-sm bg-surface-2" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={t("home.quality")}>
         <motion.div className="h-full rounded-sm" style={{ background: tone }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5, ease: "easeOut" }} />
         {[60, 80].map((m) => <span key={m} className="absolute -top-1 h-4 w-px bg-ink/30" style={{ left: `${m}%` }} />)}

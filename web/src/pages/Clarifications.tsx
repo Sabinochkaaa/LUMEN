@@ -39,13 +39,13 @@ function View({ a, set }: { a: Audit; set: (a: Audit) => void }) {
         <div><h2 className="text-xl font-semibold">{t("q.title")}</h2><p className="meta mt-1 max-w-2xl">{t("q.sub")}</p></div>
         <div className="w-full md:w-64">
           <div className="meta mb-1.5 flex justify-between"><span>{t("q.progress")}</span><span className="tabular-nums">{done}%</span></div>
-          <div className="h-2 overflow-hidden rounded-full bg-line"><motion.div className="h-2 rounded-full grad-bg" animate={{ width: `${done}%` }} /></div>
+          <div className="h-2 overflow-hidden rounded-full bg-line"><motion.div className="h-2 rounded-full bg-primary" animate={{ width: `${done}%` }} /></div>
         </div>
       </div>
       <div className="mb-4 flex flex-wrap gap-1">
         {([["open", "q.open"], ["clarified", "q.clarified"], ["rejected", "q.rejected"], ["", "ui.all"]] as const).map(([k, l]) => (
-          <button key={k} onClick={() => setFilter(k)} className={`relative rounded-lg px-3 py-1.5 text-sm ${filter === k ? "font-medium text-violet" : "text-ink-soft hover:text-ink"}`}>
-            {filter === k && <motion.span layoutId="q-filter" className="absolute inset-0 rounded-lg bg-violet/15" />}
+          <button key={k} onClick={() => setFilter(k)} className={`relative rounded-lg px-3 py-1.5 text-sm ${filter === k ? "font-medium text-ink" : "text-ink-soft hover:text-ink"}`}>
+            {filter === k && <motion.span layoutId="q-filter" className="absolute inset-0 rounded-md bg-surface-2 ring-1 ring-line" />}
             <span className="relative">{t(l)} <span className="text-ink-faint">{k ? counts[k] : a.questions.length}</span></span>
           </button>
         ))}
@@ -84,7 +84,7 @@ function QuestionCard({ q, onSave }: { q: Question; onSave: (b: { status?: strin
         <div className="mt-3 flex flex-wrap gap-1.5">
           {q.options.map((o) => (
             <motion.button whileTap={{ scale: 0.96 }} key={o} onClick={() => setAnswer(o)} disabled={busy}
-              className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors ${answer === o ? "border-violet bg-violet/15 text-violet" : "border-line hover:border-violet/50"}`}>{o}</motion.button>
+              className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors ${answer === o ? "border-signal bg-signal/10 text-signal" : "border-line hover:border-ink/25"}`}>{o}</motion.button>
           ))}
         </div>
       )}
