@@ -146,7 +146,7 @@ export default function Landing() {
     <div className="relative min-h-full overflow-x-clip">
       <header className="sticky top-0 z-30 border-b border-line bg-canvas/95">
         <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-5 py-3">
-          <Link to="/" className="flex items-center gap-2.5"><Logo size={28} /><span className="text-[16px] font-semibold tracking-[0.06em]">LÜMEN</span></Link>
+          <Link to="/" className="flex items-center gap-2.5"><Logo size={36} /><span className="text-[16px] font-semibold tracking-[0.06em]">LÜMEN</span></Link>
           <nav className="ml-6 hidden gap-6 text-sm text-ink-soft md:flex">
             <a href="#team" className="hover:text-ink">{t("land.navTeam")}</a>
             <a href="#how" className="hover:text-ink">{t("land.navHow")}</a>
@@ -240,7 +240,7 @@ export default function Landing() {
       </main>
       <footer className="border-t border-line py-7">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-5 text-[13px] text-ink-faint">
-          <span className="flex items-center gap-2"><Logo size={20} />LÜMEN Requirements Intelligence</span>
+          <span className="flex items-center gap-2"><Logo size={24} />LÜMEN Requirements Intelligence</span>
           <span>{t("land.foot")}</span>
         </div>
       </footer>

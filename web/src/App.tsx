@@ -99,7 +99,7 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
   return (
     <aside className="flex h-full w-60 flex-col border-r border-line bg-surface">
       <NavLink to="/" className="flex items-center gap-2.5 px-5 pb-5 pt-5" onClick={onNav}>
-        <Logo size={28} />
+        <Logo size={36} />
         <div className="min-w-0">
           <div className="text-[15px] font-semibold tracking-[0.06em]">LÜMEN</div>
           <div className="truncate text-[11.5px] text-ink-faint">{t("brand.sub")}</div>
@@ -173,7 +173,7 @@ function Shell() {
       <main className="relative z-[1] min-w-0 flex-1 overflow-x-clip">
         <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-surface px-4 py-2.5 lg:hidden">
           <button className="btn-ghost px-2" onClick={() => setOpen(!open)} aria-label={t("ui.menu")}>{open ? <X size={18} /> : <Menu size={18} />}</button>
-          <Logo size={24} /><span className="font-semibold tracking-[0.06em]">LÜMEN</span>
+          <Logo size={30} /><span className="font-semibold tracking-[0.06em]">LÜMEN</span>
         </div>
         <div className="mx-auto max-w-[1280px] px-5 py-7 md:px-10"><AnimatedOutlet /></div>
       </main>

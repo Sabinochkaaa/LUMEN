@@ -6,15 +6,9 @@ import { Readiness, Severity, SEV_COLOR } from "../api";
 import { LANGS, useT } from "../i18n";
 import { Theme, useTheme } from "../theme";
 
-/** Design 2.0 mark: the same L-with-a-dot, one colour (docs/DESIGN.md §6). */
+/** The LÜMEN mark: a blue L with the robot. The file lives in web/public (transparent, works in both themes). */
 export function Logo({ size = 30 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="7" fill="rgb(var(--primary))" />
-      <path d="M10.5 7.5v17h11" stroke="rgb(var(--on-primary))" strokeWidth="3" fill="none" strokeLinecap="square" />
-      <circle cx="21.5" cy="11" r="2.75" fill="rgb(var(--on-primary))" />
-    </svg>
-  );
+  return <img src="/logo.png" width={size} height={size} alt="" aria-hidden draggable={false} className="shrink-0 select-none" />;
 }
 
 export function SevBadge({ sev, short }: { sev: Severity; short?: boolean }) {
