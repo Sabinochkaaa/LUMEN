@@ -1,10 +1,10 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Bot, Check, ChevronLeft, ChevronRight, FileStack, GitFork, HelpCircle, Landmark, Quote } from "lucide-react";
-import { SEV_COLOR, Severity } from "../api";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Bot, Check, ChevronLeft, ChevronRight, FileCheck2, FileDown, FileStack, FileUp, Gauge, GitFork, Globe, HelpCircle, KeyRound, Landmark, Lock, Menu, MessagesSquare, Quote, ScanSearch, ShieldAlert, ShieldCheck, X } from "lucide-react";
+import { Severity } from "../api";
 import { Lang, useT } from "../i18n";
-import { LangSwitch, Logo, Num, ReadinessBadge, SevBadge, ThemeSwitch } from "../components/ui";
+import { LangSwitch, Logo, Num, ThemeSwitch } from "../components/ui";
 import { AGENTS, AGENT_COLORS } from "../components/agents";
 import RobotIcon from "../components/RobotIcon";
 
@@ -242,75 +242,188 @@ function TeamShowcase() {
   );
 }
 
-function SampleReport() {
-  const { lang, t } = useT();
-  const lines = DOC[lang];
+// «How it works»: four steps, each with what you get out of it
+const STEPS = [
+  { icon: FileUp, tone: "#2F6BFF" },
+  { icon: ScanSearch, tone: "#7C4DFF" },
+  { icon: MessagesSquare, tone: "#F28C28" },
+  { icon: FileDown, tone: "#12A150" },
+];
+
+// «Everything a review needs»: one colour per feature so the eye can tell the cards apart at a glance
+const FEATURES = [
+  { icon: Quote, k: "f1", tone: "#2F6BFF" }, { icon: HelpCircle, k: "f2", tone: "#7C4DFF" }, { icon: Landmark, k: "f3", tone: "#F28C28" },
+  { icon: GitFork, k: "f4", tone: "#F0453A" }, { icon: FileStack, k: "f5", tone: "#0EA5E9" }, { icon: Bot, k: "f6", tone: "#12A150" },
+];
+
+// «Bank-grade security»: the six measures, in the order of land.secD
+const SECURITY = [Lock, Globe, FileCheck2, Gauge, KeyRound, ShieldAlert];
+
+const H2 = "text-[28px] font-semibold leading-9 tracking-[-0.015em] md:text-[36px] md:leading-[44px]";
+
+function Eyebrow({ children, light }: { children: ReactNode; light?: boolean }) {
+  return <div className={`mb-3 text-[13px] font-semibold uppercase tracking-[0.08em] ${light ? "text-white/60" : "text-signal"}`}>{children}</div>;
+}
+
+function Header() {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onResize = () => { if (window.innerWidth >= 768) setOpen(false); };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden"; // the page under the open menu stays put
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onResize);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); };
+  }, [open]);
+  const links = [["#team", "land.navTeam"], ["#how", "land.navHow"], ["#features", "land.navFeatures"], ["#security", "land.navSecurity"]];
   return (
-    <div className="card overflow-hidden">
-      <div className="panel-head">
-        <div className="flex items-center gap-2 text-[13px] text-ink-soft"><span className="font-mono">requirements.md</span></div>
-        <div className="flex items-center gap-3">
-          <span className="meta hidden sm:inline">{t("ov.index")} <span className="font-medium text-ink tabular-nums"><Num value={72.3} decimals={1} /></span></span>
-          <ReadinessBadge r="NOT READY" />
+    <header className="sticky top-0 z-40 border-b border-line bg-canvas">
+      <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-5 py-3">
+        <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}><Logo size={36} /><span className="text-[16px] font-semibold tracking-[0.06em]">LÜMEN</span></Link>
+        <nav className="ml-6 hidden gap-6 text-sm text-ink-soft md:flex">
+          {links.map(([h, k]) => <a key={h} href={h} className="transition-colors hover:text-ink">{t(k)}</a>)}
+        </nav>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="hidden lg:block"><LangSwitch /></div>
+          <div className="hidden md:block"><ThemeSwitch compact /></div>
+          <Link to="/dashboard" className="btn-line hidden md:inline-flex">{t("land.open")}</Link>
+          <Link to="/new" className="btn-primary hidden sm:inline-flex">{t("land.cta")}</Link>
+          <button className="btn-ghost h-10 w-10 px-0 md:hidden" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu"
+            aria-label={t("ui.menu")}>
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
-      <div className="grid lg:grid-cols-[1fr_1fr]">
-        <div className="border-b border-line py-2 font-mono text-[12.5px] leading-[1.85] lg:border-b-0 lg:border-r">
-          {lines.map((ln, i) => {
-            const hit = HITS.find((h) => h.line === i);
-            const c = hit ? SEV_COLOR[hit.sev] : undefined;
-            return (
-              <div key={i} className="flex pr-4" style={c ? { boxShadow: `inset 2px 0 0 ${c}`, background: c + "0F" } : undefined}>
-                <span className="w-10 shrink-0 select-none pr-3 text-right text-ink-faint">{i + 1}</span>
-                <span className={`min-w-0 truncate ${ln.startsWith("##") ? "font-semibold text-ink" : "text-ink/80"}`}
-                  style={c ? { textDecoration: `underline ${c}`, textDecorationThickness: 2, textUnderlineOffset: 4 } : undefined}>{ln || " "}</span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="overflow-x-auto">
-          <table className="tbl">
-            <thead><tr><th>{t("land.colSev")}</th><th className="text-right">{t("land.colLine")}</th><th>{t("land.colIssue")}</th></tr></thead>
-            <tbody>
-              {HITS.map((h) => (
-                <tr key={h.line}><td className="whitespace-nowrap"><SevBadge sev={h.sev} /></td><td className="text-right tabular-nums text-ink-soft">{h.line + 1}</td><td>{h.label[lang]}</td></tr>
+      <AnimatePresence>
+        {open && (<>
+          <motion.div className="fixed inset-0 top-[61px] z-[-1] bg-black/30 md:hidden" aria-hidden onClick={() => setOpen(false)}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} />
+          <motion.nav id="mobile-menu" aria-label={t("ui.menu")} className="absolute inset-x-0 top-full border-b border-line bg-canvas shadow-lift md:hidden"
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+            <div className="mx-auto max-w-[1200px] px-5 pb-5 pt-2">
+              {links.map(([h, k]) => (
+                <a key={h} href={h} onClick={() => setOpen(false)}
+                  className="flex items-center justify-between border-b border-line py-3.5 text-[17px] font-medium">
+                  {t(k)}<ChevronRight size={18} className="text-ink-faint" />
+                </a>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <LangSwitch />
+                <ThemeSwitch />
+              </div>
+              <div className="mt-4 grid gap-2">
+                <Link to="/new" className="btn-primary h-11 text-[15px]" onClick={() => setOpen(false)}>{t("land.cta")}<ArrowRight size={16} /></Link>
+                <Link to="/dashboard" className="btn-line h-11 text-[15px]" onClick={() => setOpen(false)}>{t("land.open")}</Link>
+              </div>
+            </div>
+          </motion.nav>
+        </>)}
+      </AnimatePresence>
+    </header>
   );
 }
 
-const FEATURES = [
-  { icon: Quote, k: "f1" }, { icon: HelpCircle, k: "f2" }, { icon: Landmark, k: "f3" },
-  { icon: GitFork, k: "f4" }, { icon: FileStack, k: "f5" }, { icon: Bot, k: "f6" },
-];
+function HowItWorks() {
+  const { t } = useT();
+  return (
+    <section id="how" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-20 md:py-24">
+      <motion.div {...UP} className="max-w-2xl">
+        <Eyebrow>{t("land.navHow")}</Eyebrow>
+        <h2 className={H2}>{t("land.hTitle")}</h2>
+        <p className="mt-3 text-[16px] leading-[26px] text-ink-soft">{t("land.hSub")}</p>
+      </motion.div>
+      <ol className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+        {STEPS.map(({ icon: Icon, tone }, i) => (
+          <motion.li key={i} {...UP} transition={{ ...UP.transition, delay: i * 0.06 }} className="relative">
+            {/* arrow to the next step (wide screens) / a rail down the left (phones) */}
+            {i < 3 && <span className="absolute -right-[14px] top-[38px] z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-line bg-canvas text-ink-faint lg:flex" aria-hidden><ChevronRight size={14} /></span>}
+            <div className="flex h-full flex-col rounded-xl border border-line bg-surface p-5 transition-colors hover:border-ink/20">
+              <div className="flex items-center justify-between">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg" style={{ background: tone + "1A", color: tone }}><Icon size={22} strokeWidth={1.8} /></span>
+                <span className="font-mono text-[13px] text-ink-faint tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+              </div>
+              <h3 className="mt-5 text-[17px] font-semibold leading-6">{t(`land.h${i + 1}`)}</h3>
+              <p className="mt-1.5 flex-1 text-[14px] leading-[22px] text-ink-soft">{t(`land.h${i + 1}d`)}</p>
+              <div className="mt-5 flex items-start gap-2 border-t border-line pt-3.5 text-[13px] leading-5">
+                <Check size={15} className="mt-0.5 shrink-0" style={{ color: tone }} />
+                <span><span className="text-ink-faint">{t("land.hOut")}: </span><span className="font-medium">{t(`land.h${i + 1}o`)}</span></span>
+              </div>
+            </div>
+          </motion.li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function Features() {
+  const { t } = useT();
+  return (
+    <section id="features" className="scroll-mt-20 border-t border-line bg-surface">
+      <div className="mx-auto max-w-[1200px] px-5 py-20 md:py-24">
+        <motion.div {...UP} className="max-w-2xl">
+          <Eyebrow>{t("land.navFeatures")}</Eyebrow>
+          <h2 className={H2}>{t("land.fTitle")}</h2>
+          <p className="mt-3 text-[16px] leading-[26px] text-ink-soft">{t("land.fSub")}</p>
+        </motion.div>
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ icon: Icon, k, tone }, i) => (
+            <motion.div key={k} {...UP} transition={{ ...UP.transition, delay: (i % 3) * 0.06 }}
+              className="group relative overflow-hidden rounded-xl border border-line bg-canvas p-6 transition-colors hover:border-ink/20">
+              <span className="absolute inset-x-0 top-0 h-[3px] opacity-0 transition-opacity group-hover:opacity-100" style={{ background: tone }} aria-hidden />
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg" style={{ background: tone + "1A", color: tone }}><Icon size={21} strokeWidth={1.8} /></span>
+              <h3 className="mt-5 text-[17px] font-semibold leading-6">{t(`land.${k}`)}</h3>
+              <p className="mt-2 text-[14px] leading-[22px] text-ink-soft">{t(`land.${k}d`)}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Security() {
+  const { t } = useT();
+  const items = t("land.secD").replace(/\.$/, "").split(/,\s+/);
+  return (
+    <section id="security" className="scroll-mt-20 bg-[#0B1F3A] text-white">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-20 md:py-24 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+        <motion.div {...UP}>
+          <Eyebrow light>{t("land.navSecurity")}</Eyebrow>
+          <span className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-white/10"><ShieldCheck size={28} strokeWidth={1.7} /></span>
+          <h2 className={H2}>{t("land.secTitle")}</h2>
+          <p className="mt-4 max-w-md text-[16px] leading-[26px] text-white/70">{t("land.secLead")}</p>
+        </motion.div>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {items.map((s, i) => {
+            const Icon = SECURITY[i] ?? Check;
+            return (
+              <motion.li key={s} {...UP} transition={{ ...UP.transition, delay: (i % 2) * 0.05 }}
+                className="flex gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#7FB2FF]"><Icon size={19} strokeWidth={1.8} /></span>
+                <div>
+                  <div className="text-[15px] font-semibold leading-6">{s.charAt(0).toUpperCase() + s.slice(1)}</div>
+                  <p className="mt-1 text-[13.5px] leading-[21px] text-white/65">{t(`land.sec${i + 1}`)}</p>
+                </div>
+              </motion.li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+const UP = { initial: { opacity: 0, y: 12 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" }, transition: { duration: 0.3, ease: "easeOut" as const } };
 
 export default function Landing() {
   const { t } = useT();
-  const up = { initial: { opacity: 0, y: 12 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" }, transition: { duration: 0.3, ease: "easeOut" as const } };
-  const security = t("land.secD").replace(/\.$/, "").split(/,\s+/);
   return (
     <div className="relative min-h-full overflow-x-clip">
-      <header className="sticky top-0 z-30 border-b border-line bg-canvas/95">
-        <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-5 py-3">
-          <Link to="/" className="flex items-center gap-2.5"><Logo size={36} /><span className="text-[16px] font-semibold tracking-[0.06em]">LÜMEN</span></Link>
-          <nav className="ml-6 hidden gap-6 text-sm text-ink-soft md:flex">
-            <a href="#team" className="hover:text-ink">{t("land.navTeam")}</a>
-            <a href="#how" className="hover:text-ink">{t("land.navHow")}</a>
-            <a href="#features" className="hover:text-ink">{t("land.navFeatures")}</a>
-            <a href="#security" className="hover:text-ink">{t("land.navSecurity")}</a>
-          </nav>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="hidden sm:block"><LangSwitch /></div>
-            <ThemeSwitch compact />
-            <Link to="/dashboard" className="btn-line hidden md:inline-flex">{t("land.open")}</Link>
-            <Link to="/new" className="btn-primary hidden sm:inline-flex">{t("land.cta")}</Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main>
         <section className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 pb-16 pt-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:pt-16">
@@ -341,59 +454,17 @@ export default function Landing() {
         </section>
 
         <TeamShowcase />
-
-        <section id="how" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-20">
-          <motion.h2 {...up} className="text-[28px] font-semibold leading-9 tracking-[-0.01em] md:text-[32px] md:leading-10">{t("land.hTitle")}</motion.h2>
-          <ol className="relative mt-10 grid gap-8 md:grid-cols-4 md:gap-6">
-            <div className="absolute left-0 right-0 top-4 hidden h-px bg-line md:block" aria-hidden />
-            {[1, 2, 3, 4].map((n) => (
-              <motion.li key={n} {...up} className="relative">
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-ink/20 bg-canvas text-sm font-semibold tabular-nums">{n}</div>
-                <div className="mt-4 text-[16px] font-semibold">{t(`land.h${n}`)}</div>
-                <p className="meta mt-1">{t(`land.h${n}d`)}</p>
-              </motion.li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="mx-auto max-w-[1200px] px-5 pb-20">
-          <motion.div {...up}>
-            <h2 className="text-[28px] font-semibold leading-9 tracking-[-0.01em] md:text-[32px] md:leading-10">{t("land.sample")}</h2>
-            <p className="meta mt-2 max-w-2xl text-[15px] leading-6">{t("land.sampleD")}</p>
-            <div className="mt-8"><SampleReport /></div>
-          </motion.div>
-        </section>
-
-        <section id="features" className="border-t border-line bg-surface">
-          <div className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-20">
-            <motion.h2 {...up} className="max-w-2xl text-[28px] font-semibold leading-9 tracking-[-0.01em] md:text-[32px] md:leading-10">{t("land.fTitle")}</motion.h2>
-            <div className="mt-10 grid gap-x-10 gap-y-9 md:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, k }) => (
-                <motion.div key={k} {...up} className="border-t border-line pt-5">
-                  <Icon size={20} strokeWidth={1.6} className="text-ink-soft" />
-                  <div className="mt-3 text-[16px] font-semibold">{t(`land.${k}`)}</div>
-                  <p className="meta mt-1.5 text-[14px] leading-[22px]">{t(`land.${k}d`)}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="security" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-20">
-          <motion.div {...up} className="grid gap-8 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-            <h2 className="text-[28px] font-semibold leading-9 tracking-[-0.01em] md:text-[32px] md:leading-10">{t("land.secTitle")}</h2>
-            <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-              {security.map((s) => (
-                <li key={s} className="flex items-start gap-2.5 text-[15px] leading-6"><Check size={18} className="mt-0.5 shrink-0 text-ok" />{s.charAt(0).toUpperCase() + s.slice(1)}</li>
-              ))}
-            </ul>
-          </motion.div>
-        </section>
+        <HowItWorks />
+        <Features />
+        <Security />
       </main>
       <footer className="border-t border-line py-7">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-5 text-[13px] text-ink-faint">
           <span className="flex items-center gap-2"><Logo size={24} />LÜMEN Requirements Intelligence</span>
-          <span>{t("land.foot")}</span>
+          <a href="https://bcchubagents.mnu.kz/" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 underline decoration-line underline-offset-4 transition-colors hover:text-ink hover:decoration-ink/40">
+            {t("land.foot")}<ArrowUpRight size={14} />
+          </a>
         </div>
       </footer>
     </div>
