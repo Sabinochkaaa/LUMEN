@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { AGENT_COLORS } from "./agents";
@@ -28,8 +28,10 @@ function canvasTexture(draw: (g: CanvasRenderingContext2D, s: number) => void, s
 const easeBack = (p: number) => { const c = 1.6; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
-export default function TeamShowcase3D({ active, onPick, onFail, className = "", label }: {
+export default function TeamShowcase3D({ active, onPick, onFail, panel, className = "", label }: {
   active: number; onPick: (i: number) => void; onFail?: () => void; className?: string; label?: string;
+  /** the open info card lying over the stage: the picked robot is framed in the space it leaves free */
+  panel?: RefObject<HTMLDivElement>;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const state = useRef({ active, onPick });
@@ -211,7 +213,6 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
     };
     window.addEventListener("pointermove", onWinMove);
 
-    let baseZ = 10; // camera distance on a picked robot
     let overZ = 12; // camera distance for the whole team
     const half = Math.tan(THREE.MathUtils.degToRad(16));
     const resize = () => {
@@ -221,10 +222,8 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
       camera.aspect = w / h;
-      // a picked robot (≈2.9 units with the speech bubble) fills about two thirds of the height; narrow screens step back
-      baseZ = Math.max(6.2, 1.45 / (half * Math.min(camera.aspect, 1)));
       // the whole arc (±4.3 units) fits the width, the robots' height fits the height
-      overZ = Math.max(7.2, 5.1 / (half * camera.aspect));
+      overZ = Math.max(7.2, 4.85 / (half * camera.aspect));
       camera.updateProjectionMatrix();
     };
     const ro = new ResizeObserver(resize);
@@ -260,6 +259,7 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
     let dist = 0; // current camera distance (0 = not set yet)
     let zoom = 0; // 0 = whole team, 1 = a picked robot
     const aim = new THREE.Vector3();
+    const shift = new THREE.Vector2(); // where the picked robot sits, in screen units from the centre (-1…1)
     let raf = 0;
     let prevT = 0;
     const tick = () => {
@@ -276,15 +276,28 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
       if (fi >= 0) target.set(bots[fi].home.x, 1.15, bots[fi].home.z);
       else target.set(0, 1.05, 0);
       focus.lerp(target, k);
-      const wantDist = fi >= 0 ? baseZ : overZ;
+      // how much of the stage the open card covers: from the left (side card) or from the bottom (phones)
+      const W = el.clientWidth || 1, H = el.clientHeight || 1;
+      let left = 0, bottom = 0;
+      const card = fi >= 0 ? panel?.current : null;
+      if (card) {
+        const cr = card.getBoundingClientRect(), sr = el.getBoundingClientRect();
+        if (card.offsetWidth < W * 0.7) left = Math.max(0, cr.right - sr.left);
+        else bottom = Math.max(0, sr.bottom - cr.top);
+      }
+      // a picked robot (≈2.9 units high with its speech bubble, ≈1.9 wide) must fit the free part of the stage
+      const wantDist = fi >= 0
+        ? Math.max(5.2, (2.9 * H) / (2 * half * 0.84 * Math.max(120, H - bottom)), (1.9 * H) / (2 * half * 0.85 * Math.max(120, W - left)))
+        : overZ;
       dist = dist ? dist + (wantDist - dist) * k : wantDist;
       zoom += ((fi >= 0 ? 1 : 0) - zoom) * k;
       const orbit = still ? 0 : zoom * Math.sin(t * 0.32) * 0.42 + look.x * 0.12;
       camera.position.set(focus.x + Math.sin(orbit) * dist, focus.y + 0.7 - look.y * (still ? 0 : 0.2), focus.z + Math.cos(orbit) * dist);
-      // leave room for the info panel: on wide screens the robot moves right, on narrow ones up
-      const wide = camera.aspect > 1.15;
-      const shiftX = wide ? dist * half * camera.aspect * 0.42 * zoom : 0;
-      const shiftY = wide ? 0 : dist * half * 0.42 * zoom;
+      // centre the robot in the free part of the stage: right of a side card, above a bottom card
+      shift.x += (left / W - shift.x) * k;
+      shift.y += (bottom / H - shift.y) * k;
+      const shiftX = dist * half * camera.aspect * shift.x;
+      const shiftY = dist * half * shift.y;
       aim.set(focus.x - Math.cos(orbit) * shiftX, focus.y - shiftY, focus.z + Math.sin(orbit) * shiftX);
       camera.lookAt(aim);
 

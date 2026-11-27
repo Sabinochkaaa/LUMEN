@@ -133,26 +133,34 @@ function ShowcasePoster({ active, onPick }: { active: number; onPick: (i: number
 }
 
 /**
- * The team on one screen. All five robots stand on stage; a click on a robot (or its name) brings the camera close
+ * The team in the page's common container (title like every other section, the 3D stage framed under it).
+ * All five robots stand on stage; a click on a robot (or its name) brings the camera close
  * and opens its card. Arrows or ← → switch agents, «Whole team» or Esc goes back, and scrolling the page away
  * cancels the close-up too.
  */
 function TeamShowcase() {
   const { t, lang } = useT();
   const nav = useNavigate();
-  const ref = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null); // the open card: the camera frames the robot in the space it leaves
   const [active, setActive] = useState(-1);
   const [flat, setFlat] = useState(() =>
     typeof window !== "undefined" && (window.matchMedia("(prefers-reduced-motion: reduce)").matches || (navigator as any).connection?.saveData === true));
   const n = AGENTS.length;
   const open = active >= 0;
-  // while the page glides to the section after a pick, its own scroll must not count as «the user scrolled away»
+  // while the page glides to the stage after a pick, its own scroll must not count as «the user scrolled away»
   const guard = useRef({ until: 0, y: 0 });
   const pick = useCallback((i: number) => {
     guard.current = { until: Date.now() + 1000, y: window.scrollY };
-    const el = ref.current;
-    if (el && Math.abs(el.getBoundingClientRect().top) > 4) el.scrollIntoView({ behavior: "smooth", block: "start" });
     setActive(i);
+    // bring the whole stage on screen only when part of it is hidden (after the next paint: on phones it grows)
+    requestAnimationFrame(() => {
+      const el = stage.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const tall = window.innerWidth < 768 ? 660 : r.height;
+      if (r.top < 64 || r.top + tall > window.innerHeight + 4) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }, []);
   const step = useCallback((d: number) => setActive((a) => (a < 0 ? 0 : (a + d + n) % n)), [n]);
   useEffect(() => {
@@ -176,24 +184,27 @@ function TeamShowcase() {
   const a = open ? AGENTS[active] : null;
   const c = open ? AGENT_COLORS[active] : undefined;
   return (
-    <section id="team" ref={ref} className="relative h-[100svh] min-h-[620px] overflow-hidden bg-canvas" aria-label={t("team.title")}>
-      <div className="absolute inset-0">
+    <section id="team" className="mx-auto max-w-[1200px] scroll-mt-16 px-5 pt-20 md:pt-24" aria-label={t("team.title")}>
+      <motion.div {...UP} className="max-w-2xl">
+        <Eyebrow>{t("land.navTeam")}</Eyebrow>
+        <h2 className={H2}>{t("team.title")}</h2>
+        <p className="mt-3 text-[16px] leading-[26px] text-ink-soft">{t("hero.pick")}</p>
+      </motion.div>
+
+      {/* phones: the card lies over the bottom of the stage, so the stage grows while it is open */}
+      <div ref={stage} className={`relative mt-10 scroll-mt-[76px] overflow-hidden rounded-xl border border-line transition-[height] duration-300 md:h-[clamp(520px,calc(100svh-120px),600px)] ${open ? "h-[660px]" : "h-[420px]"}`}
+        style={{ background: "radial-gradient(120% 100% at 50% 0%, rgb(var(--surface)) 0%, rgb(var(--canvas)) 100%)" }}>
         {flat ? <ShowcasePoster active={active} onPick={pick} /> : (
           <Suspense fallback={<ShowcasePoster active={active} onPick={pick} />}>
-            <TeamShowcase3D active={active} onPick={pick} onFail={() => setFlat(true)} className="absolute inset-0" label={a ? a.name[lang] : t("team.title")} />
+            <TeamShowcase3D active={active} onPick={pick} onFail={() => setFlat(true)} panel={panel} className="absolute inset-0" label={a ? a.name[lang] : t("team.title")} />
           </Suspense>
         )}
-      </div>
 
-      <div className="pointer-events-none absolute inset-0 mx-auto max-w-[1200px] px-5">
+        <div className="pointer-events-none absolute inset-0 px-3 md:px-5">
         <AnimatePresence mode="wait" initial={false}>
           {!open ? (
-            <motion.div key="team" className="flex h-full flex-col items-center justify-between pb-8 pt-20 text-center"
+            <motion.div key="team" className="flex h-full flex-col items-center justify-end pb-5 text-center"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <div>
-                <h2 className="text-[28px] font-semibold leading-9 tracking-[-0.01em] md:text-[36px] md:leading-[44px]">{t("team.title")}</h2>
-                <p className="meta mt-2 text-[15px]">{t("hero.pick")}</p>
-              </div>
               <div className="pointer-events-auto flex flex-wrap justify-center gap-2" role="group" aria-label={t("team.title")}>
                 {AGENTS.map((x, i) => (
                   <button key={i} onClick={() => pick(i)}
@@ -204,9 +215,9 @@ function TeamShowcase() {
               </div>
             </motion.div>
           ) : (
-            <motion.div key="agent" className="flex h-full items-end pb-5 pt-20 lg:items-center lg:pb-0"
+            <motion.div key="agent" className="flex h-full items-end pb-3 md:items-center md:pb-0"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <div className="pointer-events-auto w-full rounded-xl border border-line bg-surface/95 p-5 shadow-lift lg:w-[400px] lg:p-6" aria-live="polite">
+              <div ref={panel} className="pointer-events-auto w-full rounded-xl border border-line bg-surface/95 p-4 shadow-lift md:w-[360px] md:p-5 lg:w-[400px] lg:p-6" aria-live="polite">
                 <div className="flex items-center justify-between gap-3">
                   <button onClick={() => setActive(-1)} className="btn-ghost -ml-2 h-8 px-2 text-[13px]"><ArrowLeft size={15} />{t("team.all")}</button>
                   <span className="font-mono text-[12.5px] text-ink-faint tabular-nums">{String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</span>
@@ -232,11 +243,12 @@ function TeamShowcase() {
                   </div>
                   <button onClick={() => step(1)} className="btn-line h-8 w-8 px-0" aria-label={t("team.next")}><ChevronRight size={16} /></button>
                 </div>
-                <p className="mt-3 hidden text-center text-[12px] text-ink-faint lg:block">{t("team.keys")}</p>
+                <p className="mt-3 hidden text-center text-[12px] text-ink-faint md:block">{t("team.keys")}</p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </section>
   );
@@ -271,7 +283,7 @@ function Header() {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    const onResize = () => { if (window.innerWidth >= 768) setOpen(false); };
+    const onResize = () => { if (window.innerWidth >= 1024) setOpen(false); };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden"; // the page under the open menu stays put
     window.addEventListener("keydown", onKey);
@@ -283,15 +295,15 @@ function Header() {
     <header className="sticky top-0 z-40 border-b border-line bg-canvas">
       <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-5 py-3">
         <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}><Logo size={36} /><span className="text-[16px] font-semibold tracking-[0.06em]">LÜMEN</span></Link>
-        <nav className="ml-6 hidden gap-6 text-sm text-ink-soft md:flex">
+        <nav className="hidden gap-5 whitespace-nowrap text-sm text-ink-soft lg:ml-3 lg:flex xl:ml-6 xl:gap-6">
           {links.map(([h, k]) => <a key={h} href={h} className="transition-colors hover:text-ink">{t(k)}</a>)}
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden lg:block"><LangSwitch /></div>
-          <div className="hidden md:block"><ThemeSwitch compact /></div>
-          <Link to="/dashboard" className="btn-line hidden md:inline-flex">{t("land.open")}</Link>
+          <div className="hidden sm:block"><ThemeSwitch compact /></div>
+          <Link to="/dashboard" className="btn-line hidden xl:inline-flex">{t("land.open")}</Link>
           <Link to="/new" className="btn-primary hidden sm:inline-flex">{t("land.cta")}</Link>
-          <button className="btn-ghost h-10 w-10 px-0 md:hidden" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu"
+          <button className="btn-ghost h-10 w-10 px-0 lg:hidden" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu"
             aria-label={t("ui.menu")}>
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -299,9 +311,9 @@ function Header() {
       </div>
       <AnimatePresence>
         {open && (<>
-          <motion.div className="fixed inset-0 top-[61px] z-[-1] bg-black/30 md:hidden" aria-hidden onClick={() => setOpen(false)}
+          <motion.div className="fixed inset-0 top-[61px] z-[-1] bg-black/30 lg:hidden" aria-hidden onClick={() => setOpen(false)}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} />
-          <motion.nav id="mobile-menu" aria-label={t("ui.menu")} className="absolute inset-x-0 top-full border-b border-line bg-canvas shadow-lift md:hidden"
+          <motion.nav id="mobile-menu" aria-label={t("ui.menu")} className="absolute inset-x-0 top-full border-b border-line bg-canvas shadow-lift lg:hidden"
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
             <div className="mx-auto max-w-[1200px] px-5 pb-5 pt-2">
               {links.map(([h, k]) => (
