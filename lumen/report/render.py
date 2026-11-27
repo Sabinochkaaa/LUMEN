@@ -5,6 +5,7 @@ risk, how to fix and an improved wording (if possible).
 """
 from __future__ import annotations
 
+import base64
 import html as _html
 import re
 from collections import Counter
@@ -16,6 +17,13 @@ from ..engine.criteria import REQUIREMENT_CRITERIA, SET_CRITERIA, criterion_name
 from ..engine.extractor import TYPE_RU
 from ..engine.scoring import METHOD
 from ..models import SEVERITY_ORDER, AuditResult, Finding
+
+# the LÜMEN mark, embedded so the HTML report stays a single self-contained file
+try:
+    from pathlib import Path as _Path
+    _LOGO = "data:image/png;base64," + base64.b64encode((_Path(__file__).with_name("logo.png")).read_bytes()).decode()
+except OSError:  # a stripped-down install without the image: the report keeps its text header
+    _LOGO = ""
 
 SEV_ICON = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🔵", "INFO": "⚪"}
 ST_ICON = {"ok": "✅", "issue": "❌", "na": "N/A", "unknown": "·"}
@@ -441,7 +449,7 @@ _CSS = """
 *{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
 .wrap{max-width:980px;margin:0 auto;padding:0 20px 60px}
 header{background:var(--ink);color:#fff;padding:28px 0 76px}header .wrap{padding-bottom:0}
-.brand{font-size:12px;letter-spacing:.06em;color:#9FB3D9}h1{margin:6px 0 4px;font-size:28px;line-height:1.2}
+.brand{font-size:12px;letter-spacing:.06em;color:#9FB3D9;display:flex;align-items:center;gap:8px}h1{margin:6px 0 4px;font-size:28px;line-height:1.2}
 .sub{color:#C7D2E8;font-size:13px}
 .hero{display:grid;grid-template-columns:1fr 200px;gap:14px;margin-top:-56px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
@@ -533,7 +541,7 @@ def render_html(r: AuditResult) -> str:
     title = p.document_title or p.document_name
     h(f"<!DOCTYPE html><html lang='ru'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
       f"<title>LÜMEN — {_e(title)}</title><style>{_CSS}</style></head><body style='--v:{vhex}'>")
-    h(f"<header><div class='wrap'><div class='brand'>LÜMEN · ПРОВЕРКА ТРЕБОВАНИЙ</div><h1>{_e(title)}</h1>"
+    h(f"<header><div class='wrap'><div class='brand'>" + (f"<img src='{_LOGO}' alt='' width='22' height='22'>" if _LOGO else "") + f"LÜMEN · ПРОВЕРКА ТРЕБОВАНИЙ</div><h1>{_e(title)}</h1>"
       f"<div class='sub'>{_e(_dt(p.analysed_at))} · {_e(p.model)} · {_e(MODE_RU[p.mode])}</div></div></header><div class='wrap'>")
     h(f"<div class='hero'><div class='card verdict'><b class='lbl'>{vlabel}</b><p><b>{_e(vtext)}</b></p>"
       f"<p class='why'>{_e(r.readiness_reason)}</p></div>"

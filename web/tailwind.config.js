@@ -19,7 +19,8 @@ export default {
         sev: { critical: "#C53030", high: "#D9622B", medium: "#B7791F", low: "#2B6CB0", info: "#718096" },
       },
       fontFamily: {
-        sans: ['"Onest Variable"', "system-ui", "sans-serif"],
+        // SF Pro Display on Apple devices (system font); Inter, the closest open font, everywhere else
+        sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', '"SF Pro Text"', '"Inter Variable"', "system-ui", "sans-serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
       },
       boxShadow: {

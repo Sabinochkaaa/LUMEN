@@ -1,6 +1,6 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Bot, Check, FileStack, GitFork, HelpCircle, Landmark, Quote } from "lucide-react";
 import { SEV_COLOR, Severity } from "../api";
 import { Lang, useT } from "../i18n";
@@ -8,7 +8,7 @@ import { LangSwitch, Logo, Num, ReadinessBadge, SevBadge, ThemeSwitch } from "..
 import { AGENTS, AGENT_COLORS } from "../components/agents";
 import RobotIcon from "../components/RobotIcon";
 
-const HeroTeam3D = lazy(() => import("../components/HeroTeam3D"));
+const TeamShowcase3D = lazy(() => import("../components/TeamShowcase3D"));
 
 const DOC: Record<Lang, string[]> = {
   ru: ["## Функциональные требования", "Ф-1. Клиент задаёт порог от 1 000 до 1 000 000 ₸.", "Ф-2. В расходы входят проведённые покупки.",
@@ -30,65 +30,170 @@ const HITS: { line: number; sev: Severity; label: Record<Lang, string> }[] = [
 ];
 
 
-/** Static picture of the team for slow devices, no WebGL, reduced motion — and while three.js loads. */
-function TeamPoster({ active, onPick }: { active: number; onPick: (i: number) => void }) {
+// colours and order of the 1.0 animated document (kept as it was, by request)
+const LENS_COLOR: Record<string, string> = { CRITICAL: "#E5484D", HIGH: "#F76B15", MEDIUM: "#E2A30F" };
+const LENS_ORDER = [3, 2, 7, 11, 4];
+
+/** The 1.0 hero document: a scan line runs over the spec and findings pop up line by line. */
+function HeroLens() {
+  const { lang, t } = useT();
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setStep((s) => (s + 1) % (HITS.length + 3)), 1400);
+    return () => clearInterval(id);
+  }, []);
+  const order = LENS_ORDER.map((l) => HITS.find((h) => h.line === l)!);
+  const shown = order.slice(0, Math.min(step, order.length));
+  const lines = DOC[lang];
   return (
-    <div className="flex h-full items-end justify-center gap-3 pb-20 sm:gap-6">
-      {AGENTS.map((_, i) => (
-        <button key={i} onClick={() => onPick(i)} aria-hidden tabIndex={-1}
-          className={`transition-transform ${active === i ? "-translate-y-2" : ""}`} style={{ marginBottom: Math.abs(i - 2) * -10 }}>
-          <RobotIcon agent={i} size={i === 2 ? 76 : 64} />
-        </button>
-      ))}
+    <div className="relative">
+      <div className="card relative overflow-hidden rounded-xl shadow-[0_24px_60px_-24px_rgb(47_107_255_/_.45),0_2px_6px_rgb(15_27_45_/_.06)]">
+        <div className="flex items-center gap-2 border-b border-line bg-surface px-4 py-2.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#E5484D]/80" /><span className="h-2.5 w-2.5 rounded-full bg-[#E2A30F]/80" /><span className="h-2.5 w-2.5 rounded-full bg-[#12A150]/70" />
+          <span className="ml-2 text-[12px] text-ink-faint">requirements.md</span>
+          <span className="ml-auto flex items-center gap-2 text-[12px] text-ink-soft">
+            <span className="hidden h-1.5 w-1.5 animate-pulse rounded-full bg-signal sm:inline-block" /><span className="hidden sm:inline">{t("lens.scan")}</span>
+            <span className="rounded-full bg-signal/10 px-2 py-0.5 font-semibold text-signal tabular-nums">{shown.length} {t("lens.found")}</span>
+          </span>
+        </div>
+        <div className="relative bg-surface py-2.5 font-mono text-[11.5px] leading-[1.8] sm:text-[12.5px]">
+          <div className="lens-beam" />
+          {lines.map((ln, i) => {
+            const hit = shown.find((h) => h.line === i);
+            const c = hit ? LENS_COLOR[hit.sev] : undefined;
+            return (
+              <div key={i} className="lens-line-hit relative flex pr-4" style={{ background: c ? c + "1F" : undefined }}>
+                <span className="relative w-9 shrink-0 select-none pr-3 text-right text-ink-faint">
+                  {c && <motion.span layoutId={`dot-${i}`} className="absolute left-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full" style={{ background: c }} />}
+                  {i + 1}
+                </span>
+                <span className={`min-w-0 truncate ${ln.startsWith("##") ? "font-semibold text-ink" : "text-ink/80"}`}>{ln || " "}</span>
+                <AnimatePresence>
+                  {hit && (
+                    <motion.span initial={{ opacity: 0, x: 12, scale: 0.9 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0 }}
+                      className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full px-2.5 py-0.5 font-sans text-[11px] font-semibold text-white shadow-lg sm:block"
+                      style={{ background: c }}>
+                      {hit.label[lang]}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <motion.div className="absolute -bottom-8 -left-6 hidden rounded-xl border border-line bg-surface px-4 py-3 shadow-lift md:block"
+        animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
+        <div className="text-[11px] text-ink-faint">{t("ready.NOT READY")}</div>
+        <div className="text-2xl font-semibold text-signal tabular-nums">72.3</div>
+      </motion.div>
+      <motion.div className="absolute -right-3 -top-11 hidden items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 shadow-lift md:flex"
+        animate={{ y: [0, 8, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
+        <HelpCircle size={16} className="text-violet" /><span className="text-[12.5px] font-medium">11 · {t("ov.questions")}</span>
+      </motion.div>
     </div>
   );
 }
 
-function HeroStage() {
+/** Hero picture: the LÜMEN robot floats in the air, the animated document sits in front of it. */
+function HeroVisual() {
+  const calm = useReducedMotion();
+  return (
+    <div className="relative mx-auto h-[440px] w-full max-w-[600px] sm:h-[540px]">
+      <div className="hero-glow absolute inset-0" aria-hidden />
+      <motion.img src="/hero-robot.webp" alt="" aria-hidden draggable={false} width={900} height={914}
+        className="absolute right-0 top-0 w-[62%] max-w-[360px] select-none"
+        animate={calm ? undefined : { y: [0, -16, 0], rotate: [0, 1.5, 0] }}
+        transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }} />
+      <motion.div className="robot-shadow absolute right-[8%] top-[60%] h-6 w-[38%] max-w-[230px]" aria-hidden
+        animate={calm ? undefined : { scaleX: [1, 0.82, 1], opacity: [0.9, 0.55, 0.9] }}
+        transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }} />
+      <div className="absolute bottom-6 left-0 z-10 w-[94%] max-w-[500px]"><HeroLens /></div>
+    </div>
+  );
+}
+
+/** Fallback for the showcase when 3D is off (no WebGL, data saver, reduced motion) and while three.js loads. */
+function ShowcasePoster({ active }: { active: number }) {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <motion.div key={active} initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+        <RobotIcon agent={active} size={200} />
+      </motion.div>
+    </div>
+  );
+}
+
+/**
+ * The team, one agent per screen: the section is five screens tall and its inside sticks to the viewport;
+ * scrolling moves the camera from robot to robot, the description changes next to it.
+ */
+function TeamShowcase() {
   const { t, lang } = useT();
   const nav = useNavigate();
-  const [active, setActive] = useState(-1);
+  const ref = useRef<HTMLElement>(null);
+  const [active, setActive] = useState(0);
   const [flat, setFlat] = useState(() =>
     typeof window !== "undefined" && (window.matchMedia("(prefers-reduced-motion: reduce)").matches || (navigator as any).connection?.saveData === true));
+  const n = AGENTS.length;
+  useEffect(() => {
+    const onScroll = () => {
+      const el = ref.current;
+      if (!el) return;
+      const total = el.offsetHeight - window.innerHeight;
+      const p = Math.min(0.9999, Math.max(0, -el.getBoundingClientRect().top / Math.max(1, total)));
+      setActive(Math.floor(p * n));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
+  }, [n]);
+  const jump = (i: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: top + ((el.offsetHeight - window.innerHeight) * (i + 0.5)) / n, behavior: "smooth" });
+  };
   const go = [() => nav("/new"), () => nav("/pick/issues"), () => nav("/pick/fintech"), () => nav("/translate"), () => window.dispatchEvent(new Event("lumen:support"))];
-  const a = active >= 0 ? AGENTS[active] : null;
+  const a = AGENTS[active];
+  const c = AGENT_COLORS[active];
   return (
-    <div id="team" className="relative scroll-mt-24">
-      <div className="stage-floor relative h-[340px] sm:h-[420px] lg:h-[460px]">
-        {flat ? <TeamPoster active={active} onPick={setActive} /> : (
-          <Suspense fallback={<TeamPoster active={active} onPick={setActive} />}>
-            <HeroTeam3D active={active} onPick={setActive} onFail={() => setFlat(true)} className="absolute inset-0" label={t("team.title")} />
-          </Suspense>
-        )}
+    <section id="team" ref={ref} className="relative bg-canvas" style={{ height: `${n * 100}vh` }} aria-label={t("team.title")}>
+      <div className="sticky top-0 flex h-screen flex-col overflow-hidden pt-14">
+        <div className="mx-auto grid h-full w-full max-w-[1200px] grid-rows-[minmax(0,1fr)_auto] gap-4 px-5 pb-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:grid-rows-1 lg:items-center lg:gap-10 lg:pb-0">
+          <div className="order-2 lg:order-1">
+            <div className="label">{t("team.title")}</div>
+            <div className="mt-2 font-mono text-[13px] text-ink-faint tabular-nums">{String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={active} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.28, ease: "easeOut" }}
+                className="mt-3 border-l-[3px] pl-5" style={{ borderColor: c }} aria-live="polite">
+                <div className="text-[13px] font-semibold" style={{ color: active === 1 ? "#7B8496" : c }}>{a.role[lang]}</div>
+                <h2 className="mt-1 text-[30px] font-semibold leading-tight tracking-[-0.015em] md:text-[44px]">{a.name[lang]}</h2>
+                <p className="mt-3 max-w-md text-[15px] leading-[24px] text-ink-soft md:text-[16px] md:leading-[26px]">{a.text[lang]}</p>
+                <button onClick={go[active]} className="btn-primary mt-5">{t(`hero.go${active}`)}<ArrowRight size={16} /></button>
+              </motion.div>
+            </AnimatePresence>
+            <div className="mt-6 flex gap-1.5 lg:mt-10" role="group" aria-label={t("team.title")}>
+              {AGENTS.map((x, i) => (
+                <button key={i} onClick={() => jump(i)} aria-pressed={active === i} aria-label={x.name[lang]} title={x.name[lang]}
+                  className="group flex h-6 flex-1 items-center">
+                  <span className="h-1 w-full rounded-full transition-colors" style={{ background: i === active ? AGENT_COLORS[i] : i < active ? "rgb(var(--ink) / .25)" : "rgb(var(--line))" }} />
+                </button>
+              ))}
+            </div>
+            <p className="meta mt-2 hidden lg:block">{t("team.sub")}</p>
+          </div>
+          <div className="relative order-1 min-h-0 lg:order-2 lg:h-[72vh]">
+            {flat ? <ShowcasePoster active={active} /> : (
+              <Suspense fallback={<ShowcasePoster active={active} />}>
+                <TeamShowcase3D active={active} onPick={jump} onFail={() => setFlat(true)} className="absolute inset-0" label={a.name[lang]} />
+              </Suspense>
+            )}
+          </div>
+        </div>
       </div>
-      <div className="relative -mt-14 flex flex-wrap justify-center gap-1.5 px-2" role="group" aria-label={t("team.title")}>
-        {AGENTS.map((x, i) => (
-          <button key={i} onClick={() => setActive(active === i ? -1 : i)} aria-pressed={active === i}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[12.5px] font-medium transition-colors ${active === i ? "border-ink/25 bg-surface text-ink" : "border-line bg-surface/80 text-ink-soft hover:text-ink"}`}>
-            <span className="h-2 w-2 rounded-full" style={{ background: AGENT_COLORS[i] }} />{x.name[lang]}
-          </button>
-        ))}
-      </div>
-      <div className="mx-auto mt-4 min-h-[132px] max-w-xl">
-        <AnimatePresence mode="wait" initial={false}>
-          {a ? (
-            <motion.div key={active} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
-              className="card px-5 py-4" style={{ borderLeft: `3px solid ${AGENT_COLORS[active]}` }} aria-live="polite">
-              <div className="flex items-baseline justify-between gap-3">
-                <div className="text-[15px] font-semibold">{a.name[lang]}</div>
-                <div className="label">{a.role[lang]}</div>
-              </div>
-              <p className="mt-1.5 text-[14px] leading-[22px] text-ink-soft">{a.text[lang]}</p>
-              <button onClick={go[active]} className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-signal hover:underline">
-                {t(`hero.go${active}`)}<ArrowRight size={15} />
-              </button>
-            </motion.div>
-          ) : (
-            <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="meta pt-3 text-center">{t("hero.pick")}</motion.p>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -176,7 +281,7 @@ export default function Landing() {
               {["PDF", "Word", "Excel", "Markdown", "HTML", "RTF", "OCR"].map((f) => <span key={f}>{f}</span>)}
             </div>
           </motion.div>
-          <div className="min-w-0"><HeroStage /></div>
+          <div className="min-w-0"><HeroVisual /></div>
         </section>
 
         <section className="border-y border-line bg-surface">
@@ -189,6 +294,8 @@ export default function Landing() {
             ))}
           </div>
         </section>
+
+        <TeamShowcase />
 
         <section id="how" className="mx-auto max-w-[1200px] scroll-mt-20 px-5 py-20">
           <motion.h2 {...up} className="text-[28px] font-semibold leading-9 tracking-[-0.01em] md:text-[32px] md:leading-10">{t("land.hTitle")}</motion.h2>

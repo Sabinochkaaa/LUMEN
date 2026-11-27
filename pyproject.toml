@@ -16,5 +16,8 @@ lumen = "lumen.cli:main"
 [tool.setuptools.packages.find]
 include = ["lumen*"]
 
+[tool.setuptools.package-data]
+lumen = ["report/logo.png"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

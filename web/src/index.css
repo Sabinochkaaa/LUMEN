@@ -75,6 +75,17 @@ body { @apply bg-canvas text-ink font-sans antialiased; font-feature-settings: "
 /* ── 3D team stage on the landing ────────────────────────────────────── */
 .stage-floor { background: radial-gradient(60% 40% at 50% 78%, rgb(var(--ink) / .07) 0%, transparent 70%); }
 
+/* ── Hero (design 3.0): the animated document from 1.0 in front of the floating robot ── */
+.hero-glow { background: radial-gradient(60% 60% at 60% 40%, rgb(124 77 255 / .22) 0%, rgb(47 107 255 / .14) 45%, transparent 75%); }
+.lens-beam {
+  position: absolute; left: 0; right: 0; height: 110px; pointer-events: none; z-index: 2;
+  background: linear-gradient(180deg, transparent 0%, rgb(47 107 255 / .10) 42%, rgb(124 77 255 / .22) 50%, rgb(47 107 255 / .10) 58%, transparent 100%);
+  animation: beam 2.6s cubic-bezier(.45,0,.55,1) infinite alternate;
+}
+@keyframes beam { from { top: -55px } to { top: calc(100% - 55px) } }
+.robot-shadow { background: radial-gradient(50% 50% at 50% 50%, rgb(var(--shadow) / .22) 0%, transparent 70%); }
+@media (prefers-reduced-motion: reduce) { .lens-beam { display: none; } }
+
 /* ── Document lens: problem places are underlined, not flooded ───────── */
 .lens-line-hit { transition: background-color .2s ease; }
 /* thin progress bar used while a document is being read (replaces the 1.0 scanning beam) */

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import "@fontsource-variable/onest";
+import "@fontsource-variable/inter";
 import "@fontsource/jetbrains-mono/400.css";
 import "./index.css";
 import App from "./App";

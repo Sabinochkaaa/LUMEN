@@ -5,10 +5,10 @@ import { AGENT_COLORS } from "./agents";
 import { makeBot } from "./AgentTeam3D";
 
 /**
- * Landing hero (docs/DESIGN.md §9): the five agents on a studio podium.
- * On load they power on one by one; then each shows its job — the Analyst scans a sheet, the Skeptic raises a magnifier,
- * the FinTech expert tosses a ₸ coin, the Translator cycles letters, Support waves with a headset on.
- * Heads follow the pointer, hover lights the ring under a robot, click (or the buttons under the scene) picks it.
+ * Landing «team» showcase (design 3.0): the five agents stand far apart, each on its own pedestal, and the camera
+ * flies to the active one and slowly orbits it (±25°). Each robot shows its job — the Analyst scans a sheet,
+ * the Skeptic raises a magnifier, the FinTech expert tosses a ₸ coin, the Translator cycles letters, Support waves
+ * with a headset on. Heads follow the pointer; a click on a robot picks it.
  * Calls onFail when WebGL is unavailable so the page can keep its static picture.
  */
 const GLYPHS = ["А", "Ә", "A", "文", "Ü"];
@@ -27,7 +27,7 @@ function canvasTexture(draw: (g: CanvasRenderingContext2D, s: number) => void, s
 const easeBack = (p: number) => { const c = 1.6; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
-export default function HeroTeam3D({ active, onPick, onFail, className = "", label }: {
+export default function TeamShowcase3D({ active, onPick, onFail, className = "", label }: {
   active: number; onPick: (i: number) => void; onFail?: () => void; className?: string; label?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -65,7 +65,8 @@ export default function HeroTeam3D({ active, onPick, onFail, className = "", lab
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
     key.shadow.radius = 8;
-    Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6 });
+    Object.assign(key.shadow.camera, { left: -11, right: 11, top: 6, bottom: -6 });
+    key.shadow.mapSize.set(2048, 1024);
     const fill = new THREE.DirectionalLight("#dfe8ff", 0.45);
     fill.position.set(-6, 3, 4);
     const rim = new THREE.DirectionalLight("#ffffff", 0.6);
@@ -87,21 +88,23 @@ export default function HeroTeam3D({ active, onPick, onFail, className = "", lab
     tintPodium();
     const mo = new MutationObserver(tintPodium);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    const podium = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.7, 0.14, 96), [edgeMat, podiumMat, edgeMat]);
-    podium.position.y = -0.07;
-    podium.receiveShadow = true;
-    const shadow = new THREE.Mesh(new THREE.CircleGeometry(3.6, 96), new THREE.ShadowMaterial({ opacity: 0.16 }));
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = 0.002;
-    shadow.receiveShadow = true;
-    scene.add(podium, shadow);
+    const SPACING = 4.2; // far enough apart that the camera shows one robot at a time
+    AGENT_COLORS.forEach((_, i) => {
+      const podium = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.12, 0.14, 72), [edgeMat, podiumMat, edgeMat]);
+      podium.position.set((i - 2) * SPACING, -0.07, 0);
+      podium.receiveShadow = true;
+      const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.05, 72), new THREE.ShadowMaterial({ opacity: 0.18 }));
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.position.set((i - 2) * SPACING, 0.002, 0);
+      shadow.receiveShadow = true;
+      scene.add(podium, shadow);
+    });
 
-    // five robots in a shallow arc that opens to the viewer
+    // five robots in a row, one per pedestal
     const bots = AGENT_COLORS.map((c, i) => {
       const b = makeBot(c, false);
-      const k = i - 2;
-      b.home.set(k * 1.3, 0, Math.abs(k) * 0.34 - 0.3);
-      b.face = -k * 0.16;
+      b.home.set((i - 2) * SPACING, 0, 0);
+      b.face = 0;
       b.root.position.copy(b.home);
       b.root.rotation.y = b.face;
       b.hit.forEach((h) => (h.userData.i = i));
@@ -166,7 +169,7 @@ export default function HeroTeam3D({ active, onPick, onFail, className = "", lab
       g.fillStyle = "#FFFFFF"; g.strokeStyle = "#D6DBE4"; g.lineWidth = 6;
       g.beginPath(); g.roundRect(14, 14, s - 28, s - 64, 36); g.fill(); g.stroke();
       g.beginPath(); g.moveTo(s * 0.42, s - 52); g.lineTo(s * 0.5, s - 18); g.lineTo(s * 0.58, s - 52); g.closePath(); g.fill();
-      g.fillStyle = "#0F1B2D"; g.font = `600 ${s * 0.42}px "Onest Variable", system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillStyle = "#0F1B2D"; g.font = `600 ${s * 0.42}px -apple-system, "SF Pro Display", "Inter Variable", system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
       g.fillText(ch, s / 2, (s - 50) / 2 + 8);
     };
     const bubble = canvasTexture(drawGlyph(GLYPHS[0]));
@@ -214,7 +217,8 @@ export default function HeroTeam3D({ active, onPick, onFail, className = "", lab
       renderer.domElement.style.height = "100%";
       camera.aspect = w / h;
       const half = Math.tan(THREE.MathUtils.degToRad(16));
-      baseZ = Math.max(7, 3.6 / (half * Math.min(camera.aspect, 1.9)));
+      // the robot (≈2.9 units with the speech bubble) fills about two thirds of the height; narrow screens step back
+      baseZ = Math.max(5.6, 1.25 / (half * Math.min(camera.aspect, 1)));
       camera.updateProjectionMatrix();
     };
     const ro = new ResizeObserver(resize);
@@ -245,26 +249,34 @@ export default function HeroTeam3D({ active, onPick, onFail, className = "", lab
 
     const clock = new THREE.Clock();
     const tmp = new THREE.Vector3();
-    const target = new THREE.Vector3(0, 1.15, 0);
+    const target = new THREE.Vector3(0, 1.2, 0);
+    const focus = new THREE.Vector3(bots[Math.max(0, active)].home.x, 1.2, 0);
     let raf = 0;
+    let prevT = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       if (!visible) return;
       const t = still ? 99 : clock.getElapsedTime();
+      const dt = Math.min(0.25, Math.max(0, t - prevT));
+      prevT = t;
       const act = state.current.active;
 
-      // camera: a slow drift after the pointer, 2–3 degrees
-      camera.position.set(look.x * (still ? 0 : 0.5), 2.0 - look.y * (still ? 0 : 0.25), baseZ);
-      camera.lookAt(target);
+      // camera: flies to the active robot, then orbits it gently (about ±25°) and leans after the pointer
+      const fi = Math.max(0, act);
+      target.set(bots[fi].home.x, 1.2, 0);
+      focus.lerp(target, still ? 1 : 1 - Math.exp(-dt * 3.2)); // ~1 s flight at any frame rate
+      const orbit = still ? -0.25 : Math.sin(t * 0.32) * 0.42 + look.x * 0.15;
+      camera.position.set(focus.x + Math.sin(orbit) * baseZ, 1.85 - look.y * (still ? 0 : 0.2), Math.cos(orbit) * baseZ);
+      camera.lookAt(focus);
 
       bots.forEach((b, i) => {
         // power-on: one after another, a small drop and an overshoot
         const p = clamp01((t - 0.25 - i * 0.28) / 0.55);
         const on = i === act;
         const over = i === hovered;
-        const s = Math.max(0.001, easeBack(p)) * (on ? 1.12 : 1) * (over && !on ? 1.04 : 1);
+        const s = Math.max(0.001, easeBack(p)) * (over ? 1.03 : 1);
         b.root.scale.lerp(tmp.set(s, s, s), p < 1 ? 1 : 0.12);
-        tmp.set(b.home.x * (on ? 0.9 : 1), 0, b.home.z + (on ? 0.85 : 0));
+        tmp.set(b.home.x, 0, b.home.z);
         b.root.position.lerp(tmp, still ? 1 : 0.08);
         b.root.position.y = (1 - p) * 0.6 + (still ? 0 : Math.sin(t * 2 + b.phase) * 0.03);
         b.eyeMat.color.lerp(p >= 1 ? EYE_ON : EYE_OFF, still ? 1 : 0.15);
@@ -277,7 +289,8 @@ export default function HeroTeam3D({ active, onPick, onFail, className = "", lab
         const faceTo = on || over ? 0 : b.face;
         b.root.rotation.y = THREE.MathUtils.lerp(b.root.rotation.y, faceTo, 0.08);
         if (!still) {
-          const glance = act >= 0 && !on ? Math.sign(act - i) * 0.45 : look.x * 0.45;
+          // the robot on stage keeps its eyes on the camera as it circles; the rest idle
+          const glance = i === fi ? orbit * 0.9 + look.x * 0.2 : Math.sin(t * 0.5 + b.phase) * 0.3;
           b.head.rotation.y = THREE.MathUtils.lerp(b.head.rotation.y, glance, 0.07);
           b.head.rotation.x = THREE.MathUtils.lerp(b.head.rotation.x, look.y * 0.18, 0.07);
           b.head.rotation.z = Math.sin(t * 0.9 + b.phase) * 0.04;
