@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Clock, Download, FileText, FileUp, Languages, Loader2, Trash2 } from "lucide-react";
+import { Clock, Download, FileText, FileUp, Languages, Loader2, Trash2, X } from "lucide-react";
 import { api, TranslationResult } from "../api";
 import { useT } from "../i18n";
 import AgentBuddy from "../components/AgentBuddy";
+import MarkdownView from "../components/MarkdownView";
 import { CopyButton, ErrorBox, PageHead } from "../components/panelUi";
 
 /** One finished translation, kept in this browser so the user sees what they translated before. */
@@ -117,9 +118,13 @@ export default function Translate() {
       const next = [e, ...history.filter((h) => !(h.name === e.name && h.target === e.target))].slice(0, MAX);
       setHistory(next); saveHistory(next);
       setFresh(true);
+      // ready for the next file: the result stays on the right, the drop zone is empty again
+      setFile(null); setPreview("");
+      if (input.current) input.current.value = "";
     } catch (err: any) { setError(err.message); } finally { setBusy(false); }
   };
   const open = (e: Entry) => { setCur(e); setView(e.res.overlay && e.image ? "overlay" : "text"); };
+  const startNew = () => { setCur(null); setFile(null); setPreview(""); setError(""); if (input.current) input.current.value = ""; };
   const clear = () => { setHistory([]); saveHistory([]); };
 
   const res = cur?.res;
@@ -143,6 +148,7 @@ export default function Translate() {
           : error ? t("buddy.trError")
           : fresh && cur ? t("buddy.trDone", { lang: langLabel(cur.target) })
           : file ? t("buddy.trPicked", { name: file.name, lang: langLabel(target) })
+          : cur ? t("buddy.trShown", { name: cur.name, lang: langLabel(cur.target) })
           : t("buddy.trIdle")}
         onPick={() => input.current?.click()} />
       <div className="grid gap-6 lg:grid-cols-[380px_1fr] lg:grid-rows-[auto_1fr]">
@@ -205,6 +211,7 @@ export default function Translate() {
               <CopyButton text={res.markdown} label={t("tr.copy")} />
               <button className="btn-line" onClick={() => download(res.markdown, base + ".md")}><Download size={15} />MD</button>
               <button className="btn-primary" onClick={() => api.translationDocx(res.markdown, base)}><Download size={15} />Word</button>
+              <button className="btn-line" onClick={startNew} title={t("tr.new")}><X size={15} />{t("tr.new")}</button>
             </div>}
           </div>
           {res && (
@@ -234,12 +241,12 @@ export default function Translate() {
               ) : view === "side" ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   <div><div className="meta mb-2">{t("tr.original")}</div><pre className={`${pre} text-ink-soft`}>{res.source_text}</pre></div>
-                  <div><div className="meta mb-2">{t("tr.text")}</div><pre className={pre}>{res.markdown}</pre></div>
+                  <div><div className="meta mb-2">{t("tr.text")}</div><MarkdownView text={res.markdown} /></div>
                 </div>
               ) : view === "original" ? (
                 <pre className={`${pre} text-ink-soft`}>{res.source_text || "—"}</pre>
               ) : (
-                <pre className={pre}>{res.markdown}</pre>
+                <MarkdownView text={res.markdown} />
               )}
               {res.warnings?.map((w) => <p key={w} className="meta mt-4">⚠ {w}</p>)}
             </motion.div>
