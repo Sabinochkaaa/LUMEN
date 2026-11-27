@@ -140,6 +140,10 @@ const D: Record<string, [string, string, string]> = {
   "nav.gReport": ["Отчёт", "Есеп", "Report"],
   "nav.gTools": ["Сервисы", "Қызметтер", "Tools"],
   // landing, design 2.0
+  "team.all": ["Вся команда", "Бүкіл команда", "Whole team"],
+  "team.prev": ["Предыдущий агент", "Алдыңғы агент", "Previous agent"],
+  "team.next": ["Следующий агент", "Келесі агент", "Next agent"],
+  "team.keys": ["← → — другой агент, Esc — вся команда", "← → — басқа агент, Esc — бүкіл команда", "← → another agent, Esc whole team"],
   "hero.pick": ["Нажмите на агента, чтобы узнать, что он проверяет.", "Агент нені тексеретінін білу үшін оны басыңыз.", "Click an agent to see what it checks."],
   "hero.go0": ["Проверить ТЗ", "ТТ тексеру", "Review a spec"],
   "hero.go1": ["Смотреть замечания", "Ескертулерді көру", "See findings"],

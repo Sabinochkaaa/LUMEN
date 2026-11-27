@@ -5,8 +5,9 @@ import { AGENT_COLORS } from "./agents";
 import { makeBot } from "./AgentTeam3D";
 
 /**
- * Landing «team» showcase (design 3.0): the five agents stand far apart, each on its own pedestal, and the camera
- * flies to the active one and slowly orbits it (±25°). Each robot shows its job — the Analyst scans a sheet,
+ * Landing «team» showcase (design 3.0): all five agents stand in a shallow arc, each on its own pedestal.
+ * active = -1 shows the whole team; a picked agent (active = i) gets the camera: it flies in (about a second),
+ * leaves room for the info panel (left on wide screens, below on narrow ones) and slowly orbits the robot (±25°). Each robot shows its job — the Analyst scans a sheet,
  * the Skeptic raises a magnifier, the FinTech expert tosses a ₸ coin, the Translator cycles letters, Support waves
  * with a headset on. Heads follow the pointer; a click on a robot picks it.
  * Calls onFail when WebGL is unavailable so the page can keep its static picture.
@@ -88,23 +89,25 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
     tintPodium();
     const mo = new MutationObserver(tintPodium);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    const SPACING = 4.2; // far enough apart that the camera shows one robot at a time
+    const SPACING = 1.85;
+    const spot = (i: number) => new THREE.Vector3((i - 2) * SPACING, 0, Math.abs(i - 2) * 0.4 - 0.4); // arc opening to the viewer
     AGENT_COLORS.forEach((_, i) => {
-      const podium = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.12, 0.14, 72), [edgeMat, podiumMat, edgeMat]);
-      podium.position.set((i - 2) * SPACING, -0.07, 0);
+      const at = spot(i);
+      const podium = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.86, 0.14, 72), [edgeMat, podiumMat, edgeMat]);
+      podium.position.set(at.x, -0.07, at.z);
       podium.receiveShadow = true;
-      const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.05, 72), new THREE.ShadowMaterial({ opacity: 0.18 }));
+      const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.8, 72), new THREE.ShadowMaterial({ opacity: 0.18 }));
       shadow.rotation.x = -Math.PI / 2;
-      shadow.position.set((i - 2) * SPACING, 0.002, 0);
+      shadow.position.set(at.x, 0.002, at.z);
       shadow.receiveShadow = true;
       scene.add(podium, shadow);
     });
 
-    // five robots in a row, one per pedestal
+    // five robots, one per pedestal, turned slightly towards the middle
     const bots = AGENT_COLORS.map((c, i) => {
       const b = makeBot(c, false);
-      b.home.set((i - 2) * SPACING, 0, 0);
-      b.face = 0;
+      b.home.copy(spot(i));
+      b.face = -(i - 2) * 0.12;
       b.root.position.copy(b.home);
       b.root.rotation.y = b.face;
       b.hit.forEach((h) => (h.userData.i = i));
@@ -208,7 +211,9 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
     };
     window.addEventListener("pointermove", onWinMove);
 
-    let baseZ = 10;
+    let baseZ = 10; // camera distance on a picked robot
+    let overZ = 12; // camera distance for the whole team
+    const half = Math.tan(THREE.MathUtils.degToRad(16));
     const resize = () => {
       const w = el.clientWidth || 1;
       const h = el.clientHeight || 1;
@@ -216,9 +221,10 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
       camera.aspect = w / h;
-      const half = Math.tan(THREE.MathUtils.degToRad(16));
-      // the robot (≈2.9 units with the speech bubble) fills about two thirds of the height; narrow screens step back
-      baseZ = Math.max(5.6, 1.25 / (half * Math.min(camera.aspect, 1)));
+      // a picked robot (≈2.9 units with the speech bubble) fills about two thirds of the height; narrow screens step back
+      baseZ = Math.max(6.2, 1.45 / (half * Math.min(camera.aspect, 1)));
+      // the whole arc (±4.3 units) fits the width, the robots' height fits the height
+      overZ = Math.max(7.2, 5.1 / (half * camera.aspect));
       camera.updateProjectionMatrix();
     };
     const ro = new ResizeObserver(resize);
@@ -249,8 +255,11 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
 
     const clock = new THREE.Clock();
     const tmp = new THREE.Vector3();
-    const target = new THREE.Vector3(0, 1.2, 0);
-    const focus = new THREE.Vector3(bots[Math.max(0, active)].home.x, 1.2, 0);
+    const target = new THREE.Vector3(0, 1.1, 0);
+    const focus = new THREE.Vector3(0, 1.1, 0); // the point the camera circles
+    let dist = 0; // current camera distance (0 = not set yet)
+    let zoom = 0; // 0 = whole team, 1 = a picked robot
+    const aim = new THREE.Vector3();
     let raf = 0;
     let prevT = 0;
     const tick = () => {
@@ -261,13 +270,23 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
       prevT = t;
       const act = state.current.active;
 
-      // camera: flies to the active robot, then orbits it gently (about ±25°) and leans after the pointer
-      const fi = Math.max(0, act);
-      target.set(bots[fi].home.x, 1.2, 0);
-      focus.lerp(target, still ? 1 : 1 - Math.exp(-dt * 3.2)); // ~1 s flight at any frame rate
-      const orbit = still ? -0.25 : Math.sin(t * 0.32) * 0.42 + look.x * 0.15;
-      camera.position.set(focus.x + Math.sin(orbit) * baseZ, 1.85 - look.y * (still ? 0 : 0.2), Math.cos(orbit) * baseZ);
-      camera.lookAt(focus);
+      // camera: the whole team, or flies to the picked robot and orbits it gently (about ±25°); time-based, ~1 s
+      const fi = act;
+      const k = still ? 1 : 1 - Math.exp(-dt * 3.2);
+      if (fi >= 0) target.set(bots[fi].home.x, 1.15, bots[fi].home.z);
+      else target.set(0, 1.05, 0);
+      focus.lerp(target, k);
+      const wantDist = fi >= 0 ? baseZ : overZ;
+      dist = dist ? dist + (wantDist - dist) * k : wantDist;
+      zoom += ((fi >= 0 ? 1 : 0) - zoom) * k;
+      const orbit = still ? 0 : zoom * Math.sin(t * 0.32) * 0.42 + look.x * 0.12;
+      camera.position.set(focus.x + Math.sin(orbit) * dist, focus.y + 0.7 - look.y * (still ? 0 : 0.2), focus.z + Math.cos(orbit) * dist);
+      // leave room for the info panel: on wide screens the robot moves right, on narrow ones up
+      const wide = camera.aspect > 1.15;
+      const shiftX = wide ? dist * half * camera.aspect * 0.42 * zoom : 0;
+      const shiftY = wide ? 0 : dist * half * 0.42 * zoom;
+      aim.set(focus.x - Math.cos(orbit) * shiftX, focus.y - shiftY, focus.z + Math.sin(orbit) * shiftX);
+      camera.lookAt(aim);
 
       bots.forEach((b, i) => {
         // power-on: one after another, a small drop and an overshoot
@@ -285,12 +304,12 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
         rm.opacity = THREE.MathUtils.lerp(rm.opacity, ringOp, 0.15);
         b.ring.position.set(b.root.position.x, 0.01, b.root.position.z);
 
-        // body turns to the viewer when picked; others glance at the picked one or follow the pointer
+        // body turns to the viewer when picked or hovered; otherwise keeps its place in the arc
         const faceTo = on || over ? 0 : b.face;
         b.root.rotation.y = THREE.MathUtils.lerp(b.root.rotation.y, faceTo, 0.08);
         if (!still) {
-          // the robot on stage keeps its eyes on the camera as it circles; the rest idle
-          const glance = i === fi ? orbit * 0.9 + look.x * 0.2 : Math.sin(t * 0.5 + b.phase) * 0.3;
+          // whole team: heads follow the pointer; picked: it watches the camera, the rest look at it
+          const glance = fi < 0 ? look.x * 0.45 : i === fi ? orbit * 0.9 + look.x * 0.2 : Math.sign(fi - i) * 0.5;
           b.head.rotation.y = THREE.MathUtils.lerp(b.head.rotation.y, glance, 0.07);
           b.head.rotation.x = THREE.MathUtils.lerp(b.head.rotation.x, look.y * 0.18, 0.07);
           b.head.rotation.z = Math.sin(t * 0.9 + b.phase) * 0.04;
@@ -357,6 +376,7 @@ export default function TeamShowcase3D({ active, onPick, onFail, className = "",
       renderer.render(scene, camera);
     };
     tick();
+    if ((import.meta as any).env?.DEV) (window as any).__lumenShowcase = { camera, bots }; // dev-only: lets a test check the framing
 
     return () => {
       cancelAnimationFrame(raf);

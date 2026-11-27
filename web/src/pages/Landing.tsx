@@ -1,7 +1,7 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Bot, Check, FileStack, GitFork, HelpCircle, Landmark, Quote } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Check, ChevronLeft, ChevronRight, FileStack, GitFork, HelpCircle, Landmark, Quote } from "lucide-react";
 import { SEV_COLOR, Severity } from "../api";
 import { Lang, useT } from "../i18n";
 import { LangSwitch, Logo, Num, ReadinessBadge, SevBadge, ThemeSwitch } from "../components/ui";
@@ -34,7 +34,11 @@ const HITS: { line: number; sev: Severity; label: Record<Lang, string> }[] = [
 const LENS_COLOR: Record<string, string> = { CRITICAL: "#E5484D", HIGH: "#F76B15", MEDIUM: "#E2A30F" };
 const LENS_ORDER = [3, 2, 7, 11, 4];
 
-/** The 1.0 hero document: a scan line runs over the spec and findings pop up line by line. */
+/**
+ * The 1.0 hero document: a scan line runs over the spec and findings pop up line by line.
+ * 3.0: semi-transparent so the robot behind it shows through; the finding tags are short enough
+ * not to overlap on neighbouring lines, and the floating badges sit where nothing else moves.
+ */
 function HeroLens() {
   const { lang, t } = useT();
   const [step, setStep] = useState(0);
@@ -47,31 +51,32 @@ function HeroLens() {
   const lines = DOC[lang];
   return (
     <div className="relative">
-      <div className="card relative overflow-hidden rounded-xl shadow-[0_24px_60px_-24px_rgb(47_107_255_/_.45),0_2px_6px_rgb(15_27_45_/_.06)]">
-        <div className="flex items-center gap-2 border-b border-line bg-surface px-4 py-2.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#E5484D]/80" /><span className="h-2.5 w-2.5 rounded-full bg-[#E2A30F]/80" /><span className="h-2.5 w-2.5 rounded-full bg-[#12A150]/70" />
-          <span className="ml-2 text-[12px] text-ink-faint">requirements.md</span>
-          <span className="ml-auto flex items-center gap-2 text-[12px] text-ink-soft">
+      <div className="relative overflow-hidden rounded-xl border border-line/80 bg-surface/70 shadow-[0_24px_60px_-24px_rgb(47_107_255_/_.40),0_2px_6px_rgb(15_27_45_/_.05)] backdrop-blur-[2px]">
+        <div className="flex items-center gap-2 border-b border-line/70 px-3.5 py-2">
+          <span className="h-2 w-2 rounded-full bg-[#E5484D]/80" /><span className="h-2 w-2 rounded-full bg-[#E2A30F]/80" /><span className="h-2 w-2 rounded-full bg-[#12A150]/70" />
+          <span className="ml-1.5 text-[11.5px] text-ink-faint">requirements.md</span>
+          <span className="ml-auto flex items-center gap-1.5 text-[11.5px] text-ink-soft">
             <span className="hidden h-1.5 w-1.5 animate-pulse rounded-full bg-signal sm:inline-block" /><span className="hidden sm:inline">{t("lens.scan")}</span>
             <span className="rounded-full bg-signal/10 px-2 py-0.5 font-semibold text-signal tabular-nums">{shown.length} {t("lens.found")}</span>
           </span>
         </div>
-        <div className="relative bg-surface py-2.5 font-mono text-[11.5px] leading-[1.8] sm:text-[12.5px]">
+        {/* only the newest finding carries its tag: tags on neighbouring lines would overlap */}
+        <div className="relative py-2 font-mono text-[11px] leading-[1.95] sm:text-[11.5px]">
           <div className="lens-beam" />
           {lines.map((ln, i) => {
             const hit = shown.find((h) => h.line === i);
             const c = hit ? LENS_COLOR[hit.sev] : undefined;
             return (
-              <div key={i} className="lens-line-hit relative flex pr-4" style={{ background: c ? c + "1F" : undefined }}>
-                <span className="relative w-9 shrink-0 select-none pr-3 text-right text-ink-faint">
-                  {c && <motion.span layoutId={`dot-${i}`} className="absolute left-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full" style={{ background: c }} />}
+              <div key={i} className="lens-line-hit relative flex pr-3" style={{ background: c ? c + "24" : undefined }}>
+                <span className="relative w-8 shrink-0 select-none pr-2.5 text-right text-ink-faint">
+                  {c && <motion.span layoutId={`dot-${i}`} className="absolute left-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full" style={{ background: c }} />}
                   {i + 1}
                 </span>
                 <span className={`min-w-0 truncate ${ln.startsWith("##") ? "font-semibold text-ink" : "text-ink/80"}`}>{ln || " "}</span>
                 <AnimatePresence>
-                  {hit && (
-                    <motion.span initial={{ opacity: 0, x: 12, scale: 0.9 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0 }}
-                      className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full px-2.5 py-0.5 font-sans text-[11px] font-semibold text-white shadow-lg sm:block"
+                  {hit && hit === shown[shown.length - 1] && (
+                    <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+                      className="absolute right-2 top-1/2 hidden max-w-[48%] -translate-y-1/2 truncate rounded-full px-2 font-sans text-[10px] font-semibold leading-4 text-white sm:block"
                       style={{ background: c }}>
                       {hit.label[lang]}
                     </motion.span>
@@ -82,14 +87,14 @@ function HeroLens() {
           })}
         </div>
       </div>
-      <motion.div className="absolute -bottom-8 -left-6 hidden rounded-xl border border-line bg-surface px-4 py-3 shadow-lift md:block"
-        animate={{ y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
-        <div className="text-[11px] text-ink-faint">{t("ready.NOT READY")}</div>
-        <div className="text-2xl font-semibold text-signal tabular-nums">72.3</div>
+      <motion.div className="absolute -top-14 left-2 hidden items-center gap-2 rounded-xl border border-line bg-surface px-3.5 py-2 shadow-lift md:flex"
+        animate={{ y: [0, -6, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
+        <HelpCircle size={15} className="text-violet" /><span className="text-[12px] font-medium">11 · {t("ov.questions")}</span>
       </motion.div>
-      <motion.div className="absolute -right-3 -top-11 hidden items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 shadow-lift md:flex"
-        animate={{ y: [0, 8, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}>
-        <HelpCircle size={16} className="text-violet" /><span className="text-[12.5px] font-medium">11 · {t("ov.questions")}</span>
+      <motion.div className="absolute -bottom-9 left-6 hidden rounded-xl border border-line bg-surface px-3.5 py-2 shadow-lift md:block"
+        animate={{ y: [0, 6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
+        <div className="text-[10.5px] text-ink-faint">{t("ready.NOT READY")}</div>
+        <div className="text-xl font-semibold leading-6 text-signal tabular-nums">72.3</div>
       </motion.div>
     </div>
   );
@@ -99,99 +104,139 @@ function HeroLens() {
 function HeroVisual() {
   const calm = useReducedMotion();
   return (
-    <div className="relative mx-auto h-[440px] w-full max-w-[600px] sm:h-[540px]">
+    <div className="relative mx-auto h-[460px] w-full max-w-[600px] sm:h-[560px]">
       <div className="hero-glow absolute inset-0" aria-hidden />
       <motion.img src="/hero-robot.webp" alt="" aria-hidden draggable={false} width={900} height={914}
-        className="absolute right-0 top-0 w-[62%] max-w-[360px] select-none"
+        className="absolute -right-2 top-0 w-[74%] max-w-[440px] select-none"
         animate={calm ? undefined : { y: [0, -16, 0], rotate: [0, 1.5, 0] }}
         transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }} />
-      <motion.div className="robot-shadow absolute right-[8%] top-[60%] h-6 w-[38%] max-w-[230px]" aria-hidden
+      <motion.div className="robot-shadow absolute right-[10%] top-[78%] h-6 w-[40%] max-w-[260px]" aria-hidden
         animate={calm ? undefined : { scaleX: [1, 0.82, 1], opacity: [0.9, 0.55, 0.9] }}
         transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }} />
-      <div className="absolute bottom-6 left-0 z-10 w-[94%] max-w-[500px]"><HeroLens /></div>
+      <div className="absolute bottom-10 left-0 z-10 w-[82%] max-w-[420px]"><HeroLens /></div>
     </div>
   );
 }
 
 /** Fallback for the showcase when 3D is off (no WebGL, data saver, reduced motion) and while three.js loads. */
-function ShowcasePoster({ active }: { active: number }) {
+function ShowcasePoster({ active, onPick }: { active: number; onPick: (i: number) => void }) {
   return (
-    <div className="flex h-full items-center justify-center">
-      <motion.div key={active} initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
-        <RobotIcon agent={active} size={200} />
-      </motion.div>
+    <div className="flex h-full items-center justify-center gap-3 px-4 sm:gap-8">
+      {AGENTS.map((a, i) => (
+        <button key={i} onClick={() => onPick(i)} tabIndex={-1} aria-hidden
+          className={`transition-all duration-300 ${active < 0 ? "" : active === i ? "scale-125" : "opacity-30"}`}>
+          <RobotIcon agent={i} size={active === i ? 120 : 72} />
+        </button>
+      ))}
     </div>
   );
 }
 
 /**
- * The team, one agent per screen: the section is five screens tall and its inside sticks to the viewport;
- * scrolling moves the camera from robot to robot, the description changes next to it.
+ * The team on one screen. All five robots stand on stage; a click on a robot (or its name) brings the camera close
+ * and opens its card. Arrows or ← → switch agents, «Whole team» or Esc goes back, and scrolling the page away
+ * cancels the close-up too.
  */
 function TeamShowcase() {
   const { t, lang } = useT();
   const nav = useNavigate();
   const ref = useRef<HTMLElement>(null);
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(-1);
   const [flat, setFlat] = useState(() =>
     typeof window !== "undefined" && (window.matchMedia("(prefers-reduced-motion: reduce)").matches || (navigator as any).connection?.saveData === true));
   const n = AGENTS.length;
-  useEffect(() => {
-    const onScroll = () => {
-      const el = ref.current;
-      if (!el) return;
-      const total = el.offsetHeight - window.innerHeight;
-      const p = Math.min(0.9999, Math.max(0, -el.getBoundingClientRect().top / Math.max(1, total)));
-      setActive(Math.floor(p * n));
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
-  }, [n]);
-  const jump = (i: number) => {
+  const open = active >= 0;
+  // while the page glides to the section after a pick, its own scroll must not count as «the user scrolled away»
+  const guard = useRef({ until: 0, y: 0 });
+  const pick = useCallback((i: number) => {
+    guard.current = { until: Date.now() + 1000, y: window.scrollY };
     const el = ref.current;
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: top + ((el.offsetHeight - window.innerHeight) * (i + 0.5)) / n, behavior: "smooth" });
-  };
+    if (el && Math.abs(el.getBoundingClientRect().top) > 4) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActive(i);
+  }, []);
+  const step = useCallback((d: number) => setActive((a) => (a < 0 ? 0 : (a + d + n) % n)), [n]);
+  useEffect(() => {
+    if (!open) return;
+    guard.current = { ...guard.current, y: window.scrollY };
+    const onScroll = () => {
+      const g = guard.current;
+      if (Date.now() < g.until) { g.y = window.scrollY; return; }
+      if (Math.abs(window.scrollY - g.y) > 40) setActive(-1);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setActive(-1);
+      else if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("keydown", onKey); };
+  }, [open, step]);
   const go = [() => nav("/new"), () => nav("/pick/issues"), () => nav("/pick/fintech"), () => nav("/translate"), () => window.dispatchEvent(new Event("lumen:support"))];
-  const a = AGENTS[active];
-  const c = AGENT_COLORS[active];
+  const a = open ? AGENTS[active] : null;
+  const c = open ? AGENT_COLORS[active] : undefined;
   return (
-    <section id="team" ref={ref} className="relative bg-canvas" style={{ height: `${n * 100}vh` }} aria-label={t("team.title")}>
-      <div className="sticky top-0 flex h-screen flex-col overflow-hidden pt-14">
-        <div className="mx-auto grid h-full w-full max-w-[1200px] grid-rows-[minmax(0,1fr)_auto] gap-4 px-5 pb-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:grid-rows-1 lg:items-center lg:gap-10 lg:pb-0">
-          <div className="order-2 lg:order-1">
-            <div className="label">{t("team.title")}</div>
-            <div className="mt-2 font-mono text-[13px] text-ink-faint tabular-nums">{String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</div>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div key={active} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.28, ease: "easeOut" }}
-                className="mt-3 border-l-[3px] pl-5" style={{ borderColor: c }} aria-live="polite">
-                <div className="text-[13px] font-semibold" style={{ color: active === 1 ? "#7B8496" : c }}>{a.role[lang]}</div>
-                <h2 className="mt-1 text-[30px] font-semibold leading-tight tracking-[-0.015em] md:text-[44px]">{a.name[lang]}</h2>
-                <p className="mt-3 max-w-md text-[15px] leading-[24px] text-ink-soft md:text-[16px] md:leading-[26px]">{a.text[lang]}</p>
-                <button onClick={go[active]} className="btn-primary mt-5">{t(`hero.go${active}`)}<ArrowRight size={16} /></button>
-              </motion.div>
-            </AnimatePresence>
-            <div className="mt-6 flex gap-1.5 lg:mt-10" role="group" aria-label={t("team.title")}>
-              {AGENTS.map((x, i) => (
-                <button key={i} onClick={() => jump(i)} aria-pressed={active === i} aria-label={x.name[lang]} title={x.name[lang]}
-                  className="group flex h-6 flex-1 items-center">
-                  <span className="h-1 w-full rounded-full transition-colors" style={{ background: i === active ? AGENT_COLORS[i] : i < active ? "rgb(var(--ink) / .25)" : "rgb(var(--line))" }} />
-                </button>
-              ))}
-            </div>
-            <p className="meta mt-2 hidden lg:block">{t("team.sub")}</p>
-          </div>
-          <div className="relative order-1 min-h-0 lg:order-2 lg:h-[72vh]">
-            {flat ? <ShowcasePoster active={active} /> : (
-              <Suspense fallback={<ShowcasePoster active={active} />}>
-                <TeamShowcase3D active={active} onPick={jump} onFail={() => setFlat(true)} className="absolute inset-0" label={a.name[lang]} />
-              </Suspense>
-            )}
-          </div>
-        </div>
+    <section id="team" ref={ref} className="relative h-[100svh] min-h-[620px] overflow-hidden bg-canvas" aria-label={t("team.title")}>
+      <div className="absolute inset-0">
+        {flat ? <ShowcasePoster active={active} onPick={pick} /> : (
+          <Suspense fallback={<ShowcasePoster active={active} onPick={pick} />}>
+            <TeamShowcase3D active={active} onPick={pick} onFail={() => setFlat(true)} className="absolute inset-0" label={a ? a.name[lang] : t("team.title")} />
+          </Suspense>
+        )}
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 mx-auto max-w-[1200px] px-5">
+        <AnimatePresence mode="wait" initial={false}>
+          {!open ? (
+            <motion.div key="team" className="flex h-full flex-col items-center justify-between pb-8 pt-20 text-center"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              <div>
+                <h2 className="text-[28px] font-semibold leading-9 tracking-[-0.01em] md:text-[36px] md:leading-[44px]">{t("team.title")}</h2>
+                <p className="meta mt-2 text-[15px]">{t("hero.pick")}</p>
+              </div>
+              <div className="pointer-events-auto flex flex-wrap justify-center gap-2" role="group" aria-label={t("team.title")}>
+                {AGENTS.map((x, i) => (
+                  <button key={i} onClick={() => pick(i)}
+                    className="inline-flex items-center gap-2 rounded-md border border-line bg-surface/90 px-3 py-1.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-ink/25 hover:text-ink">
+                    <span className="h-2 w-2 rounded-full" style={{ background: AGENT_COLORS[i] }} />{x.name[lang]}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="agent" className="flex h-full items-end pb-5 pt-20 lg:items-center lg:pb-0"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              <div className="pointer-events-auto w-full rounded-xl border border-line bg-surface/95 p-5 shadow-lift lg:w-[400px] lg:p-6" aria-live="polite">
+                <div className="flex items-center justify-between gap-3">
+                  <button onClick={() => setActive(-1)} className="btn-ghost -ml-2 h-8 px-2 text-[13px]"><ArrowLeft size={15} />{t("team.all")}</button>
+                  <span className="font-mono text-[12.5px] text-ink-faint tabular-nums">{String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}</span>
+                </div>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22, ease: "easeOut" }}
+                    className="mt-3 border-l-[3px] pl-4" style={{ borderColor: c }}>
+                    <div className="text-[13px] font-semibold" style={{ color: active === 1 ? "#7B8496" : c }}>{a!.role[lang]}</div>
+                    <h3 className="mt-0.5 text-[26px] font-semibold leading-tight tracking-[-0.01em] lg:text-[34px]">{a!.name[lang]}</h3>
+                    <p className="mt-2 text-[14px] leading-[22px] text-ink-soft lg:text-[15px] lg:leading-6">{a!.text[lang]}</p>
+                  </motion.div>
+                </AnimatePresence>
+                <button onClick={go[active]} className="btn-primary mt-4">{t(`hero.go${active}`)}<ArrowRight size={16} /></button>
+                <div className="mt-5 flex items-center gap-2 border-t border-line pt-4">
+                  <button onClick={() => step(-1)} className="btn-line h-8 w-8 px-0" aria-label={t("team.prev")}><ChevronLeft size={16} /></button>
+                  <div className="flex flex-1 justify-center gap-1.5">
+                    {AGENTS.map((x, i) => (
+                      <button key={i} onClick={() => setActive(i)} aria-pressed={active === i} aria-label={x.name[lang]} title={x.name[lang]}
+                        className="flex h-6 items-center px-0.5">
+                        <span className="block h-2 rounded-full transition-all duration-200" style={{ width: active === i ? 22 : 8, background: active === i ? AGENT_COLORS[i] : "rgb(var(--line))" }} />
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => step(1)} className="btn-line h-8 w-8 px-0" aria-label={t("team.next")}><ChevronRight size={16} /></button>
+                </div>
+                <p className="mt-3 hidden text-center text-[12px] text-ink-faint lg:block">{t("team.keys")}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
