@@ -60,6 +60,8 @@ pip install -r requirements.txt && python main.py --input docs/requirements.md -
   и проверка на каждом изменении (GitHub Actions). Архитектура — [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
+можно добавить еще иишки неограниченно
+<img width="1114" height="789" alt="image" src="https://github.com/user-attachments/assets/8f149760-d193-468e-ad65-d14134907507" />
 
 ## Бизнес-проблема
 
