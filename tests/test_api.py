@@ -198,3 +198,18 @@ def test_report_never_leaks_exception_text(client, monkeypatch):
     monkeypatch.setattr(export, "render", lambda r, fmt: (_ for _ in ()).throw(RuntimeError("/srv/secret/path")))
     r = client.get(f"/api/audits/{aid}/report.pdf")
     assert r.status_code == 500 and "/srv/secret" not in r.text
+
+
+def test_admin_can_wipe_all_reports_guests_cannot(client, monkeypatch):
+    from lumen.config import settings
+    from lumen.security import limiter
+
+    limiter._hits.clear()
+    monkeypatch.setattr(settings, "api_token", "")
+    monkeypatch.setattr(settings, "admin_password_raw", "S3cret-admin")
+    monkeypatch.setattr(settings, "env", "production")
+    wait(client, client.post("/api/demo").json()["audit_id"])
+    assert client.delete("/api/audits").status_code == 401  # guest
+    assert client.delete("/api/audits", headers={"X-API-Token": "S3cret-admin"}).json()["deleted"] >= 1
+    assert client.get("/api/audits").json()["items"] == []
+    limiter._hits.clear()

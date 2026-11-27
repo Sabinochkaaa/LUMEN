@@ -428,6 +428,17 @@ def patch_question(audit_id: str, qid: str, body: QuestionPatch):
             "readiness_reason": r.readiness_reason}
 
 
+@app.delete("/api/audits", dependencies=[Depends(require_admin)])
+def delete_all_audits():
+    """Admin only: wipes every report (site and bot) and the result cache — a clean start before a demo."""
+    svc = get_service()
+    n = svc.store.clear()
+    svc.jobs.clear()
+    svc.cache.clear()
+    log.warning("Администратор удалил все отчёты (%s)", n)
+    return {"deleted": n}
+
+
 @app.delete("/api/audits/{audit_id}", dependencies=[Depends(require_admin)])
 def delete_audit(audit_id: str):
     get_service().jobs.pop(audit_id, None)

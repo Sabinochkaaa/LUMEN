@@ -109,6 +109,7 @@ export const api = {
   list: () => req<{ items: AuditSummary[]; running: { id: string; document_name: string; status: string }[] }>("/api/audits"),
   get: (id: string) => req<Audit>(`/api/audits/${id}`),
   remove: (id: string) => req(`/api/audits/${id}`, { method: "DELETE" }),
+  removeAll: () => req<{ deleted: number }>("/api/audits", { method: "DELETE" }),
   upload: (file: File, provider?: string, model?: string) => {
     const fd = new FormData();
     fd.append("file", file);
