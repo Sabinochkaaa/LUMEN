@@ -9,12 +9,12 @@ import { AGENT_COLORS } from "./agents";
  * mode "office": each stands at a desk with a laptop; `working` types and its screen glows; `finished` makes all hop.
  * Robots react to hover and are clickable (onPick).
  */
-type Bot = {
+export type Bot = {
   root: THREE.Group; head: THREE.Group; armL: THREE.Group; armR: THREE.Group; eyes: THREE.Mesh[]; home: THREE.Vector3;
   face: number; phase: number; hit: THREE.Object3D[]; screen?: THREE.MeshStandardMaterial;
 };
 
-function makeBot(color: string, desk: boolean): Bot {
+export function makeBot(color: string, desk: boolean): Bot {
   const shell = new THREE.MeshPhysicalMaterial({ color, metalness: 0.25, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.06 });
   const visor = new THREE.MeshPhysicalMaterial({ color: "#0B1020", metalness: 0.4, roughness: 0.08, clearcoat: 1 });
   const glow = new THREE.MeshBasicMaterial({ color: "#7FE7FF" });

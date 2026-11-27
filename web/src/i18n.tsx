@@ -135,6 +135,18 @@ const D: Record<string, [string, string, string]> = {
   "land.foot": ["Сделано для BCC-HUB × MNU FinTech Hackathon 2026", "BCC-HUB × MNU FinTech Hackathon 2026 үшін жасалған", "Built for BCC-HUB × MNU FinTech Hackathon 2026"],
   "lens.scan": ["Анализ документа", "Құжатты талдау", "Analysing document"],
   "lens.found": ["найдено", "табылды", "found"],
+  // landing, design 2.0
+  "hero.pick": ["Нажмите на агента, чтобы узнать, что он проверяет.", "Агент нені тексеретінін білу үшін оны басыңыз.", "Click an agent to see what it checks."],
+  "hero.go0": ["Проверить ТЗ", "ТТ тексеру", "Review a spec"],
+  "hero.go1": ["Смотреть замечания", "Ескертулерді көру", "See findings"],
+  "hero.go2": ["FinTech-аудит", "FinTech аудиті", "FinTech audit"],
+  "hero.go3": ["Перевести документ", "Құжатты аудару", "Translate a document"],
+  "hero.go4": ["Задать вопрос", "Сұрақ қою", "Ask a question"],
+  "land.sample": ["Пример отчёта", "Есеп үлгісі", "Sample report"],
+  "land.sampleD": ["Каждое замечание привязано к строке документа и подтверждено цитатой.", "Әр ескерту құжат жолына байланған және дәйексөзбен расталған.", "Every finding is tied to a line of the document and backed by a quote."],
+  "land.colSev": ["Критичность", "Маңыздылығы", "Severity"],
+  "land.colLine": ["Строка", "Жол", "Line"],
+  "land.colIssue": ["Замечание", "Ескерту", "Finding"],
   // overview
   "ov.title": ["Обзор", "Шолу", "Overview"],
   "ov.sub": ["Качество документов требований, прошедших через LÜMEN Core.", "LÜMEN Core арқылы өткен талаптар құжаттарының сапасы.", "Quality of requirement documents reviewed by LÜMEN Core."],
