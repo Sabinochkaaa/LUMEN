@@ -219,7 +219,7 @@ export default function Translate() {
           )}
           {busy ? (
             <div className="relative flex-1 overflow-hidden p-6">
-              <div className="lens-beam" />
+              <div className="scanbar" />
               {Array.from({ length: 14 }).map((_, i) => <div key={i} className="mb-3 h-3 animate-pulse rounded bg-line" style={{ width: `${35 + ((i * 41) % 60)}%` }} />)}
             </div>
           ) : res && cur ? (

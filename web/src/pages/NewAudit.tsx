@@ -89,7 +89,7 @@ export default function NewAudit() {
         <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
           {lines.length ? <DocumentLens lines={lines} scanning={scanning} height={620} /> : (
             <div className="relative h-[620px] overflow-hidden rounded-xl border border-line bg-surface-2 p-6">
-              {scanning && <div className="lens-beam" />}
+              {scanning && <div className="scanbar" />}
               {Array.from({ length: 22 }).map((_, i) => <div key={i} className="mb-3 h-3 rounded bg-line" style={{ width: `${40 + ((i * 37) % 55)}%` }} />)}
               <p className="meta absolute bottom-4 left-6 right-6">{t("new.serverText")}</p>
             </div>

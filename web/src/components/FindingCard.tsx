@@ -12,7 +12,7 @@ export default function FindingCard({ f, open: initial = false, onLocate }: { f:
     ? `${t(f.loc.line_end !== f.loc.line_start ? "ui.lines" : "ui.line")} ${f.loc.line_start}${f.loc.line_end !== f.loc.line_start ? `–${f.loc.line_end}` : ""}${f.loc.page ? `, ${t("ui.page")} ${f.loc.page}` : ""}`
     : t("ui.wholeDoc");
   return (
-    <motion.article layout className="card overflow-hidden" style={{ borderLeft: `3px solid ${SEV_COLOR[f.severity]}` }}>
+    <motion.article layout="position" className="card overflow-hidden" style={{ borderLeft: `3px solid ${SEV_COLOR[f.severity]}` }}>
       <button className="flex w-full items-start gap-3 px-5 py-4 text-left" onClick={() => setOpen(!open)} aria-expanded={open}>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -26,19 +26,19 @@ export default function FindingCard({ f, open: initial = false, onLocate }: { f:
             {pick(CRIT_I18N[f.criterion], lang, f.criterion)} · {where}{f.req_ids.length ? ` · ${f.req_ids.slice(0, 4).join(", ")}` : ""}
           </div>
         </div>
-        <ChevronDown size={18} className={`mt-1 shrink-0 text-ink-faint transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={18} className={`mt-1 shrink-0 text-ink-faint transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }} className="overflow-hidden">
+            transition={{ duration: 0.18 }} className="overflow-hidden">
             <div className="space-y-3 border-t border-line px-5 py-4 text-[14px] leading-relaxed">
-              {f.quote && <blockquote className="whitespace-pre-wrap rounded-lg border-l-2 border-sky bg-sky/10 px-3 py-2 font-mono text-[12.5px]">{f.quote}</blockquote>}
+              {f.quote && <blockquote className="whitespace-pre-wrap rounded border-l-2 bg-surface-2 px-3 py-2 font-mono text-[12.5px]" style={{ borderColor: SEV_COLOR[f.severity] }}>{f.quote}</blockquote>}
               <Row k={t("f.problem")} v={f.problem} />
               <Row k={t("f.risk")} v={f.risk} />
               <Row k={t("f.fix")} v={f.fix} />
               {f.rewrite && (
-                <div className="rounded-lg bg-ok/10 px-3 py-2">
+                <div className="rounded border-l-2 border-ok bg-ok/5 px-3 py-2">
                   <div className="text-[12px] font-medium text-ok">{t("f.rewrite")}</div>
                   <div className="mt-0.5">{f.rewrite}</div>
                 </div>

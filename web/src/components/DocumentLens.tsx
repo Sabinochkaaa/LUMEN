@@ -34,8 +34,8 @@ export default function DocumentLens({ lines, findings = [], scanning, focusLine
   const top = (fs: Finding[]): Severity => SEV_ORDER.find((s) => fs.some((f) => f.severity === s)) || "INFO";
 
   return (
-    <div ref={box} className="relative overflow-auto rounded-xl border border-line bg-surface-2" style={{ height }}>
-      {scanning && <div className="lens-beam" />}
+    <div ref={box} className="relative overflow-auto rounded-lg border border-line bg-surface" style={{ height }} aria-busy={scanning || undefined}>
+      {scanning && <div className="sticky top-0 z-[2] h-0.5 overflow-hidden bg-line"><div className="h-full w-1/3 animate-[scanbar_1.4s_ease-in-out_infinite] bg-signal" /></div>}
       <div className="py-2 font-mono text-[12.5px] leading-[1.7]">
         {lines.map((ln) => {
           const fs = hits.get(ln.no);
@@ -47,8 +47,8 @@ export default function DocumentLens({ lines, findings = [], scanning, focusLine
               key={ln.no}
               data-line={ln.no}
               onClick={() => fs && onLine?.(ln.no, fs)}
-              className={`lens-line-hit group flex ${fs ? "cursor-pointer hover:brightness-110" : ""} ${focused ? "ring-1 ring-inset ring-signal/50" : ""}`}
-              style={{ background: c ? c + (focused ? "33" : "1A") : focused ? "rgb(var(--signal) / .12)" : undefined, opacity: dim && !fs ? 0.55 : 1 }}
+              className={`lens-line-hit group flex ${fs ? "cursor-pointer hover:bg-surface-2" : ""} ${focused ? "ring-1 ring-inset ring-signal/50" : ""}`}
+              style={{ background: c ? c + (focused ? "24" : "0F") : focused ? "rgb(var(--signal) / .08)" : undefined, boxShadow: c ? `inset 2px 0 0 ${c}` : undefined, opacity: dim && !fs ? 0.55 : 1 }}
             >
               <span className="relative w-12 shrink-0 select-none pr-3 text-right text-ink-faint">
                 {c && <span className="absolute left-1.5 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full" style={{ background: c }} />}

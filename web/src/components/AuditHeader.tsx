@@ -12,7 +12,10 @@ export default function AuditHeader({ a }: { a: Audit }) {
   const { t, lang } = useT();
   const p = a.passport;
   return (
-    <div className="mb-7">
+    <div className="mb-6">
+      <div className="mb-2 flex items-center gap-1.5 text-[13px] text-ink-faint" aria-label="breadcrumbs">
+        <NavLink to="/reports" className="hover:text-ink">{t("nav.reports")}</NavLink><span>/</span><span className="truncate text-ink-soft">{p.document_name}</span>
+      </div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="h1 truncate">{p.document_title || p.document_name}</h1>
@@ -33,12 +36,12 @@ export default function AuditHeader({ a }: { a: Audit }) {
       <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-line" aria-label={t("tab.summary")}>
         {TABS.map(([to, key]) => (
           <NavLink key={to} end to={`/audits/${a.id}${to ? "/" + to : ""}`}
-            className={({ isActive }) => `relative -mb-px whitespace-nowrap px-3.5 py-2.5 text-sm transition-colors ${isActive ? "font-medium text-signal" : "text-ink-soft hover:text-ink"}`}>
+            className={({ isActive }) => `relative -mb-px whitespace-nowrap px-3.5 py-2.5 text-sm transition-colors ${isActive ? "font-medium text-ink" : "text-ink-soft hover:text-ink"}`}>
             {({ isActive }) => (<>
               {t(key)}
               {to === "issues" && <span className="ml-1.5 text-ink-faint">{a.scores.findings_total}</span>}
               {to === "clarifications" && <span className="ml-1.5 text-ink-faint">{a.scores.open_questions}</span>}
-              {isActive && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full grad-bg" />}
+              {isActive && <span className="absolute inset-x-2 -bottom-px h-0.5 bg-primary" />}
             </>)}
           </NavLink>
         ))}

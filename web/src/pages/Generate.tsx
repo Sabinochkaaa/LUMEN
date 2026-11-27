@@ -91,7 +91,7 @@ export default function Generate() {
           </div>
           {busy ? (
             <div className="relative flex-1 overflow-hidden p-6">
-              <div className="lens-beam" />
+              <div className="scanbar" />
               {Array.from({ length: 16 }).map((_, i) => <div key={i} className="mb-3 h-3 animate-pulse rounded bg-line" style={{ width: `${30 + ((i * 37) % 65)}%` }} />)}
             </div>
           ) : res ? (
