@@ -2,10 +2,8 @@ import { Suspense, cloneElement, createContext, lazy, useCallback, useContext, u
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useOutlet, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  FilePlus2, FileText, GitFork, HelpCircle, Landmark, LayoutDashboard, Languages, ListChecks, Lock, Menu, Settings as Cog, ShieldAlert, ShieldCheck, X,
-  Sparkles,
+  FilePlus2, FileText, GitFork, HelpCircle, Landmark, LayoutDashboard, Languages, ListChecks, Lock, Menu, PenLine, Settings as Cog, ShieldAlert, ShieldCheck, X,
 } from "lucide-react";
-import RobotIcon from "./components/RobotIcon";
 import AgentBuddy from "./components/AgentBuddy";
 import { api, Audit, Health } from "./api";
 import { LangProvider, useT } from "./i18n";
@@ -67,59 +65,72 @@ export function AuditGate({ children }: { children: (a: Audit, set: (a: Audit) =
 }
 
 // ---------------------------------------------------------------- layout
+// design 2.0: plain icons, grouped menu (docs/DESIGN.md §6)
 const NAV = [
-  { to: "/dashboard", key: "nav.overview", icon: LayoutDashboard, agent: 0 },
-  { to: "/generate", key: "nav.generate", icon: Sparkles, agent: 0 },
-  { to: "/new", key: "nav.new", icon: FilePlus2, agent: 0 },
-  { to: "requirements", key: "nav.requirements", icon: ListChecks, audit: true, agent: 0 },
-  { to: "issues", key: "nav.issues", icon: ShieldAlert, audit: true, agent: 1 },
-  { to: "graph", key: "nav.graph", icon: GitFork, audit: true, agent: 0 },
-  { to: "clarifications", key: "nav.clarifications", icon: HelpCircle, audit: true, agent: 4 },
-  { to: "fintech", key: "nav.fintech", icon: Landmark, audit: true, agent: 2 },
-  { to: "/translate", key: "nav.translate", icon: Languages, agent: 3 },
-  { to: "/reports", key: "nav.reports", icon: FileText, agent: 4 },
-  { to: "/settings", key: "nav.settings", icon: Cog, agent: 4 },
+  { to: "/dashboard", key: "nav.overview", icon: LayoutDashboard, group: "nav.gCheck" },
+  { to: "/new", key: "nav.new", icon: FilePlus2, group: "nav.gCheck" },
+  { to: "/generate", key: "nav.generate", icon: PenLine, group: "nav.gCheck" },
+  { to: "requirements", key: "nav.requirements", icon: ListChecks, audit: true, group: "nav.gReport" },
+  { to: "issues", key: "nav.issues", icon: ShieldAlert, audit: true, group: "nav.gReport" },
+  { to: "graph", key: "nav.graph", icon: GitFork, audit: true, group: "nav.gReport" },
+  { to: "clarifications", key: "nav.clarifications", icon: HelpCircle, audit: true, group: "nav.gReport" },
+  { to: "fintech", key: "nav.fintech", icon: Landmark, audit: true, group: "nav.gReport" },
+  { to: "/translate", key: "nav.translate", icon: Languages, group: "nav.gTools" },
+  { to: "/reports", key: "nav.reports", icon: FileText, group: "nav.gTools" },
 ];
+const GROUPS = ["nav.gCheck", "nav.gReport", "nav.gTools"];
+
+function NavItem({ to, label, icon: Icon, onNav }: { to: string; label: string; icon: typeof Cog; onNav?: () => void }) {
+  return (
+    <NavLink to={to} onClick={onNav}
+      className={({ isActive }) => `relative flex items-center gap-3 rounded-md px-3 py-[7px] text-[14px] transition-colors ${isActive ? "bg-surface-2 font-medium text-ink" : "text-ink-soft hover:bg-surface-2 hover:text-ink"}`}>
+      {({ isActive }) => (<>
+        {isActive && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary" />}
+        <Icon size={17} strokeWidth={1.7} className={isActive ? "text-ink" : "text-ink-faint"} />
+        <span className="flex-1 truncate">{label}</span>
+      </>)}
+    </NavLink>
+  );
+}
 
 function Sidebar({ onNav }: { onNav?: () => void }) {
   const { lastId, health, admin } = useApp();
   const { t } = useT();
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-line bg-surface/80 backdrop-blur-xl">
-      <NavLink to="/" className="flex items-center gap-2.5 px-6 pb-6 pt-7" onClick={onNav}>
-        <Logo />
-        <div>
-          <div className="text-[17px] font-semibold tracking-[0.08em]">LÜMEN</div>
-          <div className="-mt-0.5 text-[11.5px] text-ink-faint">{t("brand.sub")}</div>
+    <aside className="flex h-full w-60 flex-col border-r border-line bg-surface">
+      <NavLink to="/" className="flex items-center gap-2.5 px-5 pb-5 pt-5" onClick={onNav}>
+        <Logo size={28} />
+        <div className="min-w-0">
+          <div className="text-[15px] font-semibold tracking-[0.06em]">LÜMEN</div>
+          <div className="truncate text-[11.5px] text-ink-faint">{t("brand.sub")}</div>
         </div>
       </NavLink>
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3" aria-label="LÜMEN">
-        {NAV.map((n) => {
-          const target = n.audit ? (lastId ? `/audits/${lastId}/${n.to}` : `/pick/${n.to}`) : n.to;
-          return (
-            <NavLink key={n.key} to={target} onClick={onNav}
-              className={({ isActive }) => `relative flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] transition-colors ${isActive ? "font-medium text-signal" : "text-ink-soft hover:bg-ink/5 hover:text-ink"}`}>
-              {({ isActive }) => (<>
-                {isActive && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-xl bg-signal/10" transition={{ type: "spring", stiffness: 450, damping: 35 }} />}
-                <RobotIcon agent={n.agent} active={isActive} className="relative" />
-                <span className="relative flex-1">{t(n.key)}</span>
-                <n.icon size={14} strokeWidth={1.8} className={`relative ${isActive ? "opacity-70" : "opacity-35"}`} />
-              </>)}
-            </NavLink>
-          );
-        })}
-      </nav>
-      <div className="space-y-2 p-3">
-        <LangSwitch />
-        <ThemeSwitch compact />
-        <div className="rounded-xl bg-ink/5 px-4 py-3 text-[12px] text-ink-soft">
-          <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${health ? "bg-ok shadow-[0_0_8px_rgb(var(--ok))]" : "bg-ink-faint"}`} />
-            {health ? t("status.online") : t("status.offline")}
+      <nav className="flex-1 overflow-y-auto px-3" aria-label="LÜMEN">
+        {GROUPS.map((g) => (
+          <div key={g} className="mb-4">
+            <div className="px-3 pb-1.5 text-[11.5px] font-medium text-ink-faint">{t(g)}</div>
+            <div className="space-y-px">
+              {NAV.filter((n) => n.group === g).map((n) => (
+                <NavItem key={n.key} label={t(n.key)} icon={n.icon} onNav={onNav}
+                  to={n.audit ? (lastId ? `/audits/${lastId}/${n.to}` : `/pick/${n.to}`) : n.to} />
+              ))}
+            </div>
           </div>
-          {health && <div className="mt-1 truncate text-ink-faint" title={health.model}>{health.provider_label}</div>}
+        ))}
+      </nav>
+      <div className="space-y-3 border-t border-line p-3">
+        <NavItem to="/settings" label={t("nav.settings")} icon={Cog} onNav={onNav} />
+        <div className="flex items-center justify-between gap-2 px-1">
+          <LangSwitch />
+          <ThemeSwitch compact />
+        </div>
+        <div className="px-2 text-[12px] text-ink-soft">
+          <div className="flex items-center gap-2">
+            <span className={`h-1.5 w-1.5 rounded-full ${health ? "bg-ok" : "bg-ink-faint"}`} />
+            <span className="truncate">{health ? t("status.online") : t("status.offline")}{health ? <span className="text-ink-faint"> · <span title={health.model}>{health.provider_label}</span></span> : null}</span>
+          </div>
           {health?.login_enabled && (
-            <NavLink to="/settings" onClick={onNav} className="mt-2 flex items-center gap-1.5 font-medium text-ink-soft hover:text-ink">
+            <NavLink to="/settings" onClick={onNav} className="mt-1.5 flex items-center gap-1.5 font-medium text-ink-soft hover:text-ink">
               {admin ? <><ShieldCheck size={13} className="text-ok" />{t("nav.admin")}</> : <><Lock size={13} />{t("nav.signIn")}</>}
             </NavLink>
           )}
@@ -134,16 +145,11 @@ function AnimatedOutlet() {
   const outlet = useOutlet();
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key={loc.pathname} initial={{ opacity: 0, y: 14, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none", transform: "none" } }}
-        exit={{ opacity: 0, y: -8, filter: "blur(2px)" }} transition={{ type: "spring", stiffness: 260, damping: 28, mass: 0.8 }}>
+      <motion.div key={loc.pathname} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12, ease: "easeOut" }}>
         {outlet && cloneElement(outlet, { key: loc.pathname })}
       </motion.div>
     </AnimatePresence>
   );
-}
-
-export function Aurora() {
-  return <div className="aurora" aria-hidden><i /><i /><i /></div>;
 }
 
 function Shell() {
@@ -153,24 +159,23 @@ function Shell() {
   useEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
   return (
     <div className="relative flex min-h-full">
-      <Aurora />
       <div className="sticky top-0 z-10 hidden h-screen lg:block"><Sidebar /></div>
       <AnimatePresence>
         {open && (
           <div className="fixed inset-0 z-40 lg:hidden" role="dialog">
-            <motion.div className="absolute inset-0 bg-black/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} />
-            <motion.div className="relative h-full w-64" initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }} transition={{ type: "spring", stiffness: 380, damping: 36 }}>
+            <motion.div className="absolute inset-0 bg-black/30" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} onClick={() => setOpen(false)} />
+            <motion.div className="relative h-full w-60 shadow-lift" initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }} transition={{ duration: 0.18, ease: "easeOut" }}>
               <Sidebar onNav={() => setOpen(false)} />
             </motion.div>
           </div>
         )}
       </AnimatePresence>
       <main className="relative z-[1] min-w-0 flex-1 overflow-x-clip">
-        <div className="flex items-center gap-3 border-b border-line bg-surface/80 px-4 py-3 backdrop-blur lg:hidden">
+        <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-surface px-4 py-2.5 lg:hidden">
           <button className="btn-ghost px-2" onClick={() => setOpen(!open)} aria-label={t("ui.menu")}>{open ? <X size={18} /> : <Menu size={18} />}</button>
-          <Logo size={24} /><span className="font-semibold tracking-[0.08em]">LÜMEN</span>
+          <Logo size={24} /><span className="font-semibold tracking-[0.06em]">LÜMEN</span>
         </div>
-        <div className="mx-auto max-w-[1280px] px-5 py-8 md:px-10"><AnimatedOutlet /></div>
+        <div className="mx-auto max-w-[1280px] px-5 py-7 md:px-10"><AnimatedOutlet /></div>
       </main>
     </div>
   );

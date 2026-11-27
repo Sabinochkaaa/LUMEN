@@ -135,6 +135,10 @@ const D: Record<string, [string, string, string]> = {
   "land.foot": ["Сделано для BCC-HUB × MNU FinTech Hackathon 2026", "BCC-HUB × MNU FinTech Hackathon 2026 үшін жасалған", "Built for BCC-HUB × MNU FinTech Hackathon 2026"],
   "lens.scan": ["Анализ документа", "Құжатты талдау", "Analysing document"],
   "lens.found": ["найдено", "табылды", "found"],
+  // sidebar groups, design 2.0
+  "nav.gCheck": ["Проверка", "Тексеру", "Review"],
+  "nav.gReport": ["Отчёт", "Есеп", "Report"],
+  "nav.gTools": ["Сервисы", "Қызметтер", "Tools"],
   // landing, design 2.0
   "hero.pick": ["Нажмите на агента, чтобы узнать, что он проверяет.", "Агент нені тексеретінін білу үшін оны басыңыз.", "Click an agent to see what it checks."],
   "hero.go0": ["Проверить ТЗ", "ТТ тексеру", "Review a spec"],
